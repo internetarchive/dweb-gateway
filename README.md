@@ -13,6 +13,9 @@ A decentralized web gateway for open academic papers on the Internet Archive
 * [google doc with previous architecture version](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#) - #TODO: UseCase from there needs porting here}*
 * [google doc with IPFS integration comments](https://docs.google.com/document/d/1kqETK1kmvbdgApCMQEfmajBdHzqiNTB-TSbJDePj0hM/edit#heading=h.roqqzmshx7ww) #TODO: Needs revision ot match this.
 * [google doc with top level overview of Dweb project](https://docs.google.com/document/d/1-lI352gV_ma5ObAO02XwwyQHhqbC8GnAaysuxgR2dQo/edit) - best place for links to other resources & docs.
+* [gateway.dweb.me](https://gateway.dweb.me) points at the server - which should be running the "deployed" branch. 
+* [Gitter chat area](https://gitter.im/ArchiveExperiments/Lobby)
+So for example: curl https://gateway.dweb.me/info
 
 ## Overview
 
@@ -33,8 +36,6 @@ See [Information flow diagram](./Academic Docs IPFS gateway.pdf)
 Those services will be built from a set of microservices which may or may not be exposed.
 
 All calls to the gateway will come through a server that routes to individual services.
-
-#TODO: review here down for links ====================================>>
 
 Server URLs have a consistent form 
 /outputformat/namespace/namespace-dependent-string
@@ -244,14 +245,14 @@ Methods:
 ###IPLDfiles
 Subclass of IPLD where we want to return a directory, or a list of choices 
 - for example each of the PDF's & other files available for a specific DOI
-* IPLDfiles(NameResolver) <<Expand>> load IPLD with meta-data from NR and iterate through it loading own list.
-* content() - <<Expand>> Return internal data structure as a JSON
+* IPLDfiles(NameResolver) *{Expand}* load IPLD with meta-data from NR and iterate through it loading own list.
+* content() - *{Expand}* Return internal data structure as a JSON
 
 ###IPLDshards
 Subclass of IPLD where we want to return a list of subfiles, that are the shards that together
 make up the result. 
-* IPLDshards(NameResolverItem) <<Expand>> load IPLD with meta-data from NR and iterate through it loading own list.
-* content() - <<Expand>> Return internal data structure as a JSON
+* IPLDshards(NameResolverItem) *{Expand}* load IPLD with meta-data from NR and iterate through it loading own list.
+* content() - *{Expand}* Return internal data structure as a JSON
 
 The constructor is potentially complex.
 * Read metadata from NR and store in appropriate format (esp format of RawHash not yet defined)
@@ -330,17 +331,5 @@ In the future this is likely to be stored on the metadata of the item.
 
 ### Prior to hackathon
 
-* Mitra setup script to pull repo into server and start it
 * Mitra ask Brian about non-canonical formats likely to see and canonical form
 * Mitra to edit [Academic Documents Archive](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#) into here
-* Mitra Put the multihash code somewhere
-* Mitra to review the diagram and make sure required calls here, and use same names. 
-* Mitra copy this as stubs of code in repository
-* Mitra move usecase from [google doc](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#) to above
-* Waiting Mek to fix archivelabs repo THEN
-    * Mitra move anything left on this list to issues.
-    * port this back to it
-* Waiting Chris to setup gateway.dweb.me and sandbox.dweb.me
-* Need install script to pull Brians files from manifest to server (not via GIT)
-* Brian to put together some sample files, THEN upload to Git
-
