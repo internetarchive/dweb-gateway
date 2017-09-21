@@ -6,7 +6,7 @@ if python_version.startswith('3'):
     pass
 else:
     pass
-from python.ServerBase import MyHTTPRequestHandler, exposed
+from ServerBase import MyHTTPRequestHandler, exposed
 
 
 """

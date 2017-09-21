@@ -72,7 +72,7 @@ def multihashsha256_58(data):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved fro
     :param data:    String or binary type
     :return:        string of base58 sha256 hash
     """
-    return b58encode(bytes(encode(data, SHA2_256))))
+    return b58encode(bytes(encode(data, SHA2_256)))
 
 def multihash(sha1=None, sha256=None):
     """
