@@ -7,6 +7,7 @@ git checkout deployed # Will run server branch
 git pull
 git merge deployable
 git push
-python -m python.ServerGateway
+echo "Starting Server "
+python -m python.ServerGateway &
 
 
