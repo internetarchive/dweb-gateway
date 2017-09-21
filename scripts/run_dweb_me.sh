@@ -7,7 +7,6 @@ git checkout deployed # Will run server branch
 git pull
 git merge deployable
 git push
-cd /usr/local/dweb_gateway/python
 python -m python.ServerGateway
 
 
