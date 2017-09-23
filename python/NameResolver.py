@@ -46,6 +46,18 @@ class NameResolver(object):
         #TODO NameResolver push should add a NameResolverShard to a NameResolverFile or a NameResolverFile to a NameResolverDir - in both cases on _list field
         raise ToBeImplementedException(message="NameResolver.push")
 
+    @classmethod
+    def canonical(cls, namespace, *args, **kwargs):
+        """
+        Should already be a canonical form
+
+        :param cls:
+        :param namespace:
+        :param multihash58:
+        :return:
+        """
+        return namespace, args.join('/')    # By default reconcatonate args
+
 
 class NameResolverDir(NameResolver):
 

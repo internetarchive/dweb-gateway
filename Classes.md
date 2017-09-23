@@ -142,12 +142,8 @@ Resolves a DOI specific name such as 10.nnn/zzzz,
 
 ###ContentHash
 Subclass of NameResolverItem
-
-* ContentHash(namespace, multihash58)
-* Param namespace: Should be "multihash"
-* Param multihash58: Base58 Multihash of sha1, or sha256 (may support others later)
-
 Looks up the multihash in Location Service to find where can be retrieved from.
+* details moved to [ContentHash.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/ContentHash.py)
 
 ## Gateway Outputs
 The Gateway Output group of classes manage producing derived content for sending back to requesters.
