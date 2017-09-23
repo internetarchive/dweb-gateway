@@ -30,7 +30,7 @@ class NameResolver(object):
     """
 
     def __init__(self, namespace, *args, **kwargs):
-        raise ToBeImplementedException(message="Subclass for namespace",namespace,"needs an __init__")
+        self._list = []
 
     def contenthash(self):
         """

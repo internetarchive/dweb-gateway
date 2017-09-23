@@ -76,6 +76,10 @@ class AssertionFail(MyBaseException): #TODO-BACKPORT - console.assert on JS shou
     httperror = 500
     msg = "{message}"
 
+class TransportURLNotFound(MyBaseException):
+    httperror = 404
+    msg = "{url} not found"
+
 
 """
 

@@ -112,25 +112,25 @@ with edits to match current names etc in Microservices below. Below is draft
 ##### Alternative - where IPFS Gatway shards the content
 * IPFS Gateway
     * Requests gateway.dweb.me/content/contenthash/Q....
-* Gateway Server/Service GET gateway.dweb.doi/content/contenthash/Q....
-    * Calls ContentHash(Qm...)
+* Gateway Server/Service GET gateway.dweb.doi/content/contenthash/Q.... DONE
+    * Calls ContentHash(Qm...) DONE
 * ContentHash(Qm...)  
-    * (ContentHash is subclass of NameResolverFile)
-    * Locates file in the sqlite 
-    * Loads meta-data for that file
+    * (ContentHash is subclass of NameResolverFile) DONE UNTESTED
+    * Locates file in the locationStore WAITING ON LOCATIONSTORE
+    * Loads meta-data for that file NOT REQD YET
 * Gateway Server
-    * calls content method on ContentHash
+    * calls content method on ContentHash DONE
 * ContentHash.content()
-    * retrieves the content (all of it) from the server
-    * returns it (as a stream ideally)
+    * retrieves the content (all of it) from the server DONE UNTESTED
+    * returns it (as a stream ideally) RETURN DONE, STREAM NOT YET
 * Gateway Server
-    * Returns this to IPFS Gateway
+    * Returns this to IPFS Gateway DONE
 * IPFS Gateway 
     * shards the content, calculting hash on each byterange
     * stores the IPLD in its own storage
     * Stores & Pins the reference multihash: {contenthash, byterange} for each shard
     * Optionally stores the IPLD on the Gateway Server ... via POST gateway.dweb.me/storeipld/contenthash/Q...
-* GatewayServer
+* GatewayServer POST gateway.dweb.me/storeipld/contenthash/Q...
     * Calls ContentHash("contenthash", Q...) which loads metadata
     * calls ContentHash.storeipld(data) with the IPLD as parameter
 * ContentHash.storeipld

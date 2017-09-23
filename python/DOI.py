@@ -40,12 +40,13 @@ class DOI(NameResolverDir):
         """
         pass
 
-    def push(self):
+    def push(self,doifile):
         """
         Add a DOIfile to a DOI -
-        :return:
+        :return:    undefined
         """
-        pass # Note could probably be defined on NameResolverDir class
+        # Currently Nothing done here other than superclass adding to list.
+        super(DOINameResolver, self).push(doifile)
 
     def content(self):
         #TODO replace with something that reads out fields of object
