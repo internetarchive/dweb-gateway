@@ -51,7 +51,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     Generic HTTPRequestHandler, extends BaseHTTPRequestHandler, to make it easier to use
     """
     # Carefull - do not define __init__ as it is run for each incoming request.
-    # TODO-HTTP add support for longer (streamed) files on both upload and download
+    # TODO-STREAMS add support for longer (streamed) files on both upload and download, allow a stream to be passed back from the subclasses routines.
 
     """
     Simple (standard) HTTPdispatcher,

@@ -20,19 +20,59 @@ For documentation on this project see https://docs.google.com/document/d/1FO6Tdj
 
 class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
+    """
+    Routes queries to handlers based on the first part of the URL for the output format,
+    that routine will create an object by calling the constructor for the Namespace, and
+    then do whatever is needed to generate the output format (typically calling a method on the created
+    object, or invoking a constructor for that format.)
+
+    GET '/outputformat/namespace/namespace_dependent_string?aaa=bbb,ccc=ddd'`
+
+    Services exposed as "outputformat":
+    /info           Returns data structure describing gateway
+    /content        Return the content as interpreted for the namespace.
+    /contenthash    Return the hash of the content
+
+    outputformat:  Format wanted e.g. [IPLD](#IPLD) or [nameresolution](#nameresolution)
+    namespace: is a extensible descripter for name spaces e.g. "doi"
+    namespace-dependent-string: is a string, that may contain additional "/" dependent on the namespace.
+    aaa=bbb,ccc=ddd are optional arguments to the name space resolver.
+
+    Pseudo Code for each service
+    * lookup namespace in a config table to get a class
+    * Call constuctor on that class
+    * obj = ConfigTable[namespace](namespace, namespace_dependent_string, aaa=bbb, ccc=ddd)
+    * And convert to wanted output format by either
+    * call a method on the class,  DOI(namespace, *args, **kwargs).contenthash()
+    * or a constructor on another class passing the first e.g.  IPLD(DOI(namespace, *args, **kwargs)).content()
+    * Encapsulate result as a dict to return via Server superclass
+    *   { Content-type: result.contenttype, data: result.content() }
+
+    Notes:
+    *The namespace is passed to the specific constuctor since a single name resolver might implement multiple namespaces.
+
+    Future Work:
+    #TODO-STREAM Expand the ServerBase classes to support streams as a return from these routines
+    """
+
+
+
     defaulthttpoptions = { "ipandport": (u'localhost', 4244) }
     onlyexposed = True          # Only allow calls to @exposed methods
     expectedExceptions = []     # List any exceptions that you "expect" (and dont want stacktraces for)
 
+    namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
+        "doi": DOI,
+    }
+
+
+
     @classmethod
     def DwebGatewayHTTPServeForever(cls, httpoptions={}, verbose=False):
         """
-        DWeb HTTP server, all this one does is gateway from HTTP Transport to Local Transport, allowing calls to happen over net.
         One instance of this will be created for each request, so don't override __init__()
         Initiate with something like: DwebGatewayHTTPRequestHandler.serve_forever()
 
-        Services exposed:
-        /info           Returns data structure describing gateway
 
         :return: Never Returns
         """
@@ -63,10 +103,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                  'data': { "type": "gateway",
                            "services": [ ]}     # A list of names of services supported below  (not currently consumed anywhere)
                }
-
-    namespaceclasses = {
-        "doi": DOI,
-    }
 
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.

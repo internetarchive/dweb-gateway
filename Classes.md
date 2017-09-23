@@ -12,8 +12,7 @@ A decentralized web gateway for open academic papers on the Internet Archive
 * [Use Cases](./Usecases.md)
 * [Classes](./Classes.md)  << You are here
 * [Data for the project - sqlite etc](https://archive.org/download/ia_papers_manifest_20170919)
-* [Proposal for meta data](./MetaData.md) - first draft.
-* [google doc with previous architecture version](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#) - #TODO: UseCase from there needs porting here}*
+* [Proposal for meta data](./MetaData.md) - first draft - deleted :-(
 * [google doc with IPFS integration comments](https://docs.google.com/document/d/1kqETK1kmvbdgApCMQEfmajBdHzqiNTB-TSbJDePj0hM/edit#heading=h.roqqzmshx7ww) #TODO: Needs revision ot match this.
 * [google doc with top level overview of Dweb project](https://docs.google.com/document/d/1-lI352gV_ma5ObAO02XwwyQHhqbC8GnAaysuxgR2dQo/edit) - best place for links to other resources & docs.
 * [gateway.dweb.me](https://gateway.dweb.me) points at the server - which should be running the "deployed" branch. 
@@ -83,37 +82,13 @@ See [HTTPServer](httpserver) for how this is processed in an extensible form.
 
 ###<a name="#httpserver"></a> HTTP Server 
 Routes queries to handlers based on the first part of the URL for the output format,
-and the remainder of the URL for the name.
+that routine will create an object by calling the constructor for the Namespace, and 
+then do whatever is needed to generate the output format (typically calling a method on the created 
+object, or invoking a constructor for that format.)
+
 `GET '/outputformat/namespace/namespace_dependent_string?aaa=bbb,ccc=ddd'`
 
-* outputformat:  Format wanted e.g. [IPLD](#IPLD) or [nameresolution](#nameresolution)
-* namespace: is a extensible descripter for name spaces e.g. "doi"
-* namespace-dependent-string: is a string, that may contain additional "/" dependent on the namespace.
-* aaa=bbb,ccc=ddd are optional arguments to the name space resolver.
-
-##### PseudoCode
-* lookup namespace in a config table to get a class
-* Call constuctor on that class
-    * obj = ConfigTable[namespace](namespace, namespace_dependent_string, aaa=bbb, ccc=ddd)
-* And convert to wanted output format.
-    * res = OutputTable[]
-    * result = obj.outputformat() # Returns object of class GatewayFormat<outputformat>
-* Encapsulate result as a dict to return via Server superclass
-```
-{ Content-type: result.contenttype, data: result.content() }
-```
-
-##### Notes
-* I'm pretty sure a dict or Array in `data` will be turned into JSON with appropriate Content-type,
-and if not then that can be done. 
-
-* Note that the namespace is passed to the specific constuctor since a single name resolver might 
-implement multiple namespaces.
-
-* Will need to maintain a table of name's to resolvers which all implement the same interface
-
-##### Future Work
-Support streams as the "data" field, and process appropriately.
+details moved to [ServerGateway.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/ServerGateway.py)
 
 ## Name Resolvers
 The NameResolver group of classes manage recognizing a name, and connecting it to resources 
@@ -127,37 +102,29 @@ and may have default code based on assumptions about the data structure of subcl
 
 Logically it can represent one or multiple files.
 
-#####Attributes including:
-* subfiles: List of files in this Name Resolver 
-* metadata fields for the entire content. 
+details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
 
-#####Has methods including:
-* NameResolver(namespace, *args, **kwargs)  # Standard footprint of constructor.
-* push(NameResolverItem) # Add a item to the shards or subfiles list depending on type
-* files() => Iterator    # Iterate over the subfiles, returning NameResolverItem
+###<a name="nameresolveritem"></a>NameResolverDir superclass
 
-###<a name="nameresolveritem"></a>NameResolverItem superclass
+* Superclass for items that represent multiple files,
+* e.g. a directory, or the files that contain a DOI
+* Its files() method iterates over them, returning NameResolverFile
+* details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
 
-* Superclass for items in a NameResolver, for example a subclass would be specific PDFs containing 
-a DOI.
+###<a name="nameresolveritem"></a>NameResolverFile superclass
+
+* Superclass for items in a NameResolverDir, 
+* for example a subclass would be specific PDFs containing a DOI.
 * It contains enough information to allow for retrieval of the file e.g. HTTP URL, or server and path. Also can have byterange, 
 * And meta-data such as date, size
-* shardsize:    Attribute specifying the size of shards, default to 250k but we might change that. 
-
-Key method:
-* shards()  Return an iterator that returns each of the shards in the file. 
-    * Each time called, should:
-        * read next `shardsize` bytes from content (either from a specific byterange, or by reading from an open stream)
-        * Pass that through multihash58 service to get a base58 multihash
-        * Return that multihash, plus metadata (size may be all required)
-        * Store the mapping between that multihash, and location (inc byterange) in locationstore
-    * May Need to cache the structure, but since the IPLD that calls this will be cached, that might not be needed.
+* Its shards() method iterates over the shards stored. 
+* details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
 
 ###<a name="nameresolveritem"></a>NameResolverShard superclass
 
 * Superclass for references to Shards in a NameResolverItem
 * Returned by the shards() iterator in NameResovlerItem
-
+* details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
 
 ###<a name="doiresolver"></a>DOI Resolver
 
