@@ -1,5 +1,5 @@
 from NameResolver import NameResolverDir, NameResolverFile
-from miscutils import multihashsha256_58
+from miscutils import multihashsha256_58, httpget
 from Errors import TransportURLNotFound, CodingException
 from HashStore import LocationService
 import requests
@@ -44,18 +44,7 @@ class ContentHash(NameResolverFile):
     def content(self):
         # Returns the content - i.e. bytes
         #TODO-STREAMS future work to return a stream
-
-        try:
-            r = requests.get(self.url)
-            r.raise_for_status()
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            if r is not None and (r.status_code == 404):
-                raise TransportURLNotFound(url=self.url)
-            else:
-                # print e.__class__.__name__, e
-                # TODO-LOGGING: logger.error(e)
-                raise e  # For now just raise it
-        data = r.text   #TODO-STREAM return a stream to the content,
+        data = httpget(self.url)
         return {'Content-type': 'application/json',
             'data': data,
         }
