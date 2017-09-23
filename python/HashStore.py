@@ -94,5 +94,19 @@ class LocationService(HashStore):
     The multihash represents a file or a part of a file. Build upon hashstore.
     It is split out because this could be a useful service on its own.
     """
-    pass
+    def location_push(self, multihash, location):
+        """
 
+        :param multihash:
+        :param location:
+        :return:
+        """
+        return self.hash_push(multihash, "location", location)
+
+    def location_get(self, multihash):
+        """
+
+        :param multihash:
+        :return:
+        """
+        return self.hash_get(multihash, "location")
