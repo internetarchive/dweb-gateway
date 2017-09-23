@@ -39,3 +39,31 @@ class DOI(NameResolverDir):
             }
         }
 
+        @classmethod
+        def canonicial(cls, publisher, identifier):
+            #TODO convert this identifier into a canonicised form,
+            #TDO check publisher is canonicised 10.nnnn
+            pass
+            return publisher, identifier
+            """
+            As a pre-mature heads up, the DOI format is sort of underspecified. 
+            It is case-insensitive (can be used in URLs, sometimes with encoding), 
+            but can have weird shit like whitespace. 
+            The vast majority are more "well behaved", but things like parentheses are common.
+            They do always start with "10\.\d+\/" (aka, 10, period, numerical digits, slash)
+            """
+
+
+        @classmethod
+        def findDOI(cls, publisher, identifier):
+            #TODO search the sqlite database, and come back with a list of rows with any meta data found.
+            #TODO gradually extend it to return the biblio info etc from the other files.
+
+            """
+            Notes from Brian on the sqlite
+            Currently the sqlite database has URLs with an optional datetime column.
+            If the url starts "https://archive.org/download/" then it's an item/file pointer, and there is no datetime.
+            If the url starts with something else, it's a URL from wayback, and the datetime can be used to construct a
+            "https://web.archive.org/web/<datetime>/<url>" URL. TODO: double-check that wayback gateway supports range-requests
+            """
+            pass
