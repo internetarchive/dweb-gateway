@@ -1,4 +1,5 @@
 from miscutils import multihashsha256_58
+from Errors import ToBeImplementedException
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -30,7 +31,7 @@ class NameResolver(object):
     """
 
     def __init__(self, namespace, *args, **kwargs):
-        raise ToBeImplementedException(message="Subclass for namespace",namespace,"needs an __init__")
+        self._list = []
 
     def contenthash(self):
         """
@@ -42,9 +43,9 @@ class NameResolver(object):
          'data': multihashsha256_58(self.content())  # A list of names of services supported below  (not currently consumed anywhere)
          }
 
-    def push(self,*args,**kwargs):
+    def push(self,obj):
+        self._list.append(obj)
         #TODO NameResolver push should add a NameResolverShard to a NameResolverFile or a NameResolverFile to a NameResolverDir - in both cases on _list field
-        raise ToBeImplementedException(message="NameResolver.push")
 
     @classmethod
     def canonical(cls, namespace, *args, **kwargs):
@@ -69,7 +70,8 @@ class NameResolverDir(NameResolver):
     files():  An iterator over _list - returns NameResolverFile
     name:   Name of the directory
     """
-    pass
+    def files(self):
+        return self._list      #TODO-ITERATION split this into an iterator
 
 class NameResolverFile(NameResolver):
     """
@@ -86,7 +88,6 @@ class NameResolverFile(NameResolver):
     Any other field can be used as namespace specific metadata
     """
     shardsize = 256000  # A default for shard size, TODO determine best size, subclasses can overwrite, or ignore for things like video.
-    pass
 
     def shards():
         """

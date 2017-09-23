@@ -1,5 +1,6 @@
 from NameResolver import NameResolverDir, NameResolverFile
-from miscutils import multihashsha256_58
+from miscutils import multihashsha256_58, httpget
+import sqlite3
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -38,57 +39,92 @@ class DOI(NameResolverDir):
         *   Create a DOIfile(..)
         *   self.push(DOIfile)
         """
-        pass
+        print("XXX DOI.__init__",namespace,publisher,identifier)
+        super(DOI,self).__init__(namespace, publisher, *identifier)
+        db = sqlite3.connect('../data/idents_files_urls.sqlite')
+        self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
+        sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
-    def push(self):
+        for row in sha1_list:
+            _, the_sha1, _ = row
+            files_metadata_list = list(db.execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [the_sha1]))
+            _, mimetype, size_bytes, md5 = files_metadata_list[0]
+            urls_list = list(db.execute('SELECT * FROM urls WHERE sha1 = ?;', [the_sha1]))
+            self.push(DOIfile({
+                    'doi': self.doi,
+                    'urls': [self.archive_url(url) for url in urls_list],
+                    'mimetype': mimetype,
+                    'size_bytes': size_bytes,
+                    'md5': md5,
+                }))
+
+    @classmethod
+    def archive_url(cls, row):
+        """
+        Take a tuple of sha-1 URL datetime and return a direct URL to file content
+        Currently the sqlite database has URLs with an optional datetime column.
+        If the url starts "https://archive.org/download/" then it's an item/file pointer, and there is no datetime.
+        If the url starts with something else, it's a URL from wayback, and the datetime can be used to construct a
+        "https://web.archive.org/web/<datetime>/<url>" URL. TODO: double-check that wayback gateway supports range-requests
+        :return: url to file content
+        """
+        sha1, url, datetime = row
+        if not datetime:
+            return url
+        else:
+            return 'https://web.archive.org/web/{}/{}'.format(datetime, url)
+
+    def push(self,doifile):
         """
         Add a DOIfile to a DOI -
-        :return:
+        :return:    undefined
         """
-        pass # Note could probably be defined on NameResolverDir class
+        # Currently Nothing done here other than superclass adding to list.
+        super(DOI, self).push(doifile)
 
     def content(self):
         #TODO replace with something that reads out fields of object
         return {'Content-type': 'application/json',
             'data': {
-                'name': "FOO BAR",
-                'files': {   # Metadata for each file found with DOI goes here
-                    "first.pdf": {
-                        "contenthash": "Q123456",
-                        "url": "/foo/bar",
-                        }
-                },
+                "urls": [
+                    doifile.metadata for doifile in self.files()
+                ]
             }
         }
 
-        @classmethod
-        def canonicial(cls, publisher, identifier):
-            #TODO convert this identifier into a canonicised form,
-            #TDO check publisher is canonicised 10.nnnn
-            pass
-            return publisher, identifier
-            """
-            As a pre-mature heads up, the DOI format is sort of underspecified. 
-            It is case-insensitive (can be used in URLs, sometimes with encoding), 
-            but can have weird shit like whitespace. 
-            The vast majority are more "well behaved", but things like parentheses are common.
-            They do always start with "10\.\d+\/" (aka, 10, period, numerical digits, slash)
-            Brian says its a long-tail, the vast majority of correct DOI appear to be case insensitive alphanumeric with some allowed punctuation 
-            This will require lookin in the Sqlite (or asking Brian) to determine suitable characters for a OK DOI
-            """
+    @classmethod
+    def canonical(cls, publisher, *identifier):
+        """
+        As a pre-mature heads up, the DOI format is sort of underspecified.
+        It is case-insensitive (can be used in URLs, sometimes with encoding),
+        but can have weird shit like whitespace.
+        The vast majority are more "well behaved", but things like parentheses are common.
+        They do always start with "10\.\d+\/" (aka, 10, period, numerical digits, slash)
+        Brian says its a long-tail, the vast majority of correct DOI appear to be case insensitive alphanumeric with some allowed punctuation
+        This will require lookin in the Sqlite (or asking Brian) to determine suitable characters for a OK DOI
+        """
+        #TODO convert this identifier into a canonicised form,
+        #TDO check publisher is canonicised 10.nnnn
+        return publisher.lower() + "/" + "/".join([i.lower() for i in identifier])
 
+class DOIfile(NameResolverFile):
+    """
+    Class for one file
+    """
+    def __init__(self, metadata):
+        self.metadata = metadata    # For now all in one dict
 
-        @classmethod
-        def findDOI(cls, publisher, identifier):
-            #TODO search the sqlite database, and come back with a list of rows with any meta data found.
-            #TODO gradually extend it to return the biblio info etc from the other files.
+    def content(self):
+        #TODO iterate over urls and find first matching hash
+        return { "Content-type": self.metadata["mimetype"], "data": httpget(self.metadata["urls"][0]) }
 
-            """
-            Notes from Brian on the sqlite
-            Currently the sqlite database has URLs with an optional datetime column.
-            If the url starts "https://archive.org/download/" then it's an item/file pointer, and there is no datetime.
-            If the url starts with something else, it's a URL from wayback, and the datetime can be used to construct a
-            "https://web.archive.org/web/<datetime>/<url>" URL. TODO: double-check that wayback gateway supports range-requests
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) != 2:
+        print('hey I expected a single doi!!')
+        sys.exit(-1)
+    doi = DOI("doi", *sys.argv[1].split('/'))
 
-            """
-            pass
+    for i in doi.files():
+        print i
+        print i.content()

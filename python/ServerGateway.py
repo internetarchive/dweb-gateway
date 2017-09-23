@@ -8,6 +8,7 @@ else:
     pass
 from ServerBase import MyHTTPRequestHandler, exposed
 from DOI import DOI
+from ContentHash import ContentHash
 from IPLD import IPLDdir
 
 """
@@ -62,6 +63,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
         "doi": DOI,
+        "contenthash": ContentHash,
     }
 
 
@@ -107,7 +109,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     # call a method on it, or create an output class.
     @exposed
     def content(self, namespace, *args, **kwargs):
-        return self.namespaceclasses[namespace](namespace, *args, **kwargs).content()
+        return self.namespaceclasses[namespace](namespace, *args, **kwargs).content()   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def contenthash(self, namespace, *args, **kwargs):
@@ -121,6 +123,11 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         i = IPLDdir(obj)
         return i.content()
 
+    def POST_storeipld(self, namespace, *args, **kwargs):
+        data = kwargs["data"]
+        delete(kwargs["data"])
+        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
+        #TODO-XXXX Mitra has got to here.
 
 if __name__ == "__main__":
     DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': (u'localhost',4244)}) # Run local gateway

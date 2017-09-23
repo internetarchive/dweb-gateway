@@ -1,5 +1,8 @@
 from NameResolver import NameResolverDir, NameResolverFile
-from miscutils import multihashsha256_58
+from miscutils import multihashsha256_58, httpget
+from Errors import TransportURLNotFound, CodingException
+from HashStore import LocationService
+import requests
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -27,7 +30,9 @@ class ContentHash(NameResolverFile):
         Pseudo-code
         Looks up the multihash in Location Service to find where can be retrieved from.
         """
-        pass
+        if namespace != "contenthash":
+            raise CodingException("namespace != contenthash")
+        self.url = LocationService.get(multihashsha256_58) #TODO-FUTURE recognize different types of location, currently assumes URL
 
     def push(self):
         """
@@ -39,8 +44,9 @@ class ContentHash(NameResolverFile):
     def content(self):
         # Returns the content - i.e. bytes
         #TODO-STREAMS future work to return a stream
+        data = httpget(self.url)
         return {'Content-type': 'application/json',
-            'data': { "content of file" },
+            'data': data,
         }
 
     # def canonical - not needed as already in a canonical form

@@ -6,7 +6,9 @@ from base58 import b58encode
 from datetime import datetime
 import nacl.encoding
 from util_multihash import encode, SHA2_256
-from Errors import ToBeImplementedException
+from Errors import ToBeImplementedException, TransportURLNotFound
+import requests
+
 
 #TODO-PYTHON3 - file needs reviewing for Python2/3 compatability
 
@@ -80,3 +82,19 @@ def multihash(sha1=None, sha256=None):
     """
     raise ToBeImplementedException(name="multihash")
 
+
+def httpget(url):
+    # Returns the content - i.e. bytes
+    #TODO-STREAMS future work to return a stream
+
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+    except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+        if r is not None and (r.status_code == 404):
+            raise TransportURLNotFound(url=self.url)
+        else:
+            # print e.__class__.__name__, e
+            # TODO-LOGGING: logger.error(e)
+            raise e  # For now just raise it
+    return r.text   #TODO-STREAM support streams in future
