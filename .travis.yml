@@ -9,5 +9,8 @@ before_install: cd python
 install:
     - pip install -r requirements.txt
 
+services:
+    - redis-server
+
 script:
     - python -m pytest test/
