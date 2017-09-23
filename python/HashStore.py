@@ -1,6 +1,8 @@
 """
 Hash Store set of classes for storage and retrieval
 """
+import redis
+
 
 class HashStore(object):
     """
@@ -52,7 +54,32 @@ class HashStore(object):
             return "", 404
     """
 
-    pass
+    def __init__(self):
+        self.r = redis.StrictRedis(
+            host="localhost",
+            port=6379,
+            db=0,
+            decode_responses=True
+        )
+
+    def hash_push(self, multihash, field, value):
+        """
+
+        :param multihash:
+        :param field:
+        :param value:
+        :return:
+        """
+        return self.r.hset(multihash, field, value)
+
+    def hash_get(self, multihash, field):
+        """
+
+        :param multihash:
+        :param field:
+        :return:
+        """
+        return self.r.hget(multihash, field)
 
 
 class LocationService(HashStore):
