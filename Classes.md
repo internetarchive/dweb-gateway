@@ -1,4 +1,4 @@
-# dweb_gateway
+# dweb_gateway - Classes
 A decentralized web gateway for open academic papers on the Internet Archive
 
 ## Important editing notes
@@ -8,9 +8,9 @@ A decentralized web gateway for open academic papers on the Internet Archive
 
 ## Other Info Links
 
-* [Main README](./README.md) << You are here
+* [Main README](./README.md)
 * [Use Cases](./Usecases.md)
-* [Classes](./Classes.md)
+* [Classes](./Classes.md)  << You are here
 * [Data for the project - sqlite etc](https://archive.org/download/ia_papers_manifest_20170919)
 * [Proposal for meta data](./MetaData.md) - first draft.
 * [google doc with previous architecture version](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#) - #TODO: UseCase from there needs porting here}*
