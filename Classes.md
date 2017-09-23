@@ -215,64 +215,21 @@ Preferably these will be implemented as classes, and interface doc below changed
 
 ### Hashstore
 Stores and retrieves meta data for hashes, NOTE the hash is NOT the hash of the metadata, and metadata is mutable.
-* Not exposed as a URL (can do internally if reqd)
-* hash_store(multihash, field, value)    # Replace the data in hash
-* hash_push(multihash, field, value)     # Append data to anything already there (use a REDIS RPUSH)
-* hash_delete(multihash, field)          # Delete anything stored (probably not required).
-* hash_get(multihash, field)             # Return python obj relating to field (list, or string)
-* param multihash: Base58 string of self describing hash: e.g. SHA256 is "Qm..." and SHA1 is "5..."
-* param field: Field to store data in.
-
-* Consumes: REDIS
-* ConsumedBy: *TBC*
-
 The fields allow essentially for independent indexes. 
-
 It should be a simple shim around REDIS, note will have to combine multihash and field to get a redis "key" as if we 
 used multihash as the key, and field is one field of a Redis dict type, then we won't be able to "push" to it. 
-
 Note we can assume that this is used in a consistent fashion, e.g. won't do hash_store then hash_push which would be invalid.
 
 ### Location Service
 Maps hashes to locations
-* location_push(multihash, location)
-* location_get(multihash) => NameResolverItem
-* Consumes: Hashstore
-* ConsumedBy: DOI Name Resolver
-
 The multihash represents a file or a part of a file. Build upon hashstore. 
 It is split out because this could be a useful service on its own.
 
 ### Content Store
 Store and retrieve content by its hash.
-* rawstore(bytes) => multihash    
-* rawfetch(multihash) => bytes 
-* Consumes: multihash; hashstore
-
-Notes: The names are for compatability with a separate client library project. 
-For now this could use the hashstore or it could use the file system (have code for this)
 
 ## Services
 Any services not bound to any class, group of classes
 
 ### Multihash58
 Convert file or hash to multihash in base58
-
-* multihash58(sha256=None, sha1=None, file=None)  
-* param file: If present, convert to a sha256  
-* param sha1, sha256: Sha's in these formats,  
-* returns [multihash](#multihash), a base58 self-describing version of the SHA  
-
-Note Mitra has code that does this.
-
-####Future Work
-
-In the future this is likely to be stored on the metadata of the item. 
-
-## Actions - this will be moved to Issues
-
-
-### Prior to hackathon
-
-* Mitra ask Brian about non-canonical formats likely to see and canonical form
-* Mitra to edit [Academic Documents Archive](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#) into here

@@ -80,4 +80,3 @@ def multihash(sha1=None, sha256=None):
     """
     raise ToBeImplementedException(name="multihash")
 
-
