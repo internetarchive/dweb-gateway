@@ -131,35 +131,14 @@ details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/b
 Implements name resolution of the DOI namespace, via a sqlite database (provided by Brian)
 
 * URL: `/xxx/doi/10.pub_id/pub_specific_id` (forwarded here by HTTPServer)
-* `DOIResolver(self, "doi", pub_id, pub_specific_id, **kwargs)`  
-* param: pub_id: ID of publisher as assigned by doi.org - always 10.nnnn
-* Param: pub_specific_id: ID assigned by publisher, case insensitive, a-z0-9 and some punc
-* Consumes: Sqlite database from Brian *ACTION* need db from Brian
-* Consumes: location_store; 
-* Consumed by: Name Resolver Service
-
 Resolves a DOI specific name such as 10.nnn/zzzz, 
 
-Brian says: The names are somewhat non-canonical, so first step should be to canonicalize. 
-(this will require looking in the sqlite to figure out what are common formats)
-Brian says its a long-tail, the vast majority of correct DOI appear to be case insensitive alphanumeric with some allowed punctuation 
-(Brian to supply list, or you can analyze the sqlite)
-
-####Pseudo-code
-
-* Canonicalize pub_specific_id (lowercase, strip chars)
-* Look up in sqlite to find the [hash, location]* of the file (no need to retrieve it)
-* Convert hashes to multihashes
-* For each multihash: location_store(multihash, location)
-* Build a json with file and metadata in [nameresolution](#nameresolution) format.
-
-#### Later project
-
-* Build way to preload the hashstore with the hashes and URLs from the sqlite
+* details moved to [DOI.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/DOI.py)
+* Future Project to preload the different stores from the sqlite.
 
 ###<a name="doiresolverfile"></a>DOIResolverFile 
-* Subclasses NameResolverItem
-* Holds meta-data from the sqllite database
+* Subclass of NameResolverFile that holds meta-data from the sqllite database
+* details moved to [DOI.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/DOI.py)
 
 ###ContentHash
 Subclass of NameResolverItem
