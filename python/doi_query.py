@@ -4,6 +4,8 @@ import sqlite3
 import sys
 
 
+
+
 def archive_url(row):
     """
     Take a tuple of sha-1 URL datetime and return a direct URL to file content
@@ -42,6 +44,31 @@ def lookup_doi(the_doi):
             })
 
     return results
+
+def check_if_link_works(url):
+    '''See if a link is valid (i.e., returns a '200' to the HTML request).
+    '''
+    request = requests.get(url)
+    if request.status_code == 200:
+        return True
+    elif request.status_code == 404:
+        return False
+    else:
+        return 'error'
+
+
+def get_doi_metadata(doi):
+    """
+    For a DOI, get metadata from doi.org about that file
+    TODO: pick which fields want to analyze, e.g. 
+    :return: metadata on the doi in json format
+    """
+    url = "http://dx.doi.org/" + doi
+    if check_if_link_works(url):
+        headers = {"accept": "application/vnd.citationstyles.csl+json"}
+        r = requests.get(url, headers=headers)
+    return r.json()
+
 
 # print(lookup_doi('10.1001/jama.2009.1064'))
 if __name__ == '__main__':
