@@ -90,7 +90,7 @@ class NameResolverFile(NameResolver):
 
     def shards():
         """
-        Return an iterator that returns each of the NameResovlerShard in the file's _list attribute.
+        Return an iterator that returns each of the NameResolverShard in the file's _list attribute.
         * Each time called, should:
             * read next `shardsize` bytes from content (either from a specific byterange, or by reading from an open stream)
             * Pass that through multihash58 service to get a base58 multihash

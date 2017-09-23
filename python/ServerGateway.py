@@ -14,7 +14,6 @@ from IPLD import IPLDdir
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
 """
 
-#TODO-API needs writing up
 #TODO-PYTHON3 - whole file needsporting to Python2/3 compatability
 #TODO-LOG setup generic logger and move all print calls to use it
 
@@ -78,7 +77,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         """
         httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions) # Deepcopy to merge options
         if (verbose): print("Starting server with options=",httpoptions)
-        #TODO any code needed once (not per thread) goes here.
+        #any code needed once (not per thread) goes here.
         cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)    # Uses defaultipandport
 
     @exposed    # Exposes this function for outside use
