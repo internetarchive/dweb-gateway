@@ -56,3 +56,15 @@ and then a "content" method is called to output something for the client.
 See [HTTPServer](httpserver) for how this is processed in an extensible form.
 
 See [UseCases](./Usecases.md) amd [Classes](./Classes.md) for expansion of this
+
+## Installation
+
+This should work, someone please confirm on a clean(er) machine and remove this comment.
+```
+git clone http://github.com/ArchiveLabs/dweb_gateway.cid
+cd dweb_gateway
+pip install --disable-pip-version-check -u base58 pynacl
+python -m python.ServerGateway
+curl http://localhost:4244/info
+curl http://localhost:4244/contenthash/doi/10.1234/abcdef
+```
