@@ -1,0 +1,3 @@
+class OutputFormat(object):
+    pass
+

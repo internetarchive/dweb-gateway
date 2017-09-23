@@ -7,7 +7,8 @@ if python_version.startswith('3'):
 else:
     pass
 from ServerBase import MyHTTPRequestHandler, exposed
-
+from DOI import DOI
+from IPLD import IPLDdir
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -62,6 +63,28 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                  'data': { "type": "gateway",
                            "services": [ ]}     # A list of names of services supported below  (not currently consumed anywhere)
                }
+
+    namespaceclasses = {
+        "doi": DOI,
+    }
+
+    # Create one of these for each output format, by default parse name and create object, then either
+    # call a method on it, or create an output class.
+    @exposed
+    def content(self, namespace, *args, **kwargs):
+        return self.namespaceclasses[namespace](namespace, *args, **kwargs).content()
+
+    @exposed
+    def contenthash(self, namespace, *args, **kwargs):
+        return self.namespaceclasses[namespace](namespace, *args, **kwargs).contenthash()
+
+    # Now complex ones where have to create a class to handle conversion e.g. IPLDdirs
+
+    @exposed
+    def iplddir(self, namespace, *args, **kwargs):
+        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
+        i = IPLDdir(obj)
+        return i.content()
 
 
 if __name__ == "__main__":
