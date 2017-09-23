@@ -12,8 +12,7 @@ A decentralized web gateway for open academic papers on the Internet Archive
 * [Use Cases](./Usecases.md)
 * [Classes](./Classes.md)
 * [Data for the project - sqlite etc](https://archive.org/download/ia_papers_manifest_20170919)
-* [Proposal for meta data](./MetaData.md) - first draft.
-* [google doc with previous architecture version](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#) - #TODO: UseCase from there needs porting here}*
+* [Proposal for meta data](./MetaData.md) - first draft - looks like got deleted :-(
 * [google doc with IPFS integration comments](https://docs.google.com/document/d/1kqETK1kmvbdgApCMQEfmajBdHzqiNTB-TSbJDePj0hM/edit#heading=h.roqqzmshx7ww) #TODO: Needs revision ot match this.
 * [google doc with top level overview of Dweb project](https://docs.google.com/document/d/1-lI352gV_ma5ObAO02XwwyQHhqbC8GnAaysuxgR2dQo/edit) - best place for links to other resources & docs.
 * [gateway.dweb.me](https://gateway.dweb.me) points at the server - which should be running the "deployed" branch. 

@@ -2,6 +2,7 @@ from miscutils import multihashsha256_58
 
 # Base classes for DOI etc
 # Methods not defined yet
+#TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
 class NameResolver(object):
 

@@ -1,12 +1,16 @@
 from NameResolver import NameResolverDir, NameResolverFile
 from miscutils import multihashsha256_58
 
+#TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
+
 class DOI(NameResolverDir):
     """
     DOI is a class for Document Object Identifiers, an academic namespace
     typically of form   10.1234/abc123
 
     Case insensitive, have some significant punctuation, but sometimes presented with insignificant punctuation
+
+
     """
 
     def __init__(self, namespace, publisher, identifier):
