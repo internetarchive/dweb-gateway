@@ -21,13 +21,13 @@ then
 	gunzip data/idents_files_urls.sqlite.gz
 fi
 cd python
-if ps -f | grep ServerGateway | grep -v grep
+if ps -ef | grep ServerGateway | grep -v grep
 then
 	echo "You need to kill that process above first"
 else
     echo "Starting Server "
     python -m ServerGateway &
-    ps -f | grep ServerGateway | grep -v grep
+    ps -ef | grep ServerGateway | grep -v grep
 fi
 
 
