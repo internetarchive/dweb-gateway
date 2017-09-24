@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PIPS=py-dateutil redis base58 pynacl
+PIPS="py-dateutil redis base58 pynacl"
 cd /usr/local/dweb_gateway
 pip install --disable-pip-version-check -U $PIPS
 if git commit -a -m "Changes made on server"
