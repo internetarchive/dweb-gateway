@@ -117,15 +117,16 @@ class DOI(NameResolverDir):
 
 
     def check_if_link_works(self, url):
-    '''See if a link is valid (i.e., returns a '200' to the HTML request).
-    '''
-    request = requests.get(url)
-    if request.status_code == 200:
-        return True
-    elif request.status_code == 404:
-        return False
-    else:
-        return 'error'
+        '''
+        See if a link is valid (i.e., returns a '200' to the HTML request).
+        '''
+        request = requests.get(url)
+        if request.status_code == 200:
+            return True
+        elif request.status_code == 404:
+            return False
+        else:
+            return 'error'
 
 
     def get_doi_metadata(self):
@@ -165,3 +166,5 @@ if __name__ == '__main__':
     for i in doi.files():
         print i
         print i.content()
+
+
