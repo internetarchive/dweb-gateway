@@ -9,5 +9,6 @@ git merge deployable
 git push
 echo "Starting Server "
 python -m python.ServerGateway &
+ps -f | grep ServerGateway | grep -v grep
 
 
