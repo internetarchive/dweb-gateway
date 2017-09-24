@@ -1,3 +1,8 @@
+https://travis-ci.org/ArchiveLabs/dweb_gateway.svg?branch=master
+| Python Tests  |
+| -------------- |
+| [![Build Status](https://travis-ci.org/ArchiveLabs/dweb_gateway.svg?branch=master)](https://travis-ci.org/ArchiveLabs/dweb_gateway) |
+
 # dweb_gateway
 A decentralized web gateway for open academic papers on the Internet Archive
 
