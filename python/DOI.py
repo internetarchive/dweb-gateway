@@ -3,6 +3,9 @@ from miscutils import multihashsha256_58, multihashsha1_58, httpget
 import sqlite3
 from HashStore import LocationService
 import requests
+import multihash
+import base58
+
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -62,9 +65,16 @@ class DOI(NameResolverDir):
                     'md5': md5,
                     'sha1': the_sha1,
                 })
+            sha1_hash = doifile.metadata["sha1"]
+            sha1_binary_hash = sha1_hash.decode('hex')
+            multihash_binary = multihash.encode(sha1_binary_hash, 0x11)
+            multihash_base58 = base58.b58encode(bytes(multihash_binary))
+            doifile.metadata["sha1multihash"] = multihash_base58
+            print(multihash_base58)
             self.push(doifile)
-            sha256hash = multihashsha256_58(doifile.retrieve())
-            LocationService().set(sha256hash, doifile.metadata["urls"][0])  #TODO-FUTURE find first url that matches the sha1
+            #sha256hash = multihashsha256_58(doifile.retrieve())
+            #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
+            #LocationService().set(multihash_base58, doifile.metadata["urls"][0])  #TODO-FUTURE find first url that matches the sha1
             # WE'd like to stroe the sha1, but havent figured out how to reverse the hex string to binary adnd then multihash
 
     @classmethod
