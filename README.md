@@ -1,4 +1,3 @@
-https://travis-ci.org/ArchiveLabs/dweb_gateway.svg?branch=master
 | Python Tests  |
 | -------------- |
 | [![Build Status](https://travis-ci.org/ArchiveLabs/dweb_gateway.svg?branch=master)](https://travis-ci.org/ArchiveLabs/dweb_gateway) |
