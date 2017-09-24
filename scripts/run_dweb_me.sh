@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-PIPS="py-dateutil redis base58 pynacl multihssh"
+PIPS="multihash py-dateutil redis base58 pynacl"
 cd /usr/local/dweb_gateway
 pip install -U multihash
 pip install --disable-pip-version-check -U $PIPS
