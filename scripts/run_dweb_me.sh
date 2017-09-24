@@ -16,7 +16,7 @@ then
 	git push
 fi
 cd python
-if ps -f | grep ServerHTTP | grep -v grep
+if ps -f | grep ServerGateway | grep -v grep
 then
 	echo "You need to kill that process above first"
 else
