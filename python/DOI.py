@@ -44,6 +44,8 @@ class DOI(NameResolverDir):
         super(DOI,self).__init__(namespace, publisher, *identifier)
         db = sqlite3.connect('../data/idents_files_urls.sqlite')
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
+        self.metadata = {}
+        self.get_doi_metadata()
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
         for row in sha1_list:
@@ -112,6 +114,32 @@ class DOI(NameResolverDir):
         #TODO convert this identifier into a canonicised form,
         #TDO check publisher is canonicised 10.nnnn
         return publisher.lower() + "/" + "/".join([i.lower() for i in identifier])
+
+
+    def check_if_link_works(self, url):
+    '''See if a link is valid (i.e., returns a '200' to the HTML request).
+    '''
+    request = requests.get(url)
+    if request.status_code == 200:
+        return True
+    elif request.status_code == 404:
+        return False
+    else:
+        return 'error'
+
+
+    def get_doi_metadata(self):
+        """
+        For a DOI, get metadata from doi.org about that file
+        TODO: pick which fields want to analyze, e.g. 
+        :return: metadata on the doi in json format
+        """
+        url = "http://dx.doi.org/" + self.doi
+        if check_if_link_works(url):
+            headers = {"accept": "application/vnd.citationstyles.csl+json"}
+            r = requests.get(url, headers=headers)
+            self.metadata = r.json()
+
 
 class DOIfile(NameResolverFile):
     """
