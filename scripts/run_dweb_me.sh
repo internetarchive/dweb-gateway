@@ -1,14 +1,27 @@
 #!/bin/bash
 
+PIPS=py-dateutil redis base58 pynacl
 cd /usr/local/dweb_gateway
-pip install --disable-pip-version-check -u base58 pynacl
-git commit -a -m "Changes made on server"
+pip install --disable-pip-version-check -U $PIPS
+if git commit -a -m "Changes made on server"
+then
+	git push
+fi
 git checkout deployed # Will run server branch
 git pull
-git merge deployable
-git push
-echo "Starting Server "
-python -m python.ServerGateway &
-ps -f | grep ServerGateway | grep -v grep
+git merge origin/deployable
+if git commit -a -m "merged"
+then
+	git push
+fi
+cd python
+if ps -f | grep ServerHTTP | grep -v grep
+then
+	echo "You need to kill that process above first"
+else
+    echo "Starting Server "
+    python -m ServerGateway &
+    ps -f | grep ServerHTTP | grep -v grep
+fi
 
 
