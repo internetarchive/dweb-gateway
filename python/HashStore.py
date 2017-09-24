@@ -62,7 +62,7 @@ class HashStore(object):
             decode_responses=True
         )
 
-    def hash_push(self, multihash, field, value):
+    def hash_set(self, multihash, field, value):
         """
 
         :param multihash:
@@ -86,24 +86,24 @@ class LocationService(HashStore):
     """
     OLD NOTES
     Maps hashes to locations
-    * location_push(multihash, location)
-    * location_get(multihash) => NameResolverItem
+    * set(multihash, location)
+    * get(multihash) => NameResolverItem
     * Consumes: Hashstore
     * ConsumedBy: DOI Name Resolver
 
     The multihash represents a file or a part of a file. Build upon hashstore.
     It is split out because this could be a useful service on its own.
     """
-    def location_push(self, multihash, location):
+    def set(self, multihash, location):
         """
 
         :param multihash:
         :param location:
         :return:
         """
-        return self.hash_push(multihash, "location", location)
+        return self.hash_set(multihash, "location", location)
 
-    def location_get(self, multihash):
+    def get(self, multihash):
         """
 
         :param multihash:

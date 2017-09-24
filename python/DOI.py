@@ -1,6 +1,7 @@
 from NameResolver import NameResolverDir, NameResolverFile
-from miscutils import multihashsha256_58, httpget
+from miscutils import multihashsha256_58, multihashsha1_58, httpget
 import sqlite3
+from HashStore import LocationService
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -50,13 +51,18 @@ class DOI(NameResolverDir):
             files_metadata_list = list(db.execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [the_sha1]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
             urls_list = list(db.execute('SELECT * FROM urls WHERE sha1 = ?;', [the_sha1]))
-            self.push(DOIfile({
+            doifile = DOIfile({
                     'doi': self.doi,
                     'urls': [self.archive_url(url) for url in urls_list],
                     'mimetype': mimetype,
                     'size_bytes': size_bytes,
                     'md5': md5,
-                }))
+                    'sha1': the_sha1,
+                })
+            self.push(doifile)
+            sha256hash = multihashsha256_58(doifile.retrieve())
+            LocationService().set(sha256hash, doifile.metadata["urls"][0])  #TODO-FUTURE find first url that matches the sha1
+            # WE'd like to stroe the sha1, but havent figured out how to reverse the hex string to binary adnd then multihash
 
     @classmethod
     def archive_url(cls, row):
@@ -114,9 +120,12 @@ class DOIfile(NameResolverFile):
     def __init__(self, metadata):
         self.metadata = metadata    # For now all in one dict
 
+    def retrieve(self):
+        return httpget(self.metadata["urls"][0])
+
     def content(self):
         #TODO iterate over urls and find first matching hash
-        return { "Content-type": self.metadata["mimetype"], "data": httpget(self.metadata["urls"][0]) }
+        return { "Content-type": self.metadata["mimetype"], "data": self.retrieve() }
 
 if __name__ == '__main__':
     import sys

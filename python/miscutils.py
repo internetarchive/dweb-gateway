@@ -5,7 +5,7 @@ import json # Note dont "from json import dumps" as clashes with overdefined dum
 from base58 import b58encode
 from datetime import datetime
 import nacl.encoding
-from util_multihash import encode, SHA2_256
+from util_multihash import encode, SHA2_256, SHA1
 from Errors import ToBeImplementedException, TransportURLNotFound
 import requests
 
@@ -75,6 +75,12 @@ def multihashsha256_58(data):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved fro
     :return:        string of base58 sha256 hash
     """
     return b58encode(bytes(encode(data, SHA2_256)))
+
+def multihashsha1_58(sha1):
+    output = bytearray([SHA1, len(sha1)])
+    output.extend(sha1)
+    return output
+
 
 def multihash(sha1=None, sha256=None):
     """

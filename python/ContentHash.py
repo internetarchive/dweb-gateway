@@ -32,7 +32,7 @@ class ContentHash(NameResolverFile):
         """
         if namespace != "contenthash":
             raise CodingException("namespace != contenthash")
-        self.url = LocationService.get(multihashsha256_58) #TODO-FUTURE recognize different types of location, currently assumes URL
+        self.url = LocationService().get(multihashsha256_58) #TODO-FUTURE recognize different types of location, currently assumes URL
 
     def push(self):
         """
