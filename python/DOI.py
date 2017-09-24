@@ -2,6 +2,7 @@ from NameResolver import NameResolverDir, NameResolverFile
 from miscutils import multihashsha256_58, multihashsha1_58, httpget
 import sqlite3
 from HashStore import LocationService
+import requests
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -136,7 +137,7 @@ class DOI(NameResolverDir):
         :return: metadata on the doi in json format
         """
         url = "http://dx.doi.org/" + self.doi
-        if check_if_link_works(url):
+        if self.check_if_link_works(url):
             headers = {"accept": "application/vnd.citationstyles.csl+json"}
             r = requests.get(url, headers=headers)
             self.metadata = r.json()
