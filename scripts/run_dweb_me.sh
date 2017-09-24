@@ -3,6 +3,7 @@
 set -x
 PIPS="py-dateutil redis base58 pynacl multihssh"
 cd /usr/local/dweb_gateway
+pip install -U multihash
 pip install --disable-pip-version-check -U $PIPS
 if git commit -a -m "Changes made on server"
 then
@@ -22,7 +23,7 @@ then
 else
     echo "Starting Server "
     python -m ServerGateway &
-    ps -f | grep ServerHTTP | grep -v grep
+    ps -f | grep ServerGateway | grep -v grep
 fi
 
 
