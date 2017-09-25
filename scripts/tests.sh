@@ -5,17 +5,16 @@
 #python -m python.ServerGateway &
 
 set -x
-curl http://localhost:4244/info
-echo # Terminate response
+curl https://gateway.dweb.me/info
+echo; echo # Terminate response and blank line
+curl https://gateway.dweb.me/content/doi/10.1001/jama.2009.1064?verbose=True
+echo; echo # Terminate response and blank line
 
-echo # Ensure blank line at end of return
+# Fetch the sha1 multihash from above
+curl -D- -o /dev/null https://gateway.dweb.me/content/contenthash/5dr1gqVNt1mPzCL2tMRSMnJpWsJ5Qs?verbose=True
+echo; echo # Terminate response and blank line
 
-
-curl http://localhost:4244/content/doi/10.1234/abcd-1234
-echo # Terminate response
-
-echo # Ensure blank line at end of return
-
-
-curl http://localhost:4244/contenthash/doi/10.1234/abcd-1234
-echo # Terminate response
+echo "Now trying errors"
+#curl https://gateway.dweb.me/INVALIDCOMMAND
+#curl https://gateway.dweb.me/content/doi/10.INVALIDPUB/jama.2009.1064?verbose=True
+#curl https://gateway.dweb.me/content/doi/10.1001/INVALIDDOC.2009.1064?verbose=True
