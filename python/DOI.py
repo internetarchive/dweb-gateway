@@ -44,14 +44,18 @@ class DOI(NameResolverDir):
         *   Create a DOIfile(..)
         *   self.push(DOIfile)
         """
-        print("XXX DOI.__init__",namespace,publisher,identifier)
+	verbose=kwargs.get("verbose",False)
+        if verbose: print("DOI.__init__",namespace,publisher,identifier)
         super(DOI,self).__init__(namespace, publisher, *identifier)
+        if verbose: print("DOI.__init__ connecting to DB")
         db = sqlite3.connect('../data/idents_files_urls.sqlite')
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self.metadata = {}
         self.get_doi_metadata()
+        if verbose: print("DOI.__init__ looking up",self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
+        if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
         for row in sha1_list:
             _, the_sha1, _ = row
             files_metadata_list = list(db.execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [the_sha1]))
@@ -76,6 +80,7 @@ class DOI(NameResolverDir):
             #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
             #LocationService().set(multihash_base58, doifile.metadata["urls"][0])  #TODO-FUTURE find first url that matches the sha1
             # WE'd like to stroe the sha1, but havent figured out how to reverse the hex string to binary adnd then multihash
+        if verbose: print("DOI.__init__ completing")
 
     @classmethod
     def archive_url(cls, row):
