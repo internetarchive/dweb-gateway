@@ -62,7 +62,7 @@ class HashStore(object):
             decode_responses=True
         )
 
-    def hash_set(self, multihash, field, value):
+    def hash_set(self, multihash, field, value, verbose=False):
         """
 
         :param multihash:
@@ -70,43 +70,53 @@ class HashStore(object):
         :param value:
         :return:
         """
-        return self.r.hset(multihash, field, value)
+	if verbose: print("Hash set:",multihash, field,"=",value)
+        self.r.hset(multihash, field, value)
 
-    def hash_get(self, multihash, field):
+    def hash_get(self, multihash, field, verbose=False):
         """
 
         :param multihash:
         :param field:
         :return:
         """
-        return self.r.hget(multihash, field)
+        res = self.r.hget(multihash, field)
+	if verbose: print("Hash found:",multihash, field,"=",res)
+	return res
 
 
-class LocationService(HashStore):
-    """
-    OLD NOTES
-    Maps hashes to locations
-    * set(multihash, location)
-    * get(multihash) => NameResolverItem
-    * Consumes: Hashstore
-    * ConsumedBy: DOI Name Resolver
-
-    The multihash represents a file or a part of a file. Build upon hashstore.
-    It is split out because this could be a useful service on its own.
-    """
-    def set(self, multihash, location):
+    def set(self, multihash, location, verbose=False):
         """
 
         :param multihash:
         :param location:
         :return:
         """
-        return self.hash_set(multihash, "location", location)
+        return self.hash_set(multihash, self.redisfield, location, verbose)
 
-    def get(self, multihash):
+    def get(self, multihash, verbose=False):
         """
 
         :param multihash:
-        :return:
+        :return: string
         """
-        return self.hash_get(multihash, "location")
+        return self.hash_get(multihash, self.redisfield, verbose)
+
+class LocationService(HashStore):
+    """
+    OLD NOTES
+    Maps hashes to locations
+    * set(multihash, location)
+    * get(multihash) => url (currently)
+    * Consumes: Hashstore
+    * ConsumedBy: DOI Name Resolver
+
+    The multihash represents a file or a part of a file. Build upon hashstore.
+    It is split out because this could be a useful service on its own.
+    """
+    redisfield="location"
+
+class MimetypeService(HashStore):
+    redisfield="mimetype"
+
+

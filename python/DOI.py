@@ -1,7 +1,7 @@
 from NameResolver import NameResolverDir, NameResolverFile
 from miscutils import multihashsha256_58, multihashsha1_58, httpget
 import sqlite3
-from HashStore import LocationService
+from HashStore import LocationService, MimetypeService
 import requests
 import multihash
 import base58
@@ -43,14 +43,20 @@ class DOI(NameResolverDir):
         *   Create a DOIfile(..)
         *   self.push(DOIfile)
         """
-        print("XXX DOI.__init__",namespace,publisher,identifier)
+	verbose=kwargs.get("verbose",False)
+        if verbose: print("DOI.__init__",namespace,publisher,identifier)
         super(DOI,self).__init__(namespace, publisher, *identifier)
-        db = sqlite3.connect('../data/idents_files_urls.sqlite')
+        if verbose: print("DOI.__init__ connecting to DB")
+        db = sqlite3.connect('../data/idents_files_urls_sqlite')
+        if verbose: print("DOI.__init__ connected to DB")
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self.metadata = {}
-        self.get_doi_metadata()
+        if verbose: print("DOI.__init__ getting metadata for",self.doi)
+        self.get_doi_metadata(verbose)
+        if verbose: print("DOI.__init__ looking up",self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
+        if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
         for row in sha1_list:
             _, the_sha1, _ = row
             files_metadata_list = list(db.execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [the_sha1]))
@@ -73,8 +79,10 @@ class DOI(NameResolverDir):
             self.push(doifile)
             #sha256hash = multihashsha256_58(doifile.retrieve())
             #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
-            #LocationService().set(multihash_base58, doifile.metadata["urls"][0])  #TODO-FUTURE find first url that matches the sha1
+            LocationService().set(multihash_base58, doifile.metadata["urls"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
+            MimetypeService().set(multihash_base58, doifile.metadata["mimetype"],verbose=verbose)
             # WE'd like to stroe the sha1, but havent figured out how to reverse the hex string to binary adnd then multihash
+        if verbose: print("DOI.__init__ completing")
 
     @classmethod
     def archive_url(cls, row):
@@ -100,7 +108,7 @@ class DOI(NameResolverDir):
         # Currently Nothing done here other than superclass adding to list.
         super(DOI, self).push(doifile)
 
-    def content(self):
+    def content(self, verbose=False):
         #TODO replace with something that reads out fields of object
         return {'Content-type': 'application/json',
             'data': {
@@ -126,11 +134,20 @@ class DOI(NameResolverDir):
         return publisher.lower() + "/" + "/".join([i.lower() for i in identifier])
 
 
-    def check_if_link_works(self, url):
+    def check_if_link_works(self, url, verbose):
         '''
         See if a link is valid (i.e., returns a '200' to the HTML request).
         '''
-        request = requests.get(url)
+	if verbose: print("check_if_link_works",url)
+	print "XXX@check_if_link_works - dummied out"
+	#return True
+	try:
+            	headers = {"accept": "*/*"}
+		# This next link can fail, it follows a redirection and then can fail on th actual PDF, which isnt what we want cos we'll use a Archive URL
+        	request = requests.get(url, headers=headers)
+	except Exception as e:
+		print "Request failed XXX",e
+	if verbose: print("result=", request.status_code)
         if request.status_code == 200:
             return True
         elif request.status_code == 404:
@@ -139,20 +156,19 @@ class DOI(NameResolverDir):
             return 'error'
 
 
-    def get_doi_metadata(self):
+    def get_doi_metadata(self, verbose):
         """
         For a DOI, get metadata from doi.org about that file
         TODO: pick which fields want to analyze, e.g. 
         :return: metadata on the doi in json format
         """
         url = "http://dx.doi.org/" + self.doi
-        print("get_doi_metadata for",url)
-        if self.check_if_link_works(url):
-            headers = {"accept": "application/vnd.citationstyles.csl+json"}
-            r = requests.get(url, headers=headers)
-            self.metadata = r.json()
-        print("got_doi_metadata for",url)
-
+        headers = {"accept": "application/vnd.citationstyles.csl+json"}
+        r = requests.get(url, headers=headers) # Note that with headers it wont redirect, without it will go to doc which may fail
+	if verbose: print "get_doi_metadata returned:",r
+	if r.status_code == 200:
+        	self.metadata = r.json()
+	# If dont get metadata, the rest of our info may still be valid
 
 class DOIfile(NameResolverFile):
     """
