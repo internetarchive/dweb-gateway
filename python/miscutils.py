@@ -94,13 +94,18 @@ def httpget(url):
     #TODO-STREAMS future work to return a stream
 
     try:
+	r = None # So that if exception in get, r is still defined and can be tested for None
         r = requests.get(url)
         r.raise_for_status()
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
         if r is not None and (r.status_code == 404):
             raise TransportURLNotFound(url=self.url)
-        else:
-            # print e.__class__.__name__, e
+	else:
+		print e.__class__.__name__, e
+		raise e
+    except (requests.exceptions.MissingSchema,) as e:
+            print e.__class__.__name__, e
             # TODO-LOGGING: logger.error(e)
             raise e  # For now just raise it
+    print "XXX@110",r.text.__class__.__name__
     return r.text   #TODO-STREAM support streams in future

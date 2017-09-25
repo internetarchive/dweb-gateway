@@ -1,7 +1,7 @@
 from NameResolver import NameResolverDir, NameResolverFile
 from miscutils import multihashsha256_58, multihashsha1_58, httpget
 import sqlite3
-from HashStore import LocationService
+from HashStore import LocationService, MimetypeService
 import requests
 import multihash
 import base58
@@ -80,7 +80,8 @@ class DOI(NameResolverDir):
             self.push(doifile)
             #sha256hash = multihashsha256_58(doifile.retrieve())
             #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
-            #LocationService().set(multihash_base58, doifile.metadata["urls"][0])  #TODO-FUTURE find first url that matches the sha1
+            LocationService().set(multihash_base58, doifile.metadata["urls"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
+            MimetypeService().set(multihash_base58, doifile.metadata["mimetype"],verbose=verbose)
             # WE'd like to stroe the sha1, but havent figured out how to reverse the hex string to binary adnd then multihash
         if verbose: print("DOI.__init__ completing")
 
@@ -108,7 +109,7 @@ class DOI(NameResolverDir):
         # Currently Nothing done here other than superclass adding to list.
         super(DOI, self).push(doifile)
 
-    def content(self):
+    def content(self, verbose=False):
         #TODO replace with something that reads out fields of object
         return {'Content-type': 'application/json',
             'data': {
@@ -134,11 +135,20 @@ class DOI(NameResolverDir):
         return publisher.lower() + "/" + "/".join([i.lower() for i in identifier])
 
 
-    def check_if_link_works(self, url):
+    def check_if_link_works(self, url, verbose):
         '''
         See if a link is valid (i.e., returns a '200' to the HTML request).
         '''
-        request = requests.get(url)
+	if verbose: print("check_if_link_works",url)
+	print "XXX@check_if_link_works - dummied out"
+	#return True
+	try:
+            	headers = {"accept": "*/*"}
+		# This next link can fail, it follows a redirection and then can fail on th actual PDF, which isnt what we want cos we'll use a Archive URL
+        	request = requests.get(url, headers=headers)
+	except Exception as e:
+		print "Request failed XXX",e
+	if verbose: print("result=", request.status_code)
         if request.status_code == 200:
             return True
         elif request.status_code == 404:
@@ -154,12 +164,12 @@ class DOI(NameResolverDir):
         :return: metadata on the doi in json format
         """
         url = "http://dx.doi.org/" + self.doi
-	if verbose: print "get_doi_metadata at",url
-        if self.check_if_link_works(url):
-            headers = {"accept": "application/vnd.citationstyles.csl+json"}
-            r = requests.get(url, headers=headers)
-	    if verbose: print "get_doi_metadata returned:",rr
-            self.metadata = r.json()
+        headers = {"accept": "application/vnd.citationstyles.csl+json"}
+        r = requests.get(url, headers=headers) # Note that with headers it wont redirect, without it will go to doc which may fail
+	if verbose: print "get_doi_metadata returned:",r
+	if r.status_code == 200:
+        	self.metadata = r.json()
+	# If dont get metadata, the rest of our info may still be valid
 
 
 class DOIfile(NameResolverFile):

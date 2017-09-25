@@ -1,7 +1,7 @@
 from NameResolver import NameResolverDir, NameResolverFile
 from miscutils import multihashsha256_58, httpget
-from Errors import TransportURLNotFound, CodingException
-from HashStore import LocationService
+from Errors import TransportURLNotFound, CodingException, NoContentException
+from HashStore import LocationService, MimetypeService
 import requests
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
@@ -23,16 +23,18 @@ class ContentHash(NameResolverFile):
         Creates the object
 
         :param namespace:   "contenthash"
-        :param multihash:   Base58 representation of multihash (may support other bases later)
+        :param multihash:   Base58 representation of multihash (could be sha256 or sha1, we may not have both)
         :param kwargs:      Any other args to the URL, ignored for now.
         """
         """
         Pseudo-code
         Looks up the multihash in Location Service to find where can be retrieved from.
         """
+	verbose=kwargs.get("verbose")
         if namespace != "contenthash":
             raise CodingException("namespace != contenthash")
-        self.url = LocationService().get(multihashsha256_58) #TODO-FUTURE recognize different types of location, currently assumes URL
+        self.url = LocationService().get(multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
+	self.mimetype = MimetypeService().get(multihash58, verbose) #TODO use a single service set at init
 
     def push(self):
         """
@@ -41,11 +43,14 @@ class ContentHash(NameResolverFile):
         """
         pass # Note could probably be defined on NameResolverFile class
 
-    def content(self):
+    def content(self, verbose=False):
         # Returns the content - i.e. bytes
         #TODO-STREAMS future work to return a stream
+	if not self.url:
+		raise NoContentException()
         data = httpget(self.url)
-        return {'Content-type': 'application/json',
+	if verbose: print("Retrieved doc size=",len(data))
+        return {'Content-type': self.mimetype,
             'data': data,
         }
 

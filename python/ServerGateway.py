@@ -109,11 +109,13 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     # call a method on it, or create an output class.
     @exposed
     def content(self, namespace, *args, **kwargs):
-        return self.namespaceclasses[namespace](namespace, *args, **kwargs).content()   # { Content-Type: xxx; data: "bytes" }
+	verbose = kwargs.get("verbose")
+        return self.namespaceclasses[namespace](namespace, *args, **kwargs).content(verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def contenthash(self, namespace, *args, **kwargs):
-        return self.namespaceclasses[namespace](namespace, *args, **kwargs).contenthash()
+	verbose = kwargs.get("verbose")
+        return self.namespaceclasses[namespace](namespace, *args, **kwargs).contenthash(verbose=verbose)
 
     # Now complex ones where have to create a class to handle conversion e.g. IPLDdirs
 
