@@ -40,7 +40,7 @@ NAMES = {
     'blake2s':  BLAKE2S,
 }
 
-CODES = dict((v, k) for k, v in NAMES.items())
+CODES = dict((v, k) for k, v in list(NAMES.items()))
 
 LENGTHS = {
     'sha1':    20,

@@ -22,7 +22,7 @@ class MyBaseException(Exception):
         try:
             return self.msg.format(**self.msgargs)
         except:
-            return self.msg+" "+unicode(self.msgargs)
+            return self.msg+" "+str(self.msgargs)
 
 class ToBeImplementedException(MyBaseException):
     """

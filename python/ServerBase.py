@@ -3,9 +3,7 @@ from .miscutils import dumps # Use our own version of dumps - more compact and h
 from json import loads      # Not our own loads since dumps is JSON compliant
 from sys import version as python_version
 from cgi import parse_header, parse_multipart
-import urllib
-import BaseHTTPServer       # See https://docs.python.org/2/library/basehttpserver.html for docs on how servers work
-                            # also /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/BaseHTTPServer.py for good error code list
+import urllib.request, urllib.parse, urllib.error
 #from Dweb import Dweb      # Import Dweb library (wont use for Academic project
 #TODO-API needs writing up
 
@@ -17,17 +15,21 @@ This file is intended to be Application independent , i.e. not dependent on Dweb
 #TODO-HTTPSERVER - this needs modifying to match the two-stage server process in the README.MD
 
 if python_version.startswith('3'):
-    from urllib.parse import parse_qs, parse_qs, urlparse
+    from urllib.parse import parse_qs, parse_qs, urlparse, unquote
     from http.server import BaseHTTPRequestHandler
+    from socketserver import ThreadingMixIn
 else:   # Python 2
     from urlparse import parse_qs, parse_qsl, urlparse        # See https://docs.python.org/2/library/urlparse.html
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+    from urllib import unquote
     from SocketServer import ThreadingMixIn
     import threading
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+            # See https://docs.python.org/2/library/basehttpserver.html for docs on how servers work
+            # also /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/BaseHTTPServer.py for good error code list
 
 import traceback
 
-from Errors import MyBaseException, ToBeImplementedException
+from .Errors import MyBaseException, ToBeImplementedException
 #from Transport import TransportBlockNotFound, TransportFileNotFound
 #from TransportHTTP import TransportHTTP
 
@@ -60,7 +62,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     exposed = []
     protocol_version = "HTTP/1.1"
     onlyexposed = False  # Dont Limit to @exposed functions (override in subclass if using @exposed)
-    defaultipandport = { "ipandport": (u'localhost', 8080) }
+    defaultipandport = { "ipandport": ('localhost', 8080) }
     expectedExceptions = () # List any exceptions that you "expect" (and dont want stacktraces for)
 
     @classmethod
@@ -99,7 +101,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             o = urlparse(self.path)             # Parsed URL {path:"/foo/aaa/bbb", query: "bbb?x=ccc,y=ddd"}
 
             # Get url args, remove HTTP quote (e.g. %20=' '), ignore leading / and anything before it. Will always be at least one item (empty after /)
-            args = [ urllib.unquote(u) for u in o.path.split('/')][1:]
+            args = [ unquote(u) for u in o.path.split('/')][1:]
             cmd = args.pop(0)                   # foo
             kwargs = dict(parse_qsl(o.query))  # { baz: bbb, bar: aaa }
             kwargs.update(postvars)
@@ -122,12 +124,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 #elif hasattr(data, "dumps"):                # Unclear if this is used except maybe in TransportDist_Peer
                 #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
                 #    data = dumps(data)            # And maype this should be data.dumps()
-                if not isinstance(data, basestring):
+                if not isinstance(data, str):
                     print(data)
                     # Raise an exception - will not honor the status already sent, but this shouldnt happen as coding
                     # error in the dispatched function if it returns anything else
                     raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
-                if isinstance(data, unicode):
+                if isinstance(data, str):
                     print("XXX converting to unicode")
                     data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary
             self.send_header('content-length', str(len(data)) if data else 0)
@@ -180,7 +182,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 length = int(self.headers['content-length'])
                 postvars = { p: (q[0] if (isinstance(q, list) and len(q)==1) else q) for p,q in parse_qs(
                     self.rfile.read(length),
-                    keep_blank_values=1).iteritems() }
+                    keep_blank_values=1).items() }
             elif ctype in ('application/octet-stream', 'text/plain'):  # Block sends this
                 length = int(self.headers['content-length'])
                 postvars = {"data": self.rfile.read(length)}

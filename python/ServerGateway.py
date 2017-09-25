@@ -57,7 +57,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
 
 
-    defaulthttpoptions = { "ipandport": (u'localhost', 4244) }
+    defaulthttpoptions = { "ipandport": ('localhost', 4244) }
     onlyexposed = True          # Only allow calls to @exposed methods
     expectedExceptions = []     # List any exceptions that you "expect" (and dont want stacktraces for)
 
@@ -132,5 +132,5 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         #TODO-XXXX Mitra has got to here.
 
 if __name__ == "__main__":
-    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': (u'localhost',4244)}) # Run local gateway
+    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}) # Run local gateway
 
