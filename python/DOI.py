@@ -20,6 +20,8 @@ class DOI(NameResolverDir):
     Future Work
     * Build way to preload the hashstore with the hashes and URLs from the sqlite
     """
+    # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
+    SQLITE="idents_files_urls_sqlite"
 
     def __init__(self, namespace, publisher, *identifier, **kwargs):
         """
@@ -45,7 +47,7 @@ class DOI(NameResolverDir):
         if verbose: print("DOI.__init__",namespace,publisher,identifier)
         super(DOI,self).__init__(namespace, publisher, *identifier)
         if verbose: print("DOI.__init__ connecting to DB")
-        db = sqlite3.connect('../data/idents_files_urls_sqlite')
+        db = sqlite3.connect(self.SQLITE)
         if verbose: print("DOI.__init__ connected to DB")
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self.metadata = {}

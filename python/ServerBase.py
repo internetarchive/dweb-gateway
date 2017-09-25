@@ -15,8 +15,8 @@ This file is intended to be Application independent , i.e. not dependent on Dweb
 #TODO-HTTPSERVER - this needs modifying to match the two-stage server process in the README.MD
 
 if python_version.startswith('3'):
-    from urllib.parse import parse_qs, parse_qs, urlparse, unquote
-    from http.server import BaseHTTPRequestHandler
+    from urllib.parse import parse_qs, parse_qsl, urlparse, unquote
+    from http.server import BaseHTTPRequestHandler, HTTPServer
     from socketserver import ThreadingMixIn
 else:   # Python 2
     from urlparse import parse_qs, parse_qsl, urlparse        # See https://docs.python.org/2/library/urlparse.html
