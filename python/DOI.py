@@ -48,10 +48,12 @@ class DOI(NameResolverDir):
         if verbose: print("DOI.__init__",namespace,publisher,identifier)
         super(DOI,self).__init__(namespace, publisher, *identifier)
         if verbose: print("DOI.__init__ connecting to DB")
-        db = sqlite3.connect('../data/idents_files_urls.sqlite')
+        db = sqlite3.connect('../data/idents_files_urls_sqlite')
+        if verbose: print("DOI.__init__ connected to DB")
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self.metadata = {}
-        self.get_doi_metadata()
+        if verbose: print("DOI.__init__ getting metadata for",self.doi)
+        self.get_doi_metadata(verbose)
         if verbose: print("DOI.__init__ looking up",self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
@@ -145,16 +147,18 @@ class DOI(NameResolverDir):
             return 'error'
 
 
-    def get_doi_metadata(self):
+    def get_doi_metadata(self, verbose):
         """
         For a DOI, get metadata from doi.org about that file
         TODO: pick which fields want to analyze, e.g. 
         :return: metadata on the doi in json format
         """
         url = "http://dx.doi.org/" + self.doi
+	if verbose: print "get_doi_metadata at",url
         if self.check_if_link_works(url):
             headers = {"accept": "application/vnd.citationstyles.csl+json"}
             r = requests.get(url, headers=headers)
+	    if verbose: print "get_doi_metadata returned:",rr
             self.metadata = r.json()
 
 
