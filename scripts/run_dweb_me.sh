@@ -18,7 +18,7 @@ fi
 if [ ! -f data/idents_files_urls.sqlite ]
 then
 	curl -L -o data/idents_files_urls_sqlite.gz https://archive.org/download/ia_papers_manifest_20170919/index/idents_files_urls.sqlite.gz
-	gunzip data/idents_files_urls.sqlite.gz
+	gunzip data/idents_files_urls_sqlite.gz
 fi
 cd python
 if ps -ef | grep ServerGateway | grep -v grep
