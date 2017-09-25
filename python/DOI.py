@@ -33,7 +33,6 @@ class DOI(NameResolverDir):
                             Its an array, because may be multiple fields seperated by /, can safely re-concatenate
         :param kwargs:      Any other args to the URL, ignored for now.
         """
-        #TODO read from sqlite table
         #Note if you dont have your own way of using sqlite I suggest SqliteWrap from https://github.com/mitra42/sqlite_models
         """
         Pseudo-code
@@ -147,10 +146,12 @@ class DOI(NameResolverDir):
         :return: metadata on the doi in json format
         """
         url = "http://dx.doi.org/" + self.doi
+        print("get_doi_metadata for",url)
         if self.check_if_link_works(url):
             headers = {"accept": "application/vnd.citationstyles.csl+json"}
             r = requests.get(url, headers=headers)
             self.metadata = r.json()
+        print("got_doi_metadata for",url)
 
 
 class DOIfile(NameResolverFile):
