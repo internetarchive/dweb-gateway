@@ -1,13 +1,11 @@
-from NameResolver import NameResolverDir, NameResolverFile
-from miscutils import multihashsha256_58, multihashsha1_58, httpget
+from .NameResolver import NameResolverDir, NameResolverFile
 import sqlite3
-from HashStore import LocationService, MimetypeService
+from .miscutils import httpget
+from .HashStore import LocationService, MimetypeService
 import requests
 import multihash
 import base58
 
-
-#TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
 class DOI(NameResolverDir):
     """
@@ -43,7 +41,7 @@ class DOI(NameResolverDir):
         *   Create a DOIfile(..)
         *   self.push(DOIfile)
         """
-	verbose=kwargs.get("verbose",False)
+        verbose=kwargs.get("verbose",False)
         if verbose: print("DOI.__init__",namespace,publisher,identifier)
         super(DOI,self).__init__(namespace, publisher, *identifier)
         if verbose: print("DOI.__init__ connecting to DB")
@@ -134,26 +132,23 @@ class DOI(NameResolverDir):
         return publisher.lower() + "/" + "/".join([i.lower() for i in identifier])
 
 
-    def check_if_link_works(self, url, verbose):
-        '''
+    def check_if_link_works(self, url, verbose=False):
+        """
         See if a link is valid (i.e., returns a '200' to the HTML request).
-        '''
-	if verbose: print("check_if_link_works",url)
-	print "XXX@check_if_link_works - dummied out"
-	#return True
-	try:
-            	headers = {"accept": "*/*"}
-		# This next link can fail, it follows a redirection and then can fail on th actual PDF, which isnt what we want cos we'll use a Archive URL
-        	request = requests.get(url, headers=headers)
-	except Exception as e:
-		print "Request failed XXX",e
-	if verbose: print("result=", request.status_code)
-        if request.status_code == 200:
-            return True
-        elif request.status_code == 404:
-            return False
-        else:
-            return 'error'
+        """
+        if verbose:
+            print("check_if_link_works",url)
+        print("XXX@check_if_link_works - dummied out")
+        #return True
+        try:
+            headers = {"accept": "*/*"}
+            # This next link can fail, it follows a redirection and then can fail on th actual PDF, which isnt what we want cos we'll use a Archive URL
+            request = requests.get(url, headers=headers)
+        except Exception as e:
+            print("Request failed XXX",e)
+            raise e
+        if verbose: print("result=", request.status_code)
+        return request.status_code == 200
 
 
     def get_doi_metadata(self, verbose):
@@ -165,16 +160,17 @@ class DOI(NameResolverDir):
         url = "http://dx.doi.org/" + self.doi
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
         r = requests.get(url, headers=headers) # Note that with headers it wont redirect, without it will go to doc which may fail
-	if verbose: print "get_doi_metadata returned:",r
-	if r.status_code == 200:
-        	self.metadata = r.json()
-	# If dont get metadata, the rest of our info may still be valid
+        if verbose: print("get_doi_metadata returned:",r)
+        if r.status_code == 200:
+            self.metadata = r.json()
+        # If dont get metadata, the rest of our info may still be valid
 
 class DOIfile(NameResolverFile):
     """
     Class for one file
     """
     def __init__(self, metadata):
+        super(NameResolverFile, self).__init__(metadata)
         self.metadata = metadata    # For now all in one dict
 
     def retrieve(self):
@@ -192,7 +188,6 @@ if __name__ == '__main__':
     doi = DOI("doi", *sys.argv[1].split('/'))
 
     for i in doi.files():
-        print i
-        print i.content()
-
+        print(i)
+        print(i.content())
 

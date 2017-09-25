@@ -1,5 +1,5 @@
 # encoding: utf-8
-from miscutils import dumps # Use our own version of dumps - more compact and handles datetime etc
+from .miscutils import dumps # Use our own version of dumps - more compact and handles datetime etc
 from json import loads      # Not our own loads since dumps is JSON compliant
 from sys import version as python_version
 from cgi import parse_header, parse_multipart
@@ -61,7 +61,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     onlyexposed = False  # Dont Limit to @exposed functions (override in subclass if using @exposed)
     defaultipandport = { "ipandport": (u'localhost', 8080) }
-    expectedExceptions = [] # List any exceptions that you "expect" (and dont want stacktraces for)
+    expectedExceptions = () # List any exceptions that you "expect" (and dont want stacktraces for)
 
     @classmethod
     def serve_forever(cls, ipandport=None, verbose=False, **options):
@@ -115,7 +115,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
                 self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
             data = res.get("data","")
-            print "XXX@dispatch118",len(data)
+            print("XXX@dispatch118",len(data))
             if data or isinstance(data, (list, tuple)): # Allow empty arrays toreturn as []
                 if isinstance(data, (dict, list, tuple)):    # Turn it into JSON
                     data = dumps(data)        # Does our own version to handle classes like datetime
@@ -128,11 +128,11 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     # error in the dispatched function if it returns anything else
                     raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
                 if isinstance(data, unicode):
-                    print "XXX converting to unicode"
+                    print("XXX converting to unicode")
                     data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary
             self.send_header('content-length', str(len(data)) if data else 0)
             self.end_headers()
-            print "XXX@dispatch134",len(data)
+            print("XXX@dispatch134",len(data))
             if data:
                 self.wfile.write(data)                   # Write content of result if applicable
             #self.wfile.close()
@@ -147,7 +147,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
     def do_GET(self):
-        #print "XXX@do_GET:145";
+        #print("XXX@do_GET:145");
         self._dispatch()
 
     def do_OPTIONS(self):

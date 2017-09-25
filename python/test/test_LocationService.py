@@ -7,10 +7,10 @@ VALUE = "testvalue"
 
 def test_hash_store():
     hs = HashStore.HashStore()
-    hs.hash_push(MULTIHASH, FIELD, VALUE)
+    hs.hash_set(MULTIHASH, FIELD, VALUE)
     assert hs.hash_get(MULTIHASH, FIELD) == VALUE
 
 def test_location_service():
     ls = HashStore.LocationService()
-    ls.location_push(MULTIHASH, VALUE)
-    ls.location_get(MULTIHASH)
+    ls.set(MULTIHASH, VALUE)
+    ls.get(MULTIHASH)

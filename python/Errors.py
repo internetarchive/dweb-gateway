@@ -81,8 +81,8 @@ class TransportURLNotFound(MyBaseException):
     msg = "{url} not found"
 
 class NoContentException(MyBaseException):
-	httperror = 404
-	msg = "No content found"
+    httperror = 404
+    msg = "No content found"
 
 """
 
