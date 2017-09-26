@@ -116,7 +116,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
                 self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
             data = res.get("data","")
-            print("XXX@dispatch118",len(data))
             if data or isinstance(data, (list, tuple)): # Allow empty arrays toreturn as []
                 if isinstance(data, (dict, list, tuple)):    # Turn it into JSON
                     data = dumps(data)        # Does our own version to handle classes like datetime
@@ -137,7 +136,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
             self.send_header('content-length', str(len(data)) if data else 0)
             self.end_headers()
-            print("XXX@dispatch134",len(data))
             if data:
                 self.wfile.write(data)                   # Write content of result if applicable
             #self.wfile.close()
@@ -152,7 +150,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
     def do_GET(self):
-        #print("XXX@do_GET:145");
         self._dispatch()
 
     def do_OPTIONS(self):

@@ -22,7 +22,8 @@ class DOI(NameResolverDir):
     * Build way to preload the hashstore with the hashes and URLs from the sqlite
     """
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
-    SQLITE="data/idents_files_urls_sqlite"
+    SQLITE="data/idents_files_urls.sqlite"
+    _sqliteconnection=None
 
     def __init__(self, namespace, publisher, *identifier, **kwargs):
         """
@@ -47,13 +48,12 @@ class DOI(NameResolverDir):
         verbose=kwargs.get("verbose",False)
         if verbose: print("DOI.__init__",namespace,publisher,identifier)
         super(DOI,self).__init__(namespace, publisher, *identifier)
-        if verbose: print("DOI.__init__ connecting to DB")
-        db = sqlite3.connect(self.SQLITE)
-        if verbose: print("DOI.__init__ connected to DB")
+        db = self.sqliteconnection(verbose)
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self.metadata = {}
         if verbose: print("DOI.__init__ getting metadata for",self.doi)
-        self.get_doi_metadata(verbose)
+        self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
+        self.get_doi_metadata(verbose)  #TODO doesnt appear to be getting to result
         if verbose: print("DOI.__init__ looking up",self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
@@ -62,10 +62,10 @@ class DOI(NameResolverDir):
             _, the_sha1, _ = row
             files_metadata_list = list(db.execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [the_sha1]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
-            urls_list = list(db.execute('SELECT * FROM urls WHERE sha1 = ?;', [the_sha1]))
+            files_list = list(db.execute('SELECT * FROM urls WHERE sha1 = ?;', [the_sha1]))
             doifile = DOIfile({
                     'doi': self.doi,
-                    'urls': [self.archive_url(url) for url in urls_list],
+                    'files': [self.archive_url(file) for file in files_list],
                     'mimetype': mimetype,
                     'size_bytes': size_bytes,
                     'md5': md5,
@@ -79,14 +79,23 @@ class DOI(NameResolverDir):
             multihash_binary = multihash.encode(sha1_binary_hash, 0x11)
             multihash_base58 = base58.b58encode(bytes(multihash_binary))
             doifile.metadata["sha1multihash"] = multihash_base58
-            print(multihash_base58)
+            if verbose: print("multihash sha1 base58=",multihash_base58)
             self.push(doifile)
             #sha256hash = multihashsha256_58(doifile.retrieve())
             #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
-            LocationService().set(multihash_base58, doifile.metadata["urls"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
+            LocationService().set(multihash_base58, doifile.metadata["files"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
             MimetypeService().set(multihash_base58, doifile.metadata["mimetype"],verbose=verbose)
             # WE'd like to stroe the sha1, but havent figured out how to reverse the hex string to binary adnd then multihash
         if verbose: print("DOI.__init__ completing")
+
+    @classmethod
+    def sqliteconnection(cls, verbose=False):
+        if not cls._sqliteconnection:
+            if verbose: print("DOI.sqliteconnection connecting to DB")
+            cls._sqliteconnection = sqlite3.connect(cls.SQLITE)
+            if verbose: print("DOI.sqliteconnection connected to DB")
+        return cls._sqliteconnection
+
 
     @classmethod
     def archive_url(cls, row):
@@ -113,10 +122,11 @@ class DOI(NameResolverDir):
         super(DOI, self).push(doifile)
 
     def content(self, verbose=False):
-        #TODO replace with something that reads out fields of object
         return {'Content-type': 'application/json',
             'data': {
-                "urls": [
+                'metadata': self.metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
+                'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
+                "files": [
                     doifile.metadata for doifile in self.files()
                 ]
             }
@@ -151,7 +161,6 @@ class DOI(NameResolverDir):
             # This next link can fail, it follows a redirection and then can fail on th actual PDF, which isnt what we want cos we'll use a Archive URL
             request = requests.get(url, headers=headers)
         except Exception as e:
-            print("Request failed XXX",e)
             raise e
         if verbose: print("result=", request.status_code)
         return request.status_code == 200
@@ -168,7 +177,7 @@ class DOI(NameResolverDir):
         r = requests.get(url, headers=headers) # Note that with headers it wont redirect, without it will go to doc which may fail
         if verbose: print("get_doi_metadata returned:",r)
         if r.status_code == 200:
-            self.metadata = r.json()
+            self.doi_org_metadata = r.json()
         # If dont get metadata, the rest of our info may still be valid
 
 class DOIfile(NameResolverFile):

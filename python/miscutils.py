@@ -98,7 +98,6 @@ def httpget(url):
     try:
         r = requests.get(url)
         r.raise_for_status()
-        print("XXX@httpget content-type=", r.headers['content-type'], "encoding=", r.encoding)
         if r.encoding:
             return r.text
         else:
