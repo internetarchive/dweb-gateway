@@ -21,7 +21,7 @@ class DOI(NameResolverDir):
     * Build way to preload the hashstore with the hashes and URLs from the sqlite
     """
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
-    SQLITE="idents_files_urls_sqlite"
+    SQLITE="data/idents_files_urls_sqlite"
 
     def __init__(self, namespace, publisher, *identifier, **kwargs):
         """
@@ -71,7 +71,8 @@ class DOI(NameResolverDir):
                     'sha1': the_sha1,
                 })
             sha1_hash = doifile.metadata["sha1"]
-            sha1_binary_hash = sha1_hash.decode('hex')
+            #sha1_binary_hash = sha1_hash.decode('hex') #Python2
+            sha1_binary_hash = bytes.fromhex(sha1_hash) #Python3
             multihash_binary = multihash.encode(sha1_binary_hash, 0x11)
             multihash_base58 = base58.b58encode(bytes(multihash_binary))
             doifile.metadata["sha1multihash"] = multihash_base58

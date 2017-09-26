@@ -129,14 +129,16 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     # Raise an exception - will not honor the status already sent, but this shouldnt happen as coding
                     # error in the dispatched function if it returns anything else
                     raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
-                if isinstance(data, str):
+                if python_version.startswith('2') and isinstance(data, str): # Python3 should be unicode, need to be careful if convert
                     print("XXX converting to unicode")
                     data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary
             self.send_header('content-length', str(len(data)) if data else 0)
             self.end_headers()
             print("XXX@dispatch134",len(data))
             if data:
-                self.wfile.write(data)                   # Write content of result if applicable
+                if python_version.startswith('3'):
+                    data = bytes(data,"utf-8")
+                self.wfile.write(data)                   # Write content of result if applicable #PYTHON2
             #self.wfile.close()
 
         except Exception as e:         # Gentle errors, entry in log is sufficient (note line is app specific)
