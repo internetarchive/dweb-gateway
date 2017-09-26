@@ -1,15 +1,15 @@
 # encoding: utf-8
 #from Errors import _print
-from miscutils import mergeoptions
+from .miscutils import mergeoptions
 from sys import version as python_version
 if python_version.startswith('3'):
     pass
 else:
     pass
-from ServerBase import MyHTTPRequestHandler, exposed
-from DOI import DOI
-from ContentHash import ContentHash
-from IPLD import IPLDdir
+from .ServerBase import MyHTTPRequestHandler, exposed
+from .DOI import DOI
+from .ContentHash import ContentHash
+from .IPLD import IPLDdir
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -57,7 +57,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
 
 
-    defaulthttpoptions = { "ipandport": (u'localhost', 4244) }
+    defaulthttpoptions = { "ipandport": ('localhost', 4244) }
     onlyexposed = True          # Only allow calls to @exposed methods
     expectedExceptions = []     # List any exceptions that you "expect" (and dont want stacktraces for)
 
@@ -69,7 +69,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
 
     @classmethod
-    def DwebGatewayHTTPServeForever(cls, httpoptions={}, verbose=False):
+    def DwebGatewayHTTPServeForever(cls, httpoptions=None, verbose=False):
         """
         One instance of this will be created for each request, so don't override __init__()
         Initiate with something like: DwebGatewayHTTPRequestHandler.serve_forever()
@@ -77,8 +77,8 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
         :return: Never Returns
         """
-        httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions) # Deepcopy to merge options
-        if (verbose): print("Starting server with options=",httpoptions)
+        httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions or {}) # Deepcopy to merge options
+        if verbose: print("Starting server with options=", httpoptions)
         #any code needed once (not per thread) goes here.
         cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)    # Uses defaultipandport
 
@@ -109,12 +109,12 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     # call a method on it, or create an output class.
     @exposed
     def content(self, namespace, *args, **kwargs):
-	verbose = kwargs.get("verbose")
+        verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace](namespace, *args, **kwargs).content(verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def contenthash(self, namespace, *args, **kwargs):
-	verbose = kwargs.get("verbose")
+        verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace](namespace, *args, **kwargs).contenthash(verbose=verbose)
 
     # Now complex ones where have to create a class to handle conversion e.g. IPLDdirs
@@ -127,10 +127,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     def POST_storeipld(self, namespace, *args, **kwargs):
         data = kwargs["data"]
-        delete(kwargs["data"])
+        del kwargs["data"]
         obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
         #TODO-XXXX Mitra has got to here.
 
 if __name__ == "__main__":
-    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': (u'localhost',4244)}) # Run local gateway
+    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}) # Run local gateway
 

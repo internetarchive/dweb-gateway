@@ -4,3 +4,4 @@ idents_files_urls.sqlite
 .idea
 .cache
 python/.cache
+idents_files_urls_sqlite

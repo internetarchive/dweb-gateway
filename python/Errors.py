@@ -22,7 +22,7 @@ class MyBaseException(Exception):
         try:
             return self.msg.format(**self.msgargs)
         except:
-            return self.msg+" "+unicode(self.msgargs)
+            return self.msg+" "+str(self.msgargs)
 
 class ToBeImplementedException(MyBaseException):
     """
@@ -81,8 +81,8 @@ class TransportURLNotFound(MyBaseException):
     msg = "{url} not found"
 
 class NoContentException(MyBaseException):
-	httperror = 404
-	msg = "No content found"
+    httperror = 404
+    msg = "No content found"
 
 """
 

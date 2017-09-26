@@ -1,8 +1,7 @@
-from NameResolver import NameResolverDir, NameResolverFile
-from miscutils import multihashsha256_58, httpget
-from Errors import TransportURLNotFound, CodingException, NoContentException
-from HashStore import LocationService, MimetypeService
-import requests
+from .NameResolver import NameResolverFile
+from .miscutils import httpget
+from .Errors import CodingException, NoContentException
+from .HashStore import LocationService, MimetypeService
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -30,13 +29,14 @@ class ContentHash(NameResolverFile):
         Pseudo-code
         Looks up the multihash in Location Service to find where can be retrieved from.
         """
-	verbose=kwargs.get("verbose")
+        super(ContentHash, self).__init__(self, namespace, multihash58, **kwargs)
+        verbose=kwargs.get("verbose")
         if namespace != "contenthash":
-            raise CodingException("namespace != contenthash")
+            raise CodingException(message="namespace != contenthash")
         self.url = LocationService().get(multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
-	self.mimetype = MimetypeService().get(multihash58, verbose) #TODO use a single service set at init
+        self.mimetype = MimetypeService().get(multihash58, verbose) #TODO use a single service set at init
 
-    def push(self):
+    def push(self, obj):
         """
         Add a Shard to a ContentHash -
         :return:
@@ -46,13 +46,12 @@ class ContentHash(NameResolverFile):
     def content(self, verbose=False):
         # Returns the content - i.e. bytes
         #TODO-STREAMS future work to return a stream
-	if not self.url:
-		raise NoContentException()
+        if not self.url:
+            raise NoContentException()
         data = httpget(self.url)
-	if verbose: print("Retrieved doc size=",len(data))
+        if verbose: print("Retrieved doc size=", len(data))
         return {'Content-type': self.mimetype,
             'data': data,
-        }
+            }
 
     # def canonical - not needed as already in a canonical form
-
