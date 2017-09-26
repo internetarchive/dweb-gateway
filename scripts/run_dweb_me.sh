@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 PIPS="wheel multihash py-dateutil redis base58 pynacl" # No guarrantee this is the full list of dependencies might need: requests
 cd /usr/local/dweb_gateway
 #pip install --disable-pip-version-check -U $PIPS
