@@ -1,5 +1,5 @@
-from miscutils import multihashsha256_58
-from Errors import ToBeImplementedException
+from .miscutils import multihashsha256_58
+from .Errors import ToBeImplementedException
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
@@ -33,7 +33,14 @@ class NameResolver(object):
     def __init__(self, namespace, *args, **kwargs):
         self._list = []
 
-    def contenthash(self):
+    def content(self):
+        """
+
+        :return:
+        """
+        raise ToBeImplementedException(name=self.__class__.__name__+".content()")
+
+    def contenthash(self, verbose=False):
         """
         By default contenthash is the hash of the content.
 
@@ -54,8 +61,8 @@ class NameResolver(object):
 
         :param cls:
         :param namespace:
-        :param multihash58:
-        :return:
+        :param args:    List of arguments to URL
+        :return:        Concatenated args with / by default (subclasses will override)
         """
         return namespace, args.join('/')    # By default reconcatonate args
 
@@ -89,7 +96,7 @@ class NameResolverFile(NameResolver):
     """
     shardsize = 256000  # A default for shard size, TODO determine best size, subclasses can overwrite, or ignore for things like video.
 
-    def shards():
+    def shards(self):
         """
         Return an iterator that returns each of the NameResolverShard in the file's _list attribute.
         * Each time called, should:

@@ -1,4 +1,4 @@
-from OutputFormat import OutputFormat
+from .OutputFormat import OutputFormat
 
 #TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 

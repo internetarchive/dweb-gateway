@@ -70,7 +70,7 @@ class HashStore(object):
         :param value:
         :return:
         """
-	if verbose: print("Hash set:",multihash, field,"=",value)
+        if verbose: print("Hash set:",multihash, field,"=",value)
         self.r.hset(multihash, field, value)
 
     def hash_get(self, multihash, field, verbose=False):
@@ -81,8 +81,8 @@ class HashStore(object):
         :return:
         """
         res = self.r.hget(multihash, field)
-	if verbose: print("Hash found:",multihash, field,"=",res)
-	return res
+        if verbose: print("Hash found:",multihash, field,"=",res)
+        return res
 
 
     def set(self, multihash, location, verbose=False):

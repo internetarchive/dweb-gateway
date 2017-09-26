@@ -5,9 +5,9 @@ import json # Note dont "from json import dumps" as clashes with overdefined dum
 from base58 import b58encode
 from datetime import datetime
 import nacl.encoding
-from util_multihash import encode, SHA2_256, SHA1
-from Errors import ToBeImplementedException, TransportURLNotFound
+from .util_multihash import encode, SHA2_256, SHA1
 import requests
+from .Errors import ToBeImplementedException, TransportURLNotFound
 
 
 #TODO-PYTHON3 - file needs reviewing for Python2/3 compatability
@@ -35,7 +35,7 @@ def dumps(obj):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transport to
     Must be valid for loading with json.loads (unless change all calls to that).
     Exception: UnicodeDecodeError if data is binary
 
-    :param data:    Any
+    :param obj:    Any
     :return: JSON string that can be deterministically hashed or compared
     """
     # ensure_ascii = False was set otherwise if try and read binary content, and embed as "data" in StructuredBlock then complains
@@ -52,7 +52,7 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
     :param obj: Anything json dumps can't serialize
     :return: string for extended types
     """
-    if isinstance(obj, (datetime,)):    # Using isinstance rather than hasattr because __getattr__ always returns true
+    if isinstance(obj, datetime):    # Using isinstance rather than hasattr because __getattr__ always returns true
     #if hasattr(obj,"isoformat"):  # Especially for datetime
         return obj.isoformat()
     try:
@@ -60,12 +60,14 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
     except Exception as e:
         raise TypeError("Type %s not serializable (%s %s)" % (obj.__class__.__name__, e.__class__.__name__, e))
 
+
 def sha256(data): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from KeyPair to miscutils
     """
     data:       String or Buffer containing string of arbitrary length
     returns:    32 byte Uint8Array with SHA256 hash
     """
     return nacl.hash.sha256(data, encoder=nacl.encoding.RawEncoder)
+
 
 def multihashsha256_58(data):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from KeyPair to miscutils
     """
@@ -76,6 +78,7 @@ def multihashsha256_58(data):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved fro
     """
     return b58encode(bytes(encode(data, SHA2_256)))
 
+
 def multihashsha1_58(sha1):
     output = bytearray([SHA1, len(sha1)])
     output.extend(sha1)
@@ -84,7 +87,7 @@ def multihashsha1_58(sha1):
 
 def multihash(sha1=None, sha256=None):
     """
-    TODO: convert sha1 or sha256 into multihash (look at "encode" in multihasha256_58 for the last few lines where it builds one from a bytearray.
+    TODO: convert sha1 or sha256 into multihash (look at "encode" in multihash256_58 for the last few lines where it builds one from a bytearray.
     """
     raise ToBeImplementedException(name="multihash")
 
@@ -93,19 +96,24 @@ def httpget(url):
     # Returns the content - i.e. bytes
     #TODO-STREAMS future work to return a stream
 
+    r = None  # So that if exception in get, r is still defined and can be tested for None
     try:
-	r = None # So that if exception in get, r is still defined and can be tested for None
         r = requests.get(url)
         r.raise_for_status()
+        print("XXX@httpget content-type=", r.headers['content-type'], "encoding=", r.encoding)
+        if r.encoding:
+            return r.text
+        else:
+            return r.content  # Should work for PDF or other binary types
+        #TODO-STREAM support streams in future
+
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
         if r is not None and (r.status_code == 404):
-            raise TransportURLNotFound(url=self.url)
-	else:
-		print e.__class__.__name__, e
-		raise e
-    except (requests.exceptions.MissingSchema,) as e:
-            print e.__class__.__name__, e
+            raise TransportURLNotFound(url=url)
+        else:
+            print(e.__class__.__name__, e)
+            raise e
+    except requests.exceptions.MissingSchema as e:
+            print(e.__class__.__name__, e)
             # TODO-LOGGING: logger.error(e)
             raise e  # For now just raise it
-    print "XXX@110",r.text.__class__.__name__
-    return r.text   #TODO-STREAM support streams in future
