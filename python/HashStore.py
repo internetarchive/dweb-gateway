@@ -59,8 +59,8 @@ class HashStore(object):
 
     @classmethod
     def redis(cls):
-        print("HashStore connecting to Redis")
         if not cls._redis:
+            print("HashStore connecting to Redis")
             cls._redis = redis.StrictRedis(
                 host="localhost",
                 port=6379,
