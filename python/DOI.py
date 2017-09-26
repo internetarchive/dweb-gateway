@@ -5,6 +5,7 @@ from .HashStore import LocationService, MimetypeService
 import requests
 import multihash
 import base58
+from sys import version as python_version
 
 
 class DOI(NameResolverDir):
@@ -71,8 +72,10 @@ class DOI(NameResolverDir):
                     'sha1': the_sha1,
                 })
             sha1_hash = doifile.metadata["sha1"]
-            #sha1_binary_hash = sha1_hash.decode('hex') #Python2
-            sha1_binary_hash = bytes.fromhex(sha1_hash) #Python3
+            if python_version.startswith('2'):
+                sha1_binary_hash = sha1_hash.decode('hex') #Python2
+            else:
+                sha1_binary_hash = bytes.fromhex(sha1_hash) #Python3
             multihash_binary = multihash.encode(sha1_binary_hash, 0x11)
             multihash_base58 = base58.b58encode(bytes(multihash_binary))
             doifile.metadata["sha1multihash"] = multihash_base58
@@ -177,7 +180,7 @@ class DOIfile(NameResolverFile):
         self.metadata = metadata    # For now all in one dict
 
     def retrieve(self):
-        return httpget(self.metadata["urls"][0]) #TODO-PYTHON3 will need changing
+        return httpget(self.metadata["urls"][0])
 
     def content(self):
         #TODO iterate over urls and find first matching hash

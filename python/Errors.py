@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-#TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
-
 class MyBaseException(Exception):
     """
     Base class for Exceptions
@@ -22,7 +20,7 @@ class MyBaseException(Exception):
         try:
             return self.msg.format(**self.msgargs)
         except:
-            return self.msg+" "+str(self.msgargs)
+            return self.msg + " UNFORMATABLE ARGS:" + repr(self.msgargs)
 
 class ToBeImplementedException(MyBaseException):
     """

@@ -3,14 +3,12 @@ from .miscutils import dumps # Use our own version of dumps - more compact and h
 from json import loads      # Not our own loads since dumps is JSON compliant
 from sys import version as python_version
 from cgi import parse_header, parse_multipart
-import urllib.request, urllib.parse, urllib.error
 #from Dweb import Dweb      # Import Dweb library (wont use for Academic project
 #TODO-API needs writing up
 
 """
 This file is intended to be Application independent , i.e. not dependent on Dweb Library
 """
-#TODO-PYTHON3 - this file needs review for Python2/3 compatability
 
 #TODO-HTTPSERVER - this needs modifying to match the two-stage server process in the README.MD
 
@@ -124,23 +122,22 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 #elif hasattr(data, "dumps"):                # Unclear if this is used except maybe in TransportDist_Peer
                 #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
                 #    data = dumps(data)            # And maype this should be data.dumps()
+                if isinstance(data, str):
+                    print("XXX converting to unicode")
+                    if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
+                        data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary -- its still a string
+                    if python_version.startswith('3'):
+                        data = bytes(data,"utf-8")  # In Python3 requests wont work on strings, have to convert to bytes explicitly
                 if not isinstance(data, (bytes, str)):
                     print(data)
                     # Raise an exception - will not honor the status already sent, but this shouldnt happen as coding
                     # error in the dispatched function if it returns anything else
                     raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
-                if isinstance(data, str):
-                    print("XXX converting to unicode")
-                    if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
-                        data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary
-                    if python_version.startswith('3'):
-                        data = bytes(data,"utf-8")
-
             self.send_header('content-length', str(len(data)) if data else 0)
             self.end_headers()
             print("XXX@dispatch134",len(data))
             if data:
-                self.wfile.write(data)                   # Write content of result if applicable #PYTHON2
+                self.wfile.write(data)                   # Write content of result if applicable
             #self.wfile.close()
 
         except Exception as e:         # Gentle errors, entry in log is sufficient (note line is app specific)
@@ -186,7 +183,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 length = int(self.headers['content-length'])
                 postvars = { p: (q[0] if (isinstance(q, list) and len(q)==1) else q) for p,q in parse_qs(
                     self.rfile.read(length),
-                    keep_blank_values=1).items() }
+                    keep_blank_values=1).items() }  # In Python2 this was iteritems, I think items will work in both cases.
             elif ctype in ('application/octet-stream', 'text/plain'):  # Block sends this
                 length = int(self.headers['content-length'])
                 postvars = {"data": self.rfile.read(length)}

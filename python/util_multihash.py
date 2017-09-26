@@ -1,8 +1,6 @@
 # From: https://github.com/tehmaze/python-multihash
 # It doesnt appear to be on Pip
 
-#TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
-
 """Multihash implementation in Python."""
 
 import hashlib

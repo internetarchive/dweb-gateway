@@ -10,8 +10,6 @@ import requests
 from .Errors import ToBeImplementedException, TransportURLNotFound
 
 
-#TODO-PYTHON3 - file needs reviewing for Python2/3 compatability
-
 def mergeoptions(a, b):
     """
     Deep merge options dictionaries

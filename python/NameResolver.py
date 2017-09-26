@@ -1,7 +1,6 @@
 from .miscutils import multihashsha256_58
 from .Errors import ToBeImplementedException
 
-#TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
 
 class NameResolver(object):
     """

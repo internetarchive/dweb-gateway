@@ -1,7 +1,8 @@
 #!/bin/bash
 
-PIPS="multihash py-dateutil redis base58 pynacl"
+PIPS="wheel multihash py-dateutil redis base58 pynacl" # No guarrantee this is the full list of dependencies might need: requests
 cd /usr/local/dweb_gateway
+#pip install --disable-pip-version-check -U $PIPS
 pip3 install --disable-pip-version-check -U $PIPS
 [ -d data ] || mkdir data
 git commit -a -m "Changes made on server" && git push
@@ -20,6 +21,7 @@ then
 	echo "You need to kill that process above first"
 else
     echo "Starting Server "
+    #cd python; python -m ServerGateway & # Python 2, but note relative paths also switched so wont work
     python3 -m python.ServerGateway &
     ps -ef | grep ServerGateway | grep -v grep
 fi

@@ -3,8 +3,6 @@ from .miscutils import httpget
 from .Errors import CodingException, NoContentException
 from .HashStore import LocationService, MimetypeService
 
-#TODO-PYTHON3 file needs reviewing for Python3 as well as Python2
-
 class ContentHash(NameResolverFile):
     """
     ContentHash is a class for retrieval by content hash
