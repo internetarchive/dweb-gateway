@@ -111,7 +111,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
             # Send the content-type
             self.send_response(200)  # Send an ok response
-            self.send_header('Content-type', res.get("Content-type","application/octet-stream"))
+            contenttype = res.get("Content-type","application/octet-stream")
+            self.send_header('Content-type', contenttype)
             if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
                 self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
             data = res.get("data","")
@@ -123,9 +124,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
                 #    data = dumps(data)            # And maype this should be data.dumps()
                 if isinstance(data, str):
-                    print("XXX converting to unicode")
+                    print("converting to utf8")
                     if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
-                        data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary -- its still a string
+                        if contenttype.startswith('text') or contenttype in ('application/json',): # Only convert types we know are strings that could be unicode
+                        	data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary -- its still a string
                     if python_version.startswith('3'):
                         data = bytes(data,"utf-8")  # In Python3 requests wont work on strings, have to convert to bytes explicitly
                 if not isinstance(data, (bytes, str)):
