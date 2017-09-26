@@ -59,15 +59,15 @@ class HashStore(object):
 
     @classmethod
     def redis(cls):
-        if not cls._redis:
+        if not HashStore._redis:
             print("HashStore connecting to Redis")
-            cls._redis = redis.StrictRedis(
+            HashStore._redis = redis.StrictRedis(   # Note uses HashStore cos this connection is shared across subclasses
                 host="localhost",
                 port=6379,
                 db=0,
                 decode_responses=True
             )
-        return cls._redis
+        return HashStore._redis
 
     def __init__(self):
         raise CodingException(message="It is meaningless to instantiate an instance of HashStore, its all class methods")
