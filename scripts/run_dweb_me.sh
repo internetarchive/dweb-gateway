@@ -2,7 +2,7 @@
 
 PIPS="multihash py-dateutil redis base58 pynacl"
 cd /usr/local/dweb_gateway
-pip install --disable-pip-version-check -U $PIPS
+pip3 install --disable-pip-version-check -U $PIPS
 [ -d data ] || mkdir data
 if git commit -a -m "Changes made on server"
 then
