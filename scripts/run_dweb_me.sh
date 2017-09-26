@@ -4,17 +4,11 @@ PIPS="multihash py-dateutil redis base58 pynacl"
 cd /usr/local/dweb_gateway
 pip3 install --disable-pip-version-check -U $PIPS
 [ -d data ] || mkdir data
-if git commit -a -m "Changes made on server"
-then
-	git push
-fi
+git commit -a -m "Changes made on server" && git push
 git checkout deployed # Will run server branch
 git pull
 git merge origin/deployable
-if git commit -a -m "merged"
-then
-	git push
-fi
+git commit -a -m "merged" && git push
 if [ ! -f data/idents_files_urls_sqlite ]
 then
 	curl -L -o data/idents_files_urls_sqlite.gz https://archive.org/download/ia_papers_manifest_20170919/index/idents_files_urls.sqlite.gz
