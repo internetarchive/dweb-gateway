@@ -1,7 +1,7 @@
 from .NameResolver import NameResolverDir, NameResolverFile
 import sqlite3
 from .miscutils import httpget
-from .HashStore import LocationService, MimetypeService
+from .HashStore import LocationService, MimetypeService, IPLDHashService
 import requests
 import multihash
 import base58
@@ -20,6 +20,8 @@ class DOI(NameResolverDir):
 
     Future Work
     * Build way to preload the hashstore with the hashes and URLs from the sqlite
+
+    TODO - ssome of this will end up in NameResolverDir as we build other classe and see commonalities
     """
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
     SQLITE="data/idents_files_urls.sqlite"
@@ -53,12 +55,13 @@ class DOI(NameResolverDir):
         self.metadata = {}
         if verbose: print("DOI.__init__ getting metadata for",self.doi)
         self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
-        self.get_doi_metadata(verbose)  #TODO doesnt appear to be getting to result
+        self.get_doi_metadata(verbose)
         if verbose: print("DOI.__init__ looking up",self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
         if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
         for row in sha1_list:
+            #TODO move some of this to DOIFile and get ContentHash to build a DOIfile
             _, the_sha1, _ = row
             files_metadata_list = list(db.execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [the_sha1]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
@@ -85,7 +88,12 @@ class DOI(NameResolverDir):
             #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
             LocationService().set(multihash_base58, doifile.metadata["files"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
             MimetypeService().set(multihash_base58, doifile.metadata["mimetype"],verbose=verbose)
-            # WE'd like to stroe the sha1, but havent figured out how to reverse the hex string to binary adnd then multihash
+            ipldhash = IPLDHashService().get(multihash_base58)    # May be None, we don't know it
+            if ipldhash:
+                doifile.metadata["ipldhash"] = ipldhash
+            else:
+                pass
+                #TODO-IPFS this is where we send the contenthash to IPFS
         if verbose: print("DOI.__init__ completing")
 
     @classmethod

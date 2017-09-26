@@ -85,20 +85,20 @@ class HashStore(object):
         return res
 
 
-    def set(self, multihash, location, verbose=False):
+    def set(self, multihash, value, verbose=False):
         """
 
         :param multihash:
         :param location:
         :return:
         """
-        return self.hash_set(multihash, self.redisfield, location, verbose)
+        return self.hash_set(multihash, self.redisfield, value, verbose)
 
     def get(self, multihash, verbose=False):
         """
 
         :param multihash:
-        :return: string
+        :return: string stored in Redis
         """
         return self.hash_get(multihash, self.redisfield, verbose)
 
@@ -119,4 +119,10 @@ class LocationService(HashStore):
 class MimetypeService(HashStore):
     redisfield="mimetype"
 
+class IPLDService(HashStore):
+    #TODO-IPFS may need to move this to ContentStore (which needs implementing)
+    redisfield="ipld"
+
+class IPLDHashService(HashStore):
+    redisfield="ipldhash"
 

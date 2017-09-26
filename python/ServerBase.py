@@ -10,8 +10,6 @@ from cgi import parse_header, parse_multipart
 This file is intended to be Application independent , i.e. not dependent on Dweb Library
 """
 
-#TODO-HTTPSERVER - this needs modifying to match the two-stage server process in the README.MD
-
 if python_version.startswith('3'):
     from urllib.parse import parse_qs, parse_qsl, urlparse, unquote
     from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -103,7 +101,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             cmd = args.pop(0)                   # foo
             kwargs = dict(parse_qsl(o.query))  # { baz: bbb, bar: aaa }
             kwargs.update(postvars)
-            func = getattr(self, cmd, None) # self.foo (should be a method)
+            func = getattr(self, self.command + "_" + cmd, None) or getattr(self, cmd, None) # self.POST_foo or self.foo (should be a method)
             if not func or (self.onlyexposed and not func.exposed):
                 raise HTTPdispatcherException(req=cmd)  # Will be caught in except
             res = func(*args, **kwargs)

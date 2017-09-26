@@ -1,15 +1,11 @@
 # encoding: utf-8
-#from Errors import _print
+#from sys import version as python_version
 from .miscutils import mergeoptions
-from sys import version as python_version
-if python_version.startswith('3'):
-    pass
-else:
-    pass
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
 from .ContentHash import ContentHash
 from .IPLD import IPLDdir
+from .Errors import ToBeImplementedException
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -120,15 +116,44 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     @exposed
     def iplddir(self, namespace, *args, **kwargs):
+        #TODO-IPLD This is not complete yet
         obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
         i = IPLDdir(obj)
         return i.content()
 
-    def POST_storeipld(self, namespace, *args, **kwargs):
+    def storeipld(self, namespace, *args, **kwargs):
+        """
+        Post a IPLD and store for a multihash
+
+        :param namespace:   Where to store this - must be "contenthash" currently
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        if namespace != "contenthash":
+            raise ToBeImplementedException(name="POST_storeipld for namespace="+namespace)
         data = kwargs["data"]
         del kwargs["data"]
-        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
-        #TODO-XXXX Mitra has got to here.
+        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)  # Construct our local object
+        IPLDfile.storeFromString(obj.multihash, data)   # Store IPLD and hash of IPLD
+        return {} # Empty return, just success
+
+    def storeipldhash(self, namespace, *args, **kwargs):
+        """
+        Post a IPLD and store for a multihash
+
+        :param namespace:   Where to store this - must be "contenthash" currently
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        if namespace != "contenthash":
+            raise ToBeImplementedException(name="POST_storeipld for namespace="+namespace)
+        data = kwargs["data"]   # multihash of IPLD that IPFS gateway has created
+        del kwargs["data"]
+        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)  # Construct our local object
+        IPLDfile.storeFromHash(obj.multihash, data)   # Store IPLD and hash of IPLD
+        return {} # Empty return, just success
 
 if __name__ == "__main__":
     DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}) # Run local gateway

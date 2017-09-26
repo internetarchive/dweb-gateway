@@ -31,19 +31,23 @@ class ContentHash(NameResolverFile):
         verbose=kwargs.get("verbose")
         if namespace != "contenthash":
             raise CodingException(message="namespace != contenthash")
+        self.multihash = multihash58
         self.url = LocationService().get(multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
         self.mimetype = MimetypeService().get(multihash58, verbose) #TODO use a single service set at init
+        #TODO - extend to look up content hash in other resources, including sqlite from DOI (ask those services e.g. DOI.contenthashsearch(multihash)
 
     def push(self, obj):
         """
         Add a Shard to a ContentHash -
         :return:
         """
-        pass # Note could probably be defined on NameResolverFile class
+        pass  # Note could probably be defined on NameResolverFile class
 
     def content(self, verbose=False):
-        # Returns the content - i.e. bytes
-        #TODO-STREAMS future work to return a stream
+        """
+        :returns:   content - i.e. bytes
+        """
+        # TODO-STREAMS future work to return a stream
         if not self.url:
             raise NoContentException()
         data = httpget(self.url)
