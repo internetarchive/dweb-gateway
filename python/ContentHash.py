@@ -32,8 +32,8 @@ class ContentHash(NameResolverFile):
         if namespace != "contenthash":
             raise CodingException(message="namespace != contenthash")
         self.multihash = multihash58
-        self.url = LocationService().get(multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
-        self.mimetype = MimetypeService().get(multihash58, verbose) #TODO use a single service set at init
+        self.url = LocationService.get(multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
+        self.mimetype = MimetypeService.get(multihash58, verbose) #TODO use a single service set at init
         #TODO - extend to look up content hash in other resources, including sqlite from DOI (ask those services e.g. DOI.contenthashsearch(multihash)
 
     def push(self, obj):

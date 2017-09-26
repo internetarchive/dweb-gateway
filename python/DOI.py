@@ -86,9 +86,9 @@ class DOI(NameResolverDir):
             self.push(doifile)
             #sha256hash = multihashsha256_58(doifile.retrieve())
             #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
-            LocationService().set(multihash_base58, doifile.metadata["files"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
-            MimetypeService().set(multihash_base58, doifile.metadata["mimetype"],verbose=verbose)
-            ipldhash = IPLDHashService().get(multihash_base58)    # May be None, we don't know it
+            LocationService.set(multihash_base58, doifile.metadata["files"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
+            MimetypeService.set(multihash_base58, doifile.metadata["mimetype"],verbose=verbose)
+            ipldhash = IPLDHashService.get(multihash_base58)    # May be None, we don't know it
             if ipldhash:
                 doifile.metadata["ipldhash"] = ipldhash
             else:

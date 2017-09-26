@@ -2,6 +2,7 @@
 Hash Store set of classes for storage and retrieval
 """
 import redis
+from .Errors import CodingException
 
 
 class HashStore(object):
@@ -53,54 +54,66 @@ class HashStore(object):
         else:
             return "", 404
     """
+    _redis = None   # Will be connected to a redis instance by redis()
+    redisfield = None   # Subclasses define this, and use set & get
+
+    @classmethod
+    def redis(cls):
+        print("HashStore connecting to Redis")
+        if not cls._redis:
+            cls._redis = redis.StrictRedis(
+                host="localhost",
+                port=6379,
+                db=0,
+                decode_responses=True
+            )
+        return cls._redis
 
     def __init__(self):
-        self.r = redis.StrictRedis(
-            host="localhost",
-            port=6379,
-            db=0,
-            decode_responses=True
-        )
+        raise CodingException(message="It is meaningless to instantiate an instance of HashStore, its all class methods")
 
-    def hash_set(self, multihash, field, value, verbose=False):
+    @classmethod
+    def hash_set(cls, multihash, field, value, verbose=False):
         """
-
         :param multihash:
         :param field:
         :param value:
         :return:
         """
-        if verbose: print("Hash set:",multihash, field,"=",value)
-        self.r.hset(multihash, field, value)
+        if verbose: print("Hash set:", multihash, field, "=", value)
+        cls.redis().hset(multihash, field, value)
 
-    def hash_get(self, multihash, field, verbose=False):
+    @classmethod
+    def hash_get(cls, multihash, field, verbose=False):
         """
 
         :param multihash:
         :param field:
         :return:
         """
-        res = self.r.hget(multihash, field)
-        if verbose: print("Hash found:",multihash, field,"=",res)
+        res = cls.redis().hget(multihash, field)
+        if verbose: print("Hash found:", multihash, field, "=", res)
         return res
 
-
-    def set(self, multihash, value, verbose=False):
+    @classmethod
+    def set(cls, multihash, value, verbose=False):
         """
 
         :param multihash:
-        :param location:
+        :param value:   What we want to store in the redisfield
         :return:
         """
-        return self.hash_set(multihash, self.redisfield, value, verbose)
+        return cls.hash_set(multihash, cls.redisfield, value, verbose)
 
-    def get(self, multihash, verbose=False):
+    @classmethod
+    def get(cls, multihash, verbose=False):
         """
 
         :param multihash:
         :return: string stored in Redis
         """
-        return self.hash_get(multihash, self.redisfield, verbose)
+        return cls.hash_get(multihash, cls.redisfield, verbose)
+
 
 class LocationService(HashStore):
     """
@@ -114,15 +127,17 @@ class LocationService(HashStore):
     The multihash represents a file or a part of a file. Build upon hashstore.
     It is split out because this could be a useful service on its own.
     """
-    redisfield="location"
+    redisfield = "location"
+
 
 class MimetypeService(HashStore):
-    redisfield="mimetype"
+    redisfield = "mimetype"
+
 
 class IPLDService(HashStore):
-    #TODO-IPFS may need to move this to ContentStore (which needs implementing)
-    redisfield="ipld"
+    # TODO-IPFS may need to move this to ContentStore (which needs implementing)
+    redisfield = "ipld"
+
 
 class IPLDHashService(HashStore):
-    redisfield="ipldhash"
-
+    redisfield = "ipldhash"
