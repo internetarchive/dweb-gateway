@@ -100,6 +100,13 @@ def httpget(url):
     try:
         r = requests.get(url)
         r.raise_for_status()
+        print("XXX@httpget content-type=", r.headers['content-type'], "encoding=", r.encoding)
+        if r.encoding:
+            return r.text
+        else:
+            return r.content  # Should work for PDF or other binary types
+        #TODO-STREAM support streams in future
+
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
         if r is not None and (r.status_code == 404):
             raise TransportURLNotFound(url=url)
@@ -110,4 +117,3 @@ def httpget(url):
             print(e.__class__.__name__, e)
             # TODO-LOGGING: logger.error(e)
             raise e  # For now just raise it
-    return r.text   #TODO-STREAM support streams in future

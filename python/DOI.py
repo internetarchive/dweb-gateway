@@ -177,7 +177,7 @@ class DOIfile(NameResolverFile):
         self.metadata = metadata    # For now all in one dict
 
     def retrieve(self):
-        return httpget(self.metadata["urls"][0])
+        return httpget(self.metadata["urls"][0]) #TODO-PYTHON3 will need changing
 
     def content(self):
         #TODO iterate over urls and find first matching hash

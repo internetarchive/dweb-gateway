@@ -124,20 +124,22 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 #elif hasattr(data, "dumps"):                # Unclear if this is used except maybe in TransportDist_Peer
                 #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
                 #    data = dumps(data)            # And maype this should be data.dumps()
-                if not isinstance(data, str):
+                if not isinstance(data, (bytes, str)):
                     print(data)
                     # Raise an exception - will not honor the status already sent, but this shouldnt happen as coding
                     # error in the dispatched function if it returns anything else
                     raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
-                if python_version.startswith('2') and isinstance(data, str): # Python3 should be unicode, need to be careful if convert
+                if isinstance(data, str):
                     print("XXX converting to unicode")
-                    data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary
+                    if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
+                        data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary
+                    if python_version.startswith('3'):
+                        data = bytes(data,"utf-8")
+
             self.send_header('content-length', str(len(data)) if data else 0)
             self.end_headers()
             print("XXX@dispatch134",len(data))
             if data:
-                if python_version.startswith('3'):
-                    data = bytes(data,"utf-8")
                 self.wfile.write(data)                   # Write content of result if applicable #PYTHON2
             #self.wfile.close()
 
