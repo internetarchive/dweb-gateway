@@ -61,39 +61,9 @@ class DOI(NameResolverDir):
 
         if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
         for row in sha1_list:
-            #TODO move some of this to DOIFile and get ContentHash to build a DOIfile
-            _, the_sha1, _ = row
-            files_metadata_list = list(db.execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [the_sha1]))
-            _, mimetype, size_bytes, md5 = files_metadata_list[0]
-            files_list = list(db.execute('SELECT * FROM urls WHERE sha1 = ?;', [the_sha1]))
-            doifile = DOIfile({
-                    'doi': self.doi,
-                    'files': [self.archive_url(file) for file in files_list],
-                    'mimetype': mimetype,
-                    'size_bytes': size_bytes,
-                    'md5': md5,
-                    'sha1': the_sha1,
-                })
-            sha1_hash = doifile.metadata["sha1"]
-            if python_version.startswith('2'):
-                sha1_binary_hash = sha1_hash.decode('hex') #Python2
-            else:
-                sha1_binary_hash = bytes.fromhex(sha1_hash) #Python3
-            multihash_binary = multihash.encode(sha1_binary_hash, 0x11)
-            multihash_base58 = base58.b58encode(bytes(multihash_binary))
-            doifile.metadata["sha1multihash"] = multihash_base58
-            if verbose: print("multihash sha1 base58=",multihash_base58)
+            _, sha1_hex, _ = row
+            doifile = DOIfile(doi=self.doi, sha1_hex=sha1_hex)  # TODO wrong signature
             self.push(doifile)
-            #sha256hash = multihashsha256_58(doifile.retrieve())
-            #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
-            LocationService.set(multihash_base58, doifile.metadata["files"][0],verbose=verbose)  #TODO-FUTURE find first url that matches the sha1
-            MimetypeService.set(multihash_base58, doifile.metadata["mimetype"],verbose=verbose)
-            ipldhash = IPLDHashService.get(multihash_base58)    # May be None, we don't know it
-            if ipldhash:
-                doifile.metadata["ipldhash"] = ipldhash
-            else:
-                pass
-                #TODO-IPFS this is where we send the contenthash to IPFS
         if verbose: print("DOI.__init__ completing")
 
     @classmethod
@@ -105,8 +75,8 @@ class DOI(NameResolverDir):
         return cls._sqliteconnection
 
 
-    @classmethod
-    def archive_url(cls, row):
+    @staticmethod
+    def archive_url(row):
         """
         Take a tuple of sha-1 URL datetime and return a direct URL to file content
         Currently the sqlite database has URLs with an optional datetime column.
@@ -192,9 +162,41 @@ class DOIfile(NameResolverFile):
     """
     Class for one file
     """
-    def __init__(self, metadata):
+
+    # TODO get ContentHash to build a DOIfile
+
+    def __init__(self, doi=None, sha1_hex=None, metadata=None, verbose=False):
         super(NameResolverFile, self).__init__(metadata)
-        self.metadata = metadata    # For now all in one dict
+        self.doi = doi
+        self.metadata = metadata or {}    # For now all in one dict
+        if sha1_hex:
+            self.sqlite_metadata(sha1_hex, verbose)
+
+    def sqlite_metadata(self, sha1_hex, verbose):
+            files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [sha1_hex]))
+            _, mimetype, size_bytes, md5 = files_metadata_list[0]
+            files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [sha1_hex]))
+            self.metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'sha1': sha1_hex,
+                    'files': [DOI.archive_url(file) for file in files_list] }
+            if python_version.startswith('2'):
+                sha1_binary_hash = sha1_hex.decode('hex') #Python2
+            else:
+                sha1_binary_hash = bytes.fromhex(sha1_hex) #Python3
+            multihash_binary = multihash.encode(sha1_binary_hash, 0x11)
+            multihash_base58 = base58.b58encode(bytes(multihash_binary))
+            self.metadata["sha1multihash"] = multihash_base58
+            if verbose: print("multihash sha1 base58=",multihash_base58)
+            #sha256hash = multihashsha256_58(doifile.retrieve())
+            #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
+            LocationService.set(multihash_base58, self.metadata["files"][0],verbose=verbose)
+            MimetypeService.set(multihash_base58, self.metadata["mimetype"],verbose=verbose)
+            ipldhash = IPLDHashService.get(multihash_base58)    # May be None, we don't know it
+            if ipldhash:
+                self.metadata["ipldhash"] = ipldhash
+            else:
+                pass
+                #TODO-IPFS this is where we send the contenthash to IPFS
+
 
     def retrieve(self):
         return httpget(self.metadata["urls"][0])
