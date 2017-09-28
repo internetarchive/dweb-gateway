@@ -1,4 +1,5 @@
 from .NameResolver import NameResolverDir, NameResolverFile
+from .Multihash import Multihash
 import sqlite3
 from .miscutils import httpget
 from .HashStore import LocationService, MimetypeService, IPLDHashService
@@ -23,6 +24,18 @@ class DOI(NameResolverDir):
 
     TODO - ssome of this will end up in NameResolverDir as we build other classe and see commonalities
     """
+
+    """
+    $ cd data; sqlite3 idents_files_urls.sqlite .schema 
+    CREATE TABLE files_id_doi (doi text not null, sha1 char(40) not null, type text);
+    CREATE UNIQUE INDEX file_id_doi_sha1 on files_id_doi (sha1);
+    CREATE INDEX files_doi on files_id_doi (doi);
+    CREATE TABLE files_metadata (sha1 char(40) not null, mimetype text, size_bytes integer, md5 char(32));
+    CREATE INDEX files_metadata_sha1 on files_metadata (sha1);
+    CREATE TABLE urls (sha1 char(40) not null, url text not null, datetime integer);
+    CREATE INDEX url_sha1 on urls (sha1);
+    """
+
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
     SQLITE="data/idents_files_urls.sqlite"
     _sqliteconnection=None
@@ -50,7 +63,7 @@ class DOI(NameResolverDir):
         verbose=kwargs.get("verbose",False)
         if verbose: print("DOI.__init__",namespace,publisher,identifier)
         super(DOI,self).__init__(namespace, publisher, *identifier)
-        db = self.sqliteconnection(verbose)
+        db = self.sqliteconnection(verbose)                     # Lazy connection to database
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self.metadata = {}
         if verbose: print("DOI.__init__ getting metadata for",self.doi)
@@ -62,7 +75,7 @@ class DOI(NameResolverDir):
         if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
         for row in sha1_list:
             _, sha1_hex, _ = row
-            doifile = DOIfile(doi=self.doi, sha1_hex=sha1_hex)  # TODO wrong signature
+            doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1_hex=sha1_hex))
             self.push(doifile)
         if verbose: print("DOI.__init__ completing")
 
@@ -85,11 +98,8 @@ class DOI(NameResolverDir):
         "https://web.archive.org/web/<datetime>/<url>" URL. TODO: double-check that wayback gateway supports range-requests
         :return: url to file content
         """
-        sha1, url, datetime = row
-        if not datetime:
-            return url
-        else:
-            return 'https://web.archive.org/web/{}/{}'.format(datetime, url)
+        _, url, datetime = row  # sha1, url, datetime(optional)
+        return 'https://web.archive.org/web/{}/{}'.format(datetime, url) if datetime else url
 
     def push(self,doifile):
         """
@@ -165,32 +175,30 @@ class DOIfile(NameResolverFile):
 
     # TODO get ContentHash to build a DOIfile
 
-    def __init__(self, doi=None, sha1_hex=None, metadata=None, verbose=False):
+    def __init__(self, doi=None, multihash=None, metadata=None, verbose=False):
         super(NameResolverFile, self).__init__(metadata)
         self.doi = doi
         self.metadata = metadata or {}    # For now all in one dict
-        if sha1_hex:
-            self.sqlite_metadata(sha1_hex, verbose)
+        self.multihash = multihash
+        if multihash and not self.doi:
+            # Lookup DOI from sha1_hex if not supplied.
+            if verbose: print("DOIfile.__init__ looking up", multihash.sha1_hex)
+            self.doi, _, _ = list(db.execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))[0]
+        if multihash:
+            self.sqlite_metadata(verbose)
 
-    def sqlite_metadata(self, sha1_hex, verbose):
-            files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [sha1_hex]))
+    def sqlite_metadata(self, verbose):
+            files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [self.multihash.sha1_hex]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
-            files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [sha1_hex]))
-            self.metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'sha1': sha1_hex,
+            files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1_hex]))
+            self.metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
                     'files': [DOI.archive_url(file) for file in files_list] }
-            if python_version.startswith('2'):
-                sha1_binary_hash = sha1_hex.decode('hex') #Python2
-            else:
-                sha1_binary_hash = bytes.fromhex(sha1_hex) #Python3
-            multihash_binary = multihash.encode(sha1_binary_hash, 0x11)
-            multihash_base58 = base58.b58encode(bytes(multihash_binary))
-            self.metadata["sha1multihash"] = multihash_base58
-            if verbose: print("multihash sha1 base58=",multihash_base58)
-            #sha256hash = multihashsha256_58(doifile.retrieve())
-            #print("Saving location", multihash_base58, doifile.metadata["urls"][0]  )
-            LocationService.set(multihash_base58, self.metadata["files"][0],verbose=verbose)
-            MimetypeService.set(multihash_base58, self.metadata["mimetype"],verbose=verbose)
-            ipldhash = IPLDHashService.get(multihash_base58)    # May be None, we don't know it
+            if verbose: print("multihash base58=",self.multihash.multihash58)
+            #multihash58_sha256 = Multihash(data=doifile.retrieve(), code=SHA256)
+            #print("Saving location", multihash58_sha256, doifile.metadata["urls"][0]  )
+            LocationService.set(self.multihash.multihash58, self.metadata["files"][0],verbose=verbose)
+            MimetypeService.set(self.multihash.multihash58, self.metadata["mimetype"],verbose=verbose)
+            ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
             if ipldhash:
                 self.metadata["ipldhash"] = ipldhash
             else:

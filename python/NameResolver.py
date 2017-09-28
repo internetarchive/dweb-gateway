@@ -1,5 +1,5 @@
-from .miscutils import multihashsha256_58
 from .Errors import ToBeImplementedException
+from .Multihash import Multihash
 
 
 class NameResolver(object):
@@ -46,7 +46,7 @@ class NameResolver(object):
         :return:
         """
         return {'Content-type': 'text/plain',
-         'data': multihashsha256_58(self.content())  # A list of names of services supported below  (not currently consumed anywhere)
+         'data': Multihash(data=self.content(), code=Multihash.SHA2_256).multihash58  # A list of names of services supported below  (not currently consumed anywhere)
          }
 
     def push(self,obj):

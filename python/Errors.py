@@ -82,6 +82,11 @@ class NoContentException(MyBaseException):
     httperror = 404
     msg = "No content found"
 
+class MultihashError(MyBaseException):
+    httperror = 500
+    msg = "Multihash error {message} {hash}"
+
+
 """
 
 # Following are currently obsolete - not being used in Python or JS

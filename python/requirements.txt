@@ -1,4 +1,11 @@
+sha3
 redis
 requests
+#multihash - no longer used and its buggy anyway
+py-dateutil
 base58
 pynacl
+pyblake2
+#binascii - built in
+#hashlib - built in I think, and fails to install with pip3
+#struct - built in

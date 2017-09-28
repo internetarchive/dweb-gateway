@@ -1,13 +1,10 @@
 """
 This is a place to put miscellaneous utilities, not specific to this project
 """
-import json # Note dont "from json import dumps" as clashes with overdefined dumps below
-from base58 import b58encode
+import json  # Note dont "from json import dumps" as clashes with overdefined dumps below
 from datetime import datetime
-import nacl.encoding
-from .util_multihash import encode, SHA2_256, SHA1
 import requests
-from .Errors import ToBeImplementedException, TransportURLNotFound
+from .Errors import TransportURLNotFound
 
 
 def mergeoptions(a, b):
@@ -58,36 +55,6 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
     except Exception as e:
         raise TypeError("Type %s not serializable (%s %s)" % (obj.__class__.__name__, e.__class__.__name__, e))
 
-
-def sha256(data): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from KeyPair to miscutils
-    """
-    data:       String or Buffer containing string of arbitrary length
-    returns:    32 byte Uint8Array with SHA256 hash
-    """
-    return nacl.hash.sha256(data, encoder=nacl.encoding.RawEncoder)
-
-
-def multihashsha256_58(data):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from KeyPair to miscutils
-    """
-    Base58 of a Multihash of a Sha2_256 of data - as used by IPFS
-
-    :param data:    String or binary type
-    :return:        string of base58 sha256 hash
-    """
-    return b58encode(bytes(encode(data, SHA2_256)))
-
-
-def multihashsha1_58(sha1):
-    output = bytearray([SHA1, len(sha1)])
-    output.extend(sha1)
-    return output
-
-
-def multihash(sha1=None, sha256=None):
-    """
-    TODO: convert sha1 or sha256 into multihash (look at "encode" in multihash256_58 for the last few lines where it builds one from a bytearray.
-    """
-    raise ToBeImplementedException(name="multihash")
 
 
 def httpget(url):

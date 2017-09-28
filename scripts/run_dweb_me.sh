@@ -3,7 +3,7 @@
 PIPS="wheel multihash py-dateutil redis base58 pynacl" # No guarrantee this is the full list of dependencies might need: requests
 cd /usr/local/dweb_gateway
 #pip install --disable-pip-version-check -U $PIPS
-pip3 -q install --disable-pip-version-check -U $PIPS
+pip3 -q install --disable-pip-version-check -U -r requirements.txt
 [ -d data ] || mkdir data
 # First push whatever branch we are on
 git status | grep 'nothing to commit' || git commit -a -m "Changes made on server"
