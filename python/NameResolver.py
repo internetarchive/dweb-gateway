@@ -50,13 +50,19 @@ class NameResolver(object):
          }
 
     def push(self,obj):
+        """
+        Add a NameResolverShard to a NameResolverFile or a NameResolverFile to a NameResolverDir - in both cases on _list field
+        Doesnt check class of object added to allow for variety of nested constructs.
+
+        :param obj: NameResolverShard, NameResolverFile, or NameResolverDir
+        :return:
+        """
         self._list.append(obj)
-        #TODO NameResolver push should add a NameResolverShard to a NameResolverFile or a NameResolverFile to a NameResolverDir - in both cases on _list field
 
     @classmethod
     def canonical(cls, namespace, *args, **kwargs):
         """
-        Should already be a canonical form
+        If this method isn't subclassed, then its already a canonical form so return with slashes
 
         :param cls:
         :param namespace:
@@ -77,7 +83,7 @@ class NameResolverDir(NameResolver):
     name:   Name of the directory
     """
     def files(self):
-        return self._list      #TODO-ITERATION split this into an iterator
+        return self._list
 
 class NameResolverFile(NameResolver):
     """
@@ -93,7 +99,7 @@ class NameResolverFile(NameResolver):
 
     Any other field can be used as namespace specific metadata
     """
-    shardsize = 256000  # A default for shard size, TODO determine best size, subclasses can overwrite, or ignore for things like video.
+    shardsize = 256000  # A default for shard size, TODO-IPLD determine best size, subclasses can overwrite, or ignore for things like video.
 
     def shards(self):
         """

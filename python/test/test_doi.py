@@ -26,7 +26,7 @@ def test_doi_resolve():
 
 
 def test_contenthash_resolve():
-    verbose=True   # True to debug
+    verbose=False   # True to debug
     res = _processurl(CONTENTHASHURL, verbose)
     assert res["Content-type"] == "application/pdf"
     assert len(res["data"]) == CONTENTSIZE
