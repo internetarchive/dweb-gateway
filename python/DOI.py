@@ -1,12 +1,11 @@
-from .NameResolver import NameResolverDir, NameResolverFile
-from .Multihash import Multihash
 import sqlite3
-from .miscutils import httpget
-from .HashStore import LocationService, MimetypeService, IPLDHashService
+
 import requests
-import util_multihash as multihash
-import base58
-from sys import version as python_version
+
+from .HashStore import LocationService, MimetypeService, IPLDHashService
+from .Multihash import Multihash
+from .NameResolver import NameResolverDir, NameResolverFile
+from .miscutils import httpget
 
 
 class DOI(NameResolverDir):
@@ -183,7 +182,7 @@ class DOIfile(NameResolverFile):
         if multihash and not self.doi:
             # Lookup DOI from sha1_hex if not supplied.
             if verbose: print("DOIfile.__init__ looking up", multihash.sha1_hex)
-            self.doi, _, _ = list(db.execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))[0]
+            self.doi, _, _ = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))[0]
         if multihash:
             self.sqlite_metadata(verbose)
 
@@ -192,7 +191,7 @@ class DOIfile(NameResolverFile):
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
             files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1_hex]))
             self.metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
-                    'files': [DOI.archive_url(file) for file in files_list] }
+                    'files': [DOI.archive_url(file) for file in files_list]}
             if verbose: print("multihash base58=",self.multihash.multihash58)
             #multihash58_sha256 = Multihash(data=doifile.retrieve(), code=SHA256)
             #print("Saving location", multihash58_sha256, doifile.metadata["urls"][0]  )
