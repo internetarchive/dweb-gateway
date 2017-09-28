@@ -3,7 +3,7 @@ import sqlite3
 from .miscutils import httpget
 from .HashStore import LocationService, MimetypeService
 import requests
-import multihash
+import util_multihash as multihash
 import base58
 from sys import version as python_version
 
@@ -169,7 +169,7 @@ class DOI(NameResolverDir):
     def get_doi_metadata(self, verbose):
         """
         For a DOI, get metadata from doi.org about that file
-        TODO: pick which fields want to analyze, e.g. 
+        TODO: pick which fields want to analyze, e.g.
         :return: metadata on the doi in json format
         """
         url = "http://dx.doi.org/" + self.doi
