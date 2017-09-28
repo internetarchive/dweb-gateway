@@ -1,3 +1,4 @@
 redis
 requests
-
+base58
+pynacl
