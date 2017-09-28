@@ -4,7 +4,7 @@ from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
 from .ContentHash import ContentHash
-from .IPLD import IPLDdir
+from .IPLD import IPLDdir, IPLDfile
 from .Errors import ToBeImplementedException
 
 """
