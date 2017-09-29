@@ -25,7 +25,7 @@ class DOI(NameResolverDir):
     """
 
     """
-    $ cd data; sqlite3 idents_files_urls.sqlite .schema 
+    $ cd data; sqlite3 idents_files_urls.sqlite .schema
     CREATE TABLE files_id_doi (doi text not null, sha1 char(40) not null, type text);
     CREATE UNIQUE INDEX file_id_doi_sha1 on files_id_doi (sha1);
     CREATE INDEX files_doi on files_id_doi (doi);
@@ -201,9 +201,9 @@ class DOIfile(NameResolverFile):
             if ipldhash:
                 self.metadata["ipldhash"] = ipldhash
             else:
-                pass
-                #TODO-IPFS this is where we send the contenthash to IPFS
-
+                data = httpget(self.metadata["files"][0])
+                ipldhash = requests.post('http://localhost:5001/api/v0/add', files={'file': ('', data, self.metadata["mimetype"])}).json()['Hash']
+                IPLDHashService.set(self.multihash.multihash58, ipldhash)
 
     def retrieve(self):
         return httpget(self.metadata["urls"][0])
@@ -222,4 +222,3 @@ if __name__ == '__main__':
     for i in doi.files():
         print(i)
         print(i.content())
-
