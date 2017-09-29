@@ -198,12 +198,11 @@ class DOIfile(NameResolverFile):
             LocationService.set(self.multihash.multihash58, self.metadata["files"][0],verbose=verbose)
             MimetypeService.set(self.multihash.multihash58, self.metadata["mimetype"],verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
-            if ipldhash:
-                self.metadata["ipldhash"] = ipldhash
-            else:
+            if not ipldhash:
                 data = httpget(self.metadata["files"][0])
                 ipldhash = requests.post('http://localhost:5001/api/v0/add', files={'file': ('', data, self.metadata["mimetype"])}).json()['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
+            self.metadata["ipldhash"] = ipldhash
 
     def retrieve(self):
         return httpget(self.metadata["urls"][0])
