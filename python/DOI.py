@@ -201,7 +201,8 @@ class DOIfile(NameResolverFile):
             if ipldhash:
                 self.metadata["ipldhash"] = ipldhash
             else:
-                ipldhash = requests.post('http://localhost:5001/api/v0/add', files={'file': ('', content, self.metadata["mimetype"])}).json()['Hash']
+                data = httpget(self.metadata["files"][0])
+                ipldhash = requests.post('http://localhost:5001/api/v0/add', files={'file': ('', data, self.metadata["mimetype"])}).json()['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
 
     def retrieve(self):
