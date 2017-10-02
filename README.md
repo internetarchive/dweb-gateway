@@ -71,3 +71,11 @@ python -m python.ServerGateway
 curl http://localhost:4244/info
 curl http://localhost:4244/contenthash/doi/10.1234/abcdef
 ```
+You'll also need REDIS and IPFS
+On a Mac
+```bash
+brew install redis
+brew services start redis
+
+<< need install info for go-ipfs running on port 5001>>
+```
