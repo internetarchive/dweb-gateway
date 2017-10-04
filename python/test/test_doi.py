@@ -16,7 +16,8 @@ def _processurl(url, verbose):
     namespace = args.pop(0)
     kwargs = {}
     if verbose: kwargs["verbose"]=True
-    obj = DwebGatewayHTTPRequestHandler.namespaceclasses[namespace](namespace, *args, **kwargs)
+    obj = DwebGatewayHTTPRequestHandler.namespaceclasses[namespace].new(namespace, *args, **kwargs)
+    assert obj
     res = getattr(obj, method)(verbose=verbose)
     if verbose: print(res)
     return res
@@ -30,7 +31,7 @@ def test_doi_resolve():
 
 
 def test_contenthash_resolve():
-    verbose=False   # True to debug
+    verbose=True   # True to debug
     res = _processurl(CONTENTHASHURL, verbose)  # Simulate what the server would do with the URL
     assert res["Content-type"] == "application/pdf", "Check retrieved content of expected type"
     assert len(res["data"]) == CONTENTSIZE, "Check retrieved content of expected length"

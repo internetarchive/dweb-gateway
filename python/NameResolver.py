@@ -32,6 +32,10 @@ class NameResolver(object):
     def __init__(self, namespace, *args, **kwargs):
         self._list = []
 
+    @classmethod
+    def new(cls, namespace, *args, **kwargs):
+        return cls(namespace, *args, **kwargs)
+
     def content(self):
         """
 
