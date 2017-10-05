@@ -65,7 +65,7 @@ class DOI(NameResolverDir):
         super(DOI,self).__init__(namespace, publisher, *identifier)
         db = self.sqliteconnection(verbose)                     # Lazy connection to database
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
-        self.metadata = {}
+        self._metadata = {}
         if verbose: print("DOI.__init__ getting metadata for",self.doi)
         self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
         self.get_doi_metadata(verbose)
@@ -114,13 +114,13 @@ class DOI(NameResolverDir):
         # Currently Nothing done here other than superclass adding to list.
         super(DOI, self).push(doifile)
 
-    def content(self, verbose=False):
+    def metadata(self, verbose=False):
         return {'Content-type': 'application/json',
             'data': {
-                'metadata': self.metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
+                'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
                 'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
                 "files": [
-                    doifile.metadata for doifile in self.files()
+                    doifile._metadata for doifile in self.files()
                 ]
             }
         }
@@ -189,7 +189,7 @@ class DOIfile(NameResolverFile):
     def __init__(self, doi=None, multihash=None, metadata=None, verbose=False):
         super(NameResolverFile, self).__init__(metadata)    # TODO note this is wrong, superclass expects namespace (but ignores that)
         self.doi = doi
-        self.metadata = metadata or {}    # For now all in one dict
+        self._metadata = metadata or {}    # For now all in one dict
         self.multihash = multihash
         if multihash and not self.doi:
             # Lookup DOI from sha1_hex if not supplied.
@@ -203,16 +203,16 @@ class DOIfile(NameResolverFile):
             files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [self.multihash.sha1_hex]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
             files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1_hex]))
-            self.metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
+            self._metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
                     'files': [DOI.archive_url(file) for file in files_list]}
             if verbose: print("multihash base58=",self.multihash.multihash58)
             #multihash58_sha256 = Multihash(data=doifile.retrieve(), code=SHA256)
-            #print("Saving location", multihash58_sha256, doifile.metadata["urls"][0]  )
-            LocationService.set(self.multihash.multihash58, self.metadata["files"][0],verbose=verbose)
-            MimetypeService.set(self.multihash.multihash58, self.metadata["mimetype"],verbose=verbose)
+            #print("Saving location", multihash58_sha256, doifile._metadata["urls"][0]  )
+            LocationService.set(self.multihash.multihash58, self._metadata["files"][0],verbose=verbose)
+            MimetypeService.set(self.multihash.multihash58, self._metadata["mimetype"],verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
             if not ipldhash:
-                data = httpget(self.metadata["files"][0])
+                data = httpget(self._metadata["files"][0])
                 #TODO move this to a URL or better to TransportIPFS when built
                 ipfsurl = "https://ipfs.dweb.me/api/v0/add" #note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
                 if verbose: print("Fetching IPFS from ",ipfsurl)
@@ -220,17 +220,17 @@ class DOIfile(NameResolverFile):
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
                 #print("XXX@216",ipldresp)
                 #ipldhash = ipldresp.json()['Hash']
-                ipldhash = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])}).json()['Hash']
+                ipldhash = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
-            self.metadata["ipldhash"] = ipldhash
+            self._metadata["ipldhash"] = ipldhash
             print("XXX@sqlite_metadata done")
 
     def retrieve(self):
-        return httpget(self.metadata["urls"][0])
+        return httpget(self._metadata["urls"][0])
 
-    def content(self): #TODO-URLMETA need to change to metadata, content should get content of first URL
+    def metadata(self): #Was "content" but content should get content of first URL
         #TODO iterate over urls and find first matching hash
-        return { "Content-type": self.metadata["mimetype"], "data": self.retrieve() }
+        return { "Content-type": self._metadata["mimetype"], "data": self.retrieve() }
 
 if __name__ == '__main__':
     import sys

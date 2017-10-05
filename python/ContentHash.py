@@ -39,12 +39,12 @@ class ContentHash(NameResolverFile):
             pass #TODO-this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
         #TODO - extend to look up content hash in other resources, including sqlite from DOI (ask those services e.g. DOI.contenthashsearch(multihash)
 
-    @classmethod #TODO-CONTENTHASH needs TODO-URLMETA
+    @classmethod
     def new(cls, namespace, *args, **kwargs): #TODO-CONTENTHASH hook to new from call to constructor in ServerGateway
         ch = super(ContentHash, cls).new(namespace, *args, **kwargs)    # By default calls cls() which goes to __init__
         #TODO-OTHERNAMESPACE turn into loop over multiple classes
         if not ch.url:
-            ch = DOIfile.new(multihash=self.multihash)
+            ch = DOIfile.new(multihash=self.multihash)  # Untested because dont have the appropriate contenthash for ones we haven't already handled
         if not ch.url:
             raise NoContentException()
         return ch

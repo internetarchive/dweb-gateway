@@ -43,6 +43,13 @@ class NameResolver(object):
         """
         raise ToBeImplementedException(name=self.__class__.__name__+".content()")
 
+    def metadata(self):
+        """
+
+        :return:
+        """
+        raise ToBeImplementedException(name=self.__class__.__name__+".metadata()")
+
     def contenthash(self, verbose=False):
         """
         By default contenthash is the hash of the content.

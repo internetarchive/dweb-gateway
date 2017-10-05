@@ -2,7 +2,7 @@ from python.ServerGateway import DwebGatewayHTTPRequestHandler
 import base58
 from python.Multihash import Multihash
 
-DOIURL = "content/doi/10.1001/jama.2009.1064"
+DOIURL = "metadata/doi/10.1001/jama.2009.1064"
 CONTENTMULTIHASH = "5dqpnTaoMSJPpsHna58ZJHcrcJeAjW"
 PDF_SHA1HEX="02efe2abec13a309916c6860de5ad8a8a096fe5d"
 CONTENTHASHURL = "content/contenthash/" + CONTENTMULTIHASH
@@ -12,7 +12,7 @@ def _processurl(url, verbose):
     # Simulates HTTP Server process - wont work for all methods
     args=url.split('/')
     method = args.pop(0)
-    assert method in ("content",), "Unsupported method for _processurl"
+    assert method in ("content","metadata","contenthash"), "Unsupported method for _processurl"
     namespace = args.pop(0)
     kwargs = {}
     if verbose: kwargs["verbose"]=True
