@@ -165,6 +165,8 @@ class DOI(NameResolverDir):
         if verbose: print("get_doi_metadata returned:",r)
         if r.status_code == 200:
             self.doi_org_metadata = r.json()
+        else:
+            print("Failed to read metadata at",url)
         # If dont get metadata, the rest of our info may still be valid
 
 class DOIfile(NameResolverFile):
