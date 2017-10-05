@@ -4,9 +4,9 @@ import requests
 
 from .HashStore import LocationService, MimetypeService, IPLDHashService
 from .Multihash import Multihash
-from .NameResolver import NameResolverDir, NameResolverFile
+from .NameResolver import NameResolverDir, NameResolverFile, NameResolverSearchItem, NameResolverSearch
 from .miscutils import httpget
-
+from .Errors import SearchException
 
 class DOI(NameResolverDir):
     """
@@ -174,7 +174,7 @@ class DOI(NameResolverDir):
         # If dont get metadata, the rest of our info may still be valid
 
 
-class DOIfile(NameResolverFile):
+class DOIfile(NameResolverFile):    # Note plural
     """
     Class for one file
 
@@ -229,6 +229,88 @@ class DOIfile(NameResolverFile):
     def metadata(self):  # Was "content" but content should get content of first URL
         #TODO iterate over urls and find first matching hash
         return {"Content-type": self._metadata["mimetype"], "data": self.retrieve()}
+
+class DOIsearchItem(NameResolverSearchItem):
+
+    def __init__(self, result=None):
+        super(DOIsearchItem, search).__init__()
+        if result: # Its a DOI search result
+            # Ensure 'authors' is a list, not a single string
+            if type(result['authors']) is not list:
+                result['authors'] = [result['authors'], ]
+        self._metadata = result
+
+    def metadata(self):
+        return self._metadata   # Will match elastic_schema.json  which is doi, title, author, journal, date, publisher, topic, media
+
+class DOIsearch(NameResolverSearch):
+
+    @classmethod
+    def search(self, querystring, limit=20, do_highlight=False):
+        """
+        Use like  /metadata/search/
+        :param querystring:
+        :param limit:
+        :param do_highlight:
+        :param do_files:
+        :return:
+        """
+        print("Search hit: " + querystring)
+
+        querystring = querystring.replace("author:", "authors:")  # Replace author: with authors: in query
+
+
+        search_request = {
+            "query": {
+                "query_string": {
+                    "query": querystring,
+                    "analyzer": "snowball",
+                    "default_operator": "AND",
+                    "analyze_wildcard": True,
+                },
+            },
+            "size": int(limit),  # TODO-SEARCH should be int before gets to search
+        }
+        if do_highlight:
+            search_request['highlight'] = {
+                "pre_tags": ["<mark>"],
+                "post_tags": ["</mark>"],
+                "fields": {"_all": {}},
+            }
+        url = "http://localhost:9200/crossref-works/_search"  # Might parameterise part of this, but unlikely
+        resp = requests.post(url, json=search_request)
+        if resp.status_code != 200:
+            raise SearchException(search="search_request")  # TODO-SEARCH extract useful part of search_request
+
+        # TODO-SEARCH edit from here when have examples probably just make an array of DOI
+        return resp.json()
+
+    def __init__(self, namespace, querystring, limit=20, do_highlight=False, verbose=False):
+        super(DOIsearch,self).__init__(namespace, querystring, verbose=verbose)
+        results = self.search(querystring,
+                                do_highlight=do_highlight,
+                                limit=min(max(0, int(limit)), 100))
+        this._list = [  DOIsearchItem(result=h) for h in results['hits']['hits'] ]
+        this.count_found = results['hits']['total']
+        this.count_returned = len(this._list)
+        this.highlight = do_highlight
+
+    def metadata(self):
+        """
+        Return metadata in a useful form for the HTML query
+
+        :return:
+        """
+        return {'Content-type': 'application/json',
+                'data': {
+                    count_found: this.count_found,
+                    count_returned: this.count_returned,
+                    highlight: this.highlight,
+                    results: [ result.metadata() for result in this._list ]
+                }
+                }
+        }
+
 
 if __name__ == '__main__':
     import sys

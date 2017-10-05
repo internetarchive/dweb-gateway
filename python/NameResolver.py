@@ -29,7 +29,7 @@ class NameResolver(object):
     contentType:    The mime-type of the content, (TODO check against schema.org), not compatible with standard Archive metadata which uses three letter types like PNG
     """
 
-    def __init__(self, namespace, *args, **kwargs):
+    def __init__(self, namespace, *args, **kwargs): # Careful if change, note its the default __init__ for NameResolverDir, NameResolverFile, NameResolverSearch etc
         self._list = []
 
     @classmethod
@@ -129,5 +129,17 @@ class NameResolverShard(NameResolver):
     Represents a single shard returned by a NameResolverFile.shards() iterator
     Holds enough info to do a byte-range retrieval of just those bytes from a server,
     And a multihash that could be retrieved by IPFS for just this shard.
+    """
+    pass
+
+class NameResolverSearchItem(NameResolver):
+    """
+    Represents each element in a search
+    """
+    pass
+
+class NameResolverSearch(NameResolver):
+    """
+    Represents the results of a search
     """
     pass
