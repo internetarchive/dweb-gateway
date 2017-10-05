@@ -2,6 +2,7 @@
 Hash Store set of classes for storage and retrieval
 """
 import redis
+import logging
 from .Errors import CodingException
 
 
@@ -60,7 +61,7 @@ class HashStore(object):
     @classmethod
     def redis(cls):
         if not HashStore._redis:
-            print("HashStore connecting to Redis")
+            logging.debug("HashStore connecting to Redis")
             HashStore._redis = redis.StrictRedis(   # Note uses HashStore cos this connection is shared across subclasses
                 host="localhost",
                 port=6379,
@@ -73,18 +74,18 @@ class HashStore(object):
         raise CodingException(message="It is meaningless to instantiate an instance of HashStore, its all class methods")
 
     @classmethod
-    def hash_set(cls, multihash, field, value, verbose=False):
+    def hash_set(cls, multihash, field, value):
         """
         :param multihash:
         :param field:
         :param value:
         :return:
         """
-        if verbose: print("Hash set:", multihash, field, "=", value)
+        logging.debug("Hash set:", multihash, field, "=", value)
         cls.redis().hset(multihash, field, value)
 
     @classmethod
-    def hash_get(cls, multihash, field, verbose=False):
+    def hash_get(cls, multihash, field):
         """
 
         :param multihash:
@@ -92,18 +93,18 @@ class HashStore(object):
         :return:
         """
         res = cls.redis().hget(multihash, field)
-        if verbose: print("Hash found:", multihash, field, "=", res)
+        logging.debug("Hash found:", multihash, field, "=", res)
         return res
 
     @classmethod
-    def set(cls, multihash, value, verbose=False):
+    def set(cls, multihash, value):
         """
 
         :param multihash:
         :param value:   What we want to store in the redisfield
         :return:
         """
-        return cls.hash_set(multihash, cls.redisfield, value, verbose)
+        return cls.hash_set(multihash, cls.redisfield, value)
 
     @classmethod
     def get(cls, multihash, verbose=False):
@@ -112,7 +113,7 @@ class HashStore(object):
         :param multihash:
         :return: string stored in Redis
         """
-        return cls.hash_get(multihash, cls.redisfield, verbose)
+        return cls.hash_get(multihash, cls.redisfield)
 
 
 class LocationService(HashStore):

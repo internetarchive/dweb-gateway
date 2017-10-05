@@ -1,4 +1,5 @@
 # encoding: utf-8
+import logging
 from .miscutils import dumps # Use our own version of dumps - more compact and handles datetime etc
 from json import loads      # Not our own loads since dumps is JSON compliant
 from sys import version as python_version
@@ -143,7 +144,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             httperror = e.httperror if hasattr(e, "httperror") else 500
             if not (self.expectedExceptions and isinstance(e, self.expectedExceptions)):  # Unexpected error
                 traceback.print_exc(limit=None)  # unfortunately only prints to try above so may need to raise?
-            print("Sending error",httperror,str(e))
+            logging.debug("Sending error: {0} {1}".format(httperror, str(e)))
             self.send_error(httperror, str(e))    # Send an error response
 
 
