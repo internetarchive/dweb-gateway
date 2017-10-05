@@ -37,7 +37,7 @@ class DOI(NameResolverDir):
     """
 
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
-    SQLITE="data/idents_files_urls.sqlite"
+    SQLITE = "data/idents_files_urls.sqlite"
     #_sqliteconnection=None  #TODO-SQL should be per thread
 
     def __init__(self, namespace, publisher, *identifier, **kwargs):
@@ -60,19 +60,19 @@ class DOI(NameResolverDir):
         *   Create a DOIfile(..)
         *   self.push(DOIfile)
         """
-        verbose=kwargs.get("verbose",False)
-        if verbose: print("DOI.__init__",namespace,publisher,identifier)
-        super(DOI,self).__init__(namespace, publisher, *identifier)
+        verbose = kwargs.get("verbose", False)
+        if verbose: print("DOI.__init__", namespace, publisher, identifier)
+        super(DOI, self).__init__(namespace, publisher, *identifier)
         db = self.sqliteconnection(verbose)                     # Lazy connection to database
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self._metadata = {}
-        if verbose: print("DOI.__init__ getting metadata for",self.doi)
+        if verbose: print("DOI.__init__ getting metadata for", self.doi)
         self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
         self.get_doi_metadata(verbose)
-        if verbose: print("DOI.__init__ looking up",self.doi)
+        if verbose: print("DOI.__init__ looking up", self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
-        if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
+        if verbose: print("DOI.__init__ iterating over", len(sha1_list), "rows")
         for row in sha1_list:
             _, sha1_hex, _ = row
             doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1_hex=sha1_hex), verbose=verbose)
@@ -106,7 +106,7 @@ class DOI(NameResolverDir):
         _, url, datetime = row  # sha1, url, datetime(optional)
         return 'https://web.archive.org/web/{}/{}'.format(datetime, url) if datetime else url
 
-    def push(self,doifile):
+    def push(self, doifile):
         """
         Add a DOIfile to a DOI -
         :return:    undefined
@@ -116,14 +116,14 @@ class DOI(NameResolverDir):
 
     def metadata(self, verbose=False):
         return {'Content-type': 'application/json',
-            'data': {
-                'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
-                'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
-                "files": [
-                    doifile._metadata for doifile in self.files()
-                ]
-            }
-        }
+                'data': {
+                    'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
+                    'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
+                    "files": [
+                        doifile._metadata for doifile in self.files()
+                    ]
+                }
+                }
 
     @classmethod
     def canonical(cls, publisher, *identifier):
@@ -140,13 +140,12 @@ class DOI(NameResolverDir):
         #TDO check publisher is canonicised 10.nnnn
         return publisher.lower() + "/" + "/".join([i.lower() for i in identifier])
 
-
     def check_if_link_works(self, url, verbose=False):
         """
         See if a link is valid (i.e., returns a '200' to the HTML request).
         """
         if verbose:
-            print("check_if_link_works",url)
+            print("check_if_link_works", url)
         print("XXX@check_if_link_works - dummied out")
         #return True
         try:
@@ -158,7 +157,6 @@ class DOI(NameResolverDir):
         if verbose: print("result=", request.status_code)
         return request.status_code == 200
 
-
     def get_doi_metadata(self, verbose):
         """
         For a DOI, get metadata from doi.org about that file
@@ -167,13 +165,14 @@ class DOI(NameResolverDir):
         """
         url = "http://dx.doi.org/" + self.doi
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
-        r = requests.get(url, headers=headers) # Note that with headers it wont redirect, without it will go to doc which may fail
-        if verbose: print("get_doi_metadata returned:",r)
+        r = requests.get(url, headers=headers)  # Note that with headers it wont redirect, without it will go to doc which may fail
+        if verbose: print("get_doi_metadata returned:", r)
         if r.status_code == 200:
             self.doi_org_metadata = r.json()
         else:
-            print("Failed to read metadata at",url)
+            print("Failed to read metadata at", url)
         # If dont get metadata, the rest of our info may still be valid
+
 
 class DOIfile(NameResolverFile):
     """
@@ -198,24 +197,23 @@ class DOIfile(NameResolverFile):
         if multihash:
             self.sqlite_metadata(verbose)
 
-
     def sqlite_metadata(self, verbose):
             files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [self.multihash.sha1_hex]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
             files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1_hex]))
-            self._metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
-                    'files': [DOI.archive_url(file) for file in files_list]}
-            if verbose: print("multihash base58=",self.multihash.multihash58)
+            self._metadata = {'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
+                              'files': [DOI.archive_url(file) for file in files_list]}
+            if verbose: print("multihash base58=", self.multihash.multihash58)
             #multihash58_sha256 = Multihash(data=doifile.retrieve(), code=SHA256)
             #print("Saving location", multihash58_sha256, doifile._metadata["urls"][0]  )
-            LocationService.set(self.multihash.multihash58, self._metadata["files"][0],verbose=verbose)
-            MimetypeService.set(self.multihash.multihash58, self._metadata["mimetype"],verbose=verbose)
+            LocationService.set(self.multihash.multihash58, self._metadata["files"][0], verbose=verbose)
+            MimetypeService.set(self.multihash.multihash58, self._metadata["mimetype"], verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
             if not ipldhash:
                 data = httpget(self._metadata["files"][0])
                 #TODO move this to a URL or better to TransportIPFS when built
-                ipfsurl = "https://ipfs.dweb.me/api/v0/add" #note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
-                if verbose: print("Fetching IPFS from ",ipfsurl)
+                ipfsurl = "https://ipfs.dweb.me/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
+                if verbose: print("Fetching IPFS from ", ipfsurl)
                 #Debugging - running into problems with 404, not sure if laptop/HTTPS issue or server
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
                 #print("XXX@216",ipldresp)
@@ -228,9 +226,9 @@ class DOIfile(NameResolverFile):
     def retrieve(self):
         return httpget(self._metadata["urls"][0])
 
-    def metadata(self): #Was "content" but content should get content of first URL
+    def metadata(self):  # Was "content" but content should get content of first URL
         #TODO iterate over urls and find first matching hash
-        return { "Content-type": self._metadata["mimetype"], "data": self.retrieve() }
+        return {"Content-type": self._metadata["mimetype"], "data": self.retrieve()}
 
 if __name__ == '__main__':
     import sys
