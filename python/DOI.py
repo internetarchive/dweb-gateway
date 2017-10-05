@@ -183,8 +183,6 @@ class DOIfile(NameResolverFile):    # Note plural
 
     """
 
-    # TODO get ContentHash to build a DOIfile
-
     def __init__(self, doi=None, multihash=None, metadata=None, verbose=False):
         super(NameResolverFile, self).__init__(metadata)    # TODO note this is wrong, superclass expects namespace (but ignores that)
         self.doi = doi
@@ -231,6 +229,7 @@ class DOIfile(NameResolverFile):    # Note plural
         return {"Content-type": self._metadata["mimetype"], "data": self.retrieve()}
 
 class DOIsearchItem(NameResolverSearchItem):
+    # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET
 
     def __init__(self, result=None):
         super(DOIsearchItem, search).__init__()
@@ -244,6 +243,7 @@ class DOIsearchItem(NameResolverSearchItem):
         return self._metadata   # Will match elastic_schema.json  which is doi, title, author, journal, date, publisher, topic, media
 
 class DOIsearch(NameResolverSearch):
+    # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET
 
     @classmethod
     def search(self, querystring, limit=20, do_highlight=False):
@@ -269,7 +269,7 @@ class DOIsearch(NameResolverSearch):
                     "analyze_wildcard": True,
                 },
             },
-            "size": int(limit),  # TODO-SEARCH should be int before gets to search
+            "size": limit,
         }
         if do_highlight:
             search_request['highlight'] = {
@@ -281,8 +281,6 @@ class DOIsearch(NameResolverSearch):
         resp = requests.post(url, json=search_request)
         if resp.status_code != 200:
             raise SearchException(search="search_request")  # TODO-SEARCH extract useful part of search_request
-
-        # TODO-SEARCH edit from here when have examples probably just make an array of DOI
         return resp.json()
 
     def __init__(self, namespace, querystring, limit=20, do_highlight=False, verbose=False):
@@ -309,7 +307,6 @@ class DOIsearch(NameResolverSearch):
                     results: [ result.metadata() for result in this._list ]
                 }
                 }
-        }
 
 
 if __name__ == '__main__':

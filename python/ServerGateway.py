@@ -11,7 +11,7 @@ from .Errors import ToBeImplementedException
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
 """
 
-#TODO-LOG setup generic logger and move all print calls to use it
+#TODO-LOGGING setup generic logger and move all print calls to use it
 
 class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 

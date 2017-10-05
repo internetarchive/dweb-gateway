@@ -7,8 +7,8 @@ which seems to have evolved from the pip3 multihash, which is seriously broken.
 
 import hashlib
 import struct
-import sha3  #TODO - add these to Pip3installs
-import pyblake2 #TODO - add these to Pip3installs
+import sha3
+import pyblake2
 import base58
 import binascii
 from sys import version as python_version
