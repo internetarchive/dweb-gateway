@@ -38,7 +38,7 @@ class DOI(NameResolverDir):
 
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
     SQLITE="data/idents_files_urls.sqlite"
-    _sqliteconnection=None
+    #_sqliteconnection=None  #TODO-SQL should be per thread
 
     def __init__(self, namespace, publisher, *identifier, **kwargs):
         """
@@ -81,12 +81,17 @@ class DOI(NameResolverDir):
 
     @classmethod
     def sqliteconnection(cls, verbose=False):
+        """
+        # This below wont work in a multithreaded server, as sqlite connections cant be used across threads and doesnt appear
+        # to be a way to access thread variables.  #TODO-THREADING
         if not cls._sqliteconnection:
             if verbose: print("DOI.sqliteconnection connecting to DB")
             cls._sqliteconnection = sqlite3.connect(cls.SQLITE)
             if verbose: print("DOI.sqliteconnection connected to DB")
         return cls._sqliteconnection
-
+        """
+        # Using a new sqlite connection for each request
+        return sqlite3.connect(cls.SQLITE)
 
     @staticmethod
     def archive_url(row):
