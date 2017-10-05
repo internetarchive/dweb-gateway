@@ -172,11 +172,7 @@ class DOI(NameResolverDir):
         if r.status_code == 200:
             self.doi_org_metadata = r.json()
         else:
-<<<<<<< HEAD
             print("Failed to read metadata at",url)
-=======
-            console.log("Failed to read metadata at",url)
->>>>>>> origin/deployable
         # If dont get metadata, the rest of our info may still be valid
 
 class DOIfile(NameResolverFile):
