@@ -36,7 +36,7 @@ class NameResolver(object):
     def new(cls, namespace, *args, **kwargs):
         return cls(namespace, *args, **kwargs)
 
-    def content(self):
+    def content(self, verbose=False):
         """
 
         :return:

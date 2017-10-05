@@ -7,7 +7,7 @@
 set -x
 curl https://gateway.dweb.me/info
 echo; echo # Terminate response and blank line
-curl https://gateway.dweb.me/content/doi/10.1001/jama.2009.1064?verbose=True
+curl https://gateway.dweb.me/metadata/doi/10.1001/jama.2009.1064?verbose=True
 echo; echo # Terminate response and blank line
 
 # Fetch the sha1 multihash from above
