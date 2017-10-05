@@ -33,11 +33,21 @@ class ContentHash(NameResolverFile):
             raise CodingException(message="namespace != contenthash")
         self.multihash = multihash58
         self.url = LocationService.get(multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
-        if not self.url:
-            doifile = DOIfile()
-            pass #TODO-this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
         self.mimetype = MimetypeService.get(multihash58, verbose) #TODO use a single service set at init
+        if not self.url:
+            doifile = DOIfile(multihash=self.multihash) # Will fill in url if known.
+            pass #TODO-this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
         #TODO - extend to look up content hash in other resources, including sqlite from DOI (ask those services e.g. DOI.contenthashsearch(multihash)
+
+    @classmethod #TODO-CONTENTHASH needs TODO-URLMETA
+    def new(cls, namespace, *args, **kwargs): #TODO-CONTENTHASH hook to new from call to constructor in ServerGateway
+        ch = super(ContentHash, cls).new(namespace, *args, **kwargs)    # By default calls cls() which goes to __init__
+        #TODO-OTHERNAMESPACE turn into loop over multiple classes
+        if not ch.url:
+            ch = DOIfile.new(multihash=self.multihash)
+        if not ch.url:
+            raise NoContentException()
+        return ch
 
     def push(self, obj):
         """

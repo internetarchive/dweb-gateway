@@ -22,6 +22,7 @@ class DOI(NameResolverDir):
     * Build way to preload the hashstore with the hashes and URLs from the sqlite
 
     TODO - ssome of this will end up in NameResolverDir as we build other classe and see commonalities
+
     """
 
     """
@@ -37,7 +38,7 @@ class DOI(NameResolverDir):
 
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
     SQLITE="data/idents_files_urls.sqlite"
-    _sqliteconnection=None
+    #_sqliteconnection=None  #TODO-SQL should be per thread
 
     def __init__(self, namespace, publisher, *identifier, **kwargs):
         """
@@ -74,18 +75,23 @@ class DOI(NameResolverDir):
         if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
         for row in sha1_list:
             _, sha1_hex, _ = row
-            doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1_hex=sha1_hex))
+            doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1_hex=sha1_hex), verbose=verbose)
             self.push(doifile)
         if verbose: print("DOI.__init__ completing")
 
     @classmethod
     def sqliteconnection(cls, verbose=False):
+        """
+        # This below wont work in a multithreaded server, as sqlite connections cant be used across threads and doesnt appear
+        # to be a way to access thread variables.  #TODO-THREADING
         if not cls._sqliteconnection:
             if verbose: print("DOI.sqliteconnection connecting to DB")
             cls._sqliteconnection = sqlite3.connect(cls.SQLITE)
             if verbose: print("DOI.sqliteconnection connected to DB")
         return cls._sqliteconnection
-
+        """
+        # Using a new sqlite connection for each request
+        return sqlite3.connect(cls.SQLITE)
 
     @staticmethod
     def archive_url(row):
@@ -156,7 +162,7 @@ class DOI(NameResolverDir):
     def get_doi_metadata(self, verbose):
         """
         For a DOI, get metadata from doi.org about that file
-        TODO: pick which fields want to analyze, e.g.
+        #TODO - move this to browser
         :return: metadata on the doi in json format
         """
         url = "http://dx.doi.org/" + self.doi
@@ -166,18 +172,26 @@ class DOI(NameResolverDir):
         if r.status_code == 200:
             self.doi_org_metadata = r.json()
         else:
+<<<<<<< HEAD
             print("Failed to read metadata at",url)
+=======
+            console.log("Failed to read metadata at",url)
+>>>>>>> origin/deployable
         # If dont get metadata, the rest of our info may still be valid
 
 class DOIfile(NameResolverFile):
     """
     Class for one file
+
+    Fields:
+    multihash   A Multihash instance either found from the DOI, or being searched on.
+
     """
 
     # TODO get ContentHash to build a DOIfile
 
     def __init__(self, doi=None, multihash=None, metadata=None, verbose=False):
-        super(NameResolverFile, self).__init__(metadata)
+        super(NameResolverFile, self).__init__(metadata)    # TODO note this is wrong, superclass expects namespace (but ignores that)
         self.doi = doi
         self.metadata = metadata or {}    # For now all in one dict
         self.multihash = multihash
@@ -187,6 +201,7 @@ class DOIfile(NameResolverFile):
             self.doi, _, _ = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))[0]
         if multihash:
             self.sqlite_metadata(verbose)
+
 
     def sqlite_metadata(self, verbose):
             files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [self.multihash.sha1_hex]))
@@ -202,14 +217,22 @@ class DOIfile(NameResolverFile):
             ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
             if not ipldhash:
                 data = httpget(self.metadata["files"][0])
-                ipldhash = requests.post('http://localhost:5001/api/v0/add', files={'file': ('', data, self.metadata["mimetype"])}).json()['Hash']
+                #TODO move this to a URL or better to TransportIPFS when built
+                ipfsurl = "https://ipfs.dweb.me/api/v0/add" #note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
+                if verbose: print("Fetching IPFS from ",ipfsurl)
+                #Debugging - running into problems with 404, not sure if laptop/HTTPS issue or server
+                #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
+                #print("XXX@216",ipldresp)
+                #ipldhash = ipldresp.json()['Hash']
+                ipldhash = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])}).json()['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
             self.metadata["ipldhash"] = ipldhash
+            print("XXX@sqlite_metadata done")
 
     def retrieve(self):
         return httpget(self.metadata["urls"][0])
 
-    def content(self):
+    def content(self): #TODO-URLMETA need to change to metadata, content should get content of first URL
         #TODO iterate over urls and find first matching hash
         return { "Content-type": self.metadata["mimetype"], "data": self.retrieve() }
 

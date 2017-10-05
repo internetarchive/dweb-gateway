@@ -59,6 +59,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
         "doi": DOI,
         "contenthash": ContentHash,
+        # TODO-OTHERNAMESPACE add new namespaces here and see other TODO-OTHERNAMESPACE here and in clients
     }
 
 
@@ -100,6 +101,8 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                            "services": [ ]}     # A list of names of services supported below  (not currently consumed anywhere)
                }
 
+    #TODO-URLMETA add metadata function
+
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.
     @exposed
@@ -110,7 +113,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def contenthash(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace](namespace, *args, **kwargs).contenthash(verbose=verbose)
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenthash(verbose=verbose)
 
     # Now complex ones where have to create a class to handle conversion e.g. IPLDdirs
 

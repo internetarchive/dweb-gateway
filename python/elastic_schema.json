@@ -1,0 +1,17 @@
+{
+"mappings": {
+    "work": {
+        "_all": { "enabled": true },
+        "properties": {
+            "doi":      { "type": "keyword" },
+            "title":    { "type": "text", "boost": 3.0 },
+            "authors":  { "type": "text", "boost": 2.0 },
+            "journal":  { "type": "text" },
+            "date":     { "type": "date" },
+            "publisher":{ "type": "text", "include_in_all": false },
+            "topic":    { "type": "text", "include_in_all": false },
+            "media":    { "type": "keyword", "include_in_all": false }
+        }
+    }
+}
+}

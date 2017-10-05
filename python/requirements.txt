@@ -6,6 +6,8 @@ py-dateutil
 base58
 pynacl
 pyblake2
+# For Brians search, maybe not in production
+flask
 #binascii - built in
 #hashlib - built in I think, and fails to install with pip3
 #struct - built in

@@ -63,14 +63,7 @@ See [UseCases](./Usecases.md) amd [Classes](./Classes.md) for expansion of this
 ## Installation
 
 This should work, someone please confirm on a clean(er) machine and remove this comment.
-```
-git clone http://github.com/ArchiveLabs/dweb_gateway.cid
-cd dweb_gateway
-pip install --disable-pip-version-check -u base58 pynacl
-python -m python.ServerGateway
-curl http://localhost:4244/info
-curl http://localhost:4244/contenthash/doi/10.1234/abcdef
-```
+
 You'll also need REDIS and IPFS
 On a Mac
 ```bash
@@ -78,4 +71,15 @@ brew install redis
 brew services start redis
 
 << need install info for go-ipfs running on port 5001>>
+```
+
+```bash
+git clone http://github.com/ArchiveLabs/dweb_gateway.cid
+cd dweb_gateway
+scripts/run_dweb_me.sh # Should install, get data and run
+
+# Then try
+curl http://localhost:4244/info
+curl http://localhost:4244/doi/10.1001/jama.2009.1064?verbose=True
+curl https://gateway.dweb.me/content/contenthash/5dr1gqVNt1mPzCL2tMRSMnJpWsJ5Qs?verbose=True
 ```
