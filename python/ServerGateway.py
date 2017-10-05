@@ -1,5 +1,6 @@
 # encoding: utf-8
 #from sys import version as python_version
+import logging
 from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
@@ -74,14 +75,14 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         :return: Never Returns
         """
         httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions or {}) # Deepcopy to merge options
-        if verbose: print("Starting server with options=", httpoptions)
+        logging.debug("Starting server with options=", httpoptions)
         #any code needed once (not per thread) goes here.
         cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)    # Uses defaultipandport
 
     @exposed    # Exposes this function for outside use
     def sandbox(self, foo, bar, **kwargs):
         # Changeable, just for testing HTTP etc, feel free to play with in your branch, and expect it to be overwritten on master branch.
-        print("foo=",foo,"bar=",bar, kwargs)
+        logging.debug("foo=",foo,"bar=",bar, kwargs)
         return { 'Content-type': 'application/json',
                  'data': { "FOO": foo, "BAR": bar, "kwargs": kwargs}
                }
@@ -159,5 +160,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         return {} # Empty return, just success
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='dweb_gateway.log', level=logging.DEBUG)
     DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}) # Run local gateway
 
