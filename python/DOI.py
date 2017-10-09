@@ -212,8 +212,8 @@ class DOIfile(NameResolverFile):    # Note plural
                 data = httpget(self._metadata["files"][0])
                 #TODO move this to a URL or better to TransportIPFS when built
                 #ipfsurl = "https://ipfs.dweb.me/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
-                #ipfsurl = "https://localhost:5001/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
-                ipfsurl = "https://localhost:5001/api/v0/pin/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
+                #ipfsurl = "http://localhost:5001/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
+                ipfsurl = "http://localhost:5001/api/v0/pin/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
                 if verbose: print("Fetching IPFS from ", ipfsurl)
                 #Debugging - running into problems with 404, not sure if laptop/HTTPS issue or server
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
