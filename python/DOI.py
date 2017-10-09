@@ -68,7 +68,7 @@ class DOI(NameResolverDir):
         self._metadata = {}
         if verbose: print("DOI.__init__ getting metadata for", self.doi)
         self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
-        #self.get_doi_metadata(verbose)
+        self.get_doi_metadata(verbose)
         if verbose: print("DOI.__init__ looking up", self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
@@ -219,7 +219,9 @@ class DOIfile(NameResolverFile):    # Note plural
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
                 #print("XXX@216",ipldresp)
                 #ipldhash = ipldresp.json()['Hash']
-                ipldhash = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()['Hash']
+                res = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()
+                console.log("IPFS result=",res)
+                ipldhash = res['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
             self._metadata["ipldhash"] = ipldhash
             print("XXX@sqlite_metadata done")
