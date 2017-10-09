@@ -117,6 +117,7 @@ class DOI(NameResolverDir):
     def metadata(self, verbose=False):
         return {'Content-type': 'application/json',
                 'data': {
+                    "doi": self.doi,
                     'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
                     'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
                     "files": [
@@ -211,7 +212,8 @@ class DOIfile(NameResolverFile):    # Note plural
                 data = httpget(self._metadata["files"][0])
                 #TODO move this to a URL or better to TransportIPFS when built
                 #ipfsurl = "https://ipfs.dweb.me/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
-                ipfsurl = "https://localhost:5001/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
+                #ipfsurl = "https://localhost:5001/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
+                ipfsurl = "https://localhost:5001/api/v0/pin/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
                 if verbose: print("Fetching IPFS from ", ipfsurl)
                 #Debugging - running into problems with 404, not sure if laptop/HTTPS issue or server
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
