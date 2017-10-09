@@ -68,7 +68,7 @@ class DOI(NameResolverDir):
         self._metadata = {}
         if verbose: print("DOI.__init__ getting metadata for", self.doi)
         self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
-        self.get_doi_metadata(verbose)
+        #self.get_doi_metadata(verbose)
         if verbose: print("DOI.__init__ looking up", self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
@@ -117,6 +117,7 @@ class DOI(NameResolverDir):
     def metadata(self, verbose=False):
         return {'Content-type': 'application/json',
                 'data': {
+                    "doi": self.doi,
                     'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
                     'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
                     "files": [
