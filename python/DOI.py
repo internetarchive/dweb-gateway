@@ -219,7 +219,9 @@ class DOIfile(NameResolverFile):    # Note plural
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
                 #print("XXX@216",ipldresp)
                 #ipldhash = ipldresp.json()['Hash']
-                ipldhash = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()['Hash']
+                res = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()
+                console.log("IPFS result=",res)
+                ipldhash = res['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
             self._metadata["ipldhash"] = ipldhash
             print("XXX@sqlite_metadata done")
