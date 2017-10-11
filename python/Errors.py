@@ -86,6 +86,9 @@ class MultihashError(MyBaseException):
     httperror = 500
     msg = "Multihash error {message} {hash}"
 
+class SearchException(MyBaseException):
+    httperror = 404
+    msg = "{search} not found"
 
 """
 

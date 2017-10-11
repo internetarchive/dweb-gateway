@@ -4,9 +4,9 @@ import requests
 
 from .HashStore import LocationService, MimetypeService, IPLDHashService
 from .Multihash import Multihash
-from .NameResolver import NameResolverDir, NameResolverFile
+from .NameResolver import NameResolverDir, NameResolverFile, NameResolverSearchItem, NameResolverSearch
 from .miscutils import httpget
-
+from .Errors import SearchException
 
 class DOI(NameResolverDir):
     """
@@ -37,8 +37,8 @@ class DOI(NameResolverDir):
     """
 
     # SQLITE="../data/idents_files_urls_sqlite"   # Old version in Python2 when working dir was "python"
-    SQLITE="data/idents_files_urls.sqlite"
-    _sqliteconnection=None
+    SQLITE = "data/idents_files_urls.sqlite"
+    #_sqliteconnection=None  #TODO-SQL should be per thread
 
     def __init__(self, namespace, publisher, *identifier, **kwargs):
         """
@@ -60,19 +60,19 @@ class DOI(NameResolverDir):
         *   Create a DOIfile(..)
         *   self.push(DOIfile)
         """
-        verbose=kwargs.get("verbose",False)
-        if verbose: print("DOI.__init__",namespace,publisher,identifier)
-        super(DOI,self).__init__(namespace, publisher, *identifier)
+        verbose = kwargs.get("verbose", False)
+        if verbose: print("DOI.__init__", namespace, publisher, identifier)
+        super(DOI, self).__init__(namespace, publisher, *identifier)
         db = self.sqliteconnection(verbose)                     # Lazy connection to database
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
-        self.metadata = {}
-        if verbose: print("DOI.__init__ getting metadata for",self.doi)
+        self._metadata = {}
+        if verbose: print("DOI.__init__ getting metadata for", self.doi)
         self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
         self.get_doi_metadata(verbose)
-        if verbose: print("DOI.__init__ looking up",self.doi)
+        if verbose: print("DOI.__init__ looking up", self.doi)
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
-        if verbose: print("DOI.__init__ iterating over",len(sha1_list),"rows")
+        if verbose: print("DOI.__init__ iterating over", len(sha1_list), "rows")
         for row in sha1_list:
             _, sha1_hex, _ = row
             doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1_hex=sha1_hex), verbose=verbose)
@@ -81,12 +81,17 @@ class DOI(NameResolverDir):
 
     @classmethod
     def sqliteconnection(cls, verbose=False):
+        """
+        # This below wont work in a multithreaded server, as sqlite connections cant be used across threads and doesnt appear
+        # to be a way to access thread variables.  #TODO-THREADING
         if not cls._sqliteconnection:
             if verbose: print("DOI.sqliteconnection connecting to DB")
             cls._sqliteconnection = sqlite3.connect(cls.SQLITE)
             if verbose: print("DOI.sqliteconnection connected to DB")
         return cls._sqliteconnection
-
+        """
+        # Using a new sqlite connection for each request
+        return sqlite3.connect(cls.SQLITE)
 
     @staticmethod
     def archive_url(row):
@@ -101,7 +106,7 @@ class DOI(NameResolverDir):
         _, url, datetime = row  # sha1, url, datetime(optional)
         return 'https://web.archive.org/web/{}/{}'.format(datetime, url) if datetime else url
 
-    def push(self,doifile):
+    def push(self, doifile):
         """
         Add a DOIfile to a DOI -
         :return:    undefined
@@ -109,16 +114,16 @@ class DOI(NameResolverDir):
         # Currently Nothing done here other than superclass adding to list.
         super(DOI, self).push(doifile)
 
-    def content(self, verbose=False):
+    def metadata(self, verbose=False):
         return {'Content-type': 'application/json',
-            'data': {
-                'metadata': self.metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
-                'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
-                "files": [
-                    doifile.metadata for doifile in self.files()
-                ]
-            }
-        }
+                'data': {
+                    'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
+                    'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
+                    "files": [
+                        doifile._metadata for doifile in self.files()
+                    ]
+                }
+                }
 
     @classmethod
     def canonical(cls, publisher, *identifier):
@@ -135,13 +140,12 @@ class DOI(NameResolverDir):
         #TDO check publisher is canonicised 10.nnnn
         return publisher.lower() + "/" + "/".join([i.lower() for i in identifier])
 
-
     def check_if_link_works(self, url, verbose=False):
         """
         See if a link is valid (i.e., returns a '200' to the HTML request).
         """
         if verbose:
-            print("check_if_link_works",url)
+            print("check_if_link_works", url)
         print("XXX@check_if_link_works - dummied out")
         #return True
         try:
@@ -153,7 +157,6 @@ class DOI(NameResolverDir):
         if verbose: print("result=", request.status_code)
         return request.status_code == 200
 
-
     def get_doi_metadata(self, verbose):
         """
         For a DOI, get metadata from doi.org about that file
@@ -162,15 +165,16 @@ class DOI(NameResolverDir):
         """
         url = "http://dx.doi.org/" + self.doi
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
-        r = requests.get(url, headers=headers) # Note that with headers it wont redirect, without it will go to doc which may fail
-        if verbose: print("get_doi_metadata returned:",r)
+        r = requests.get(url, headers=headers)  # Note that with headers it wont redirect, without it will go to doc which may fail
+        if verbose: print("get_doi_metadata returned:", r)
         if r.status_code == 200:
             self.doi_org_metadata = r.json()
         else:
-            console.log("Failed to read metadata at",url)
+            print("Failed to read metadata at", url)
         # If dont get metadata, the rest of our info may still be valid
 
-class DOIfile(NameResolverFile):
+
+class DOIfile(NameResolverFile):    # Note plural
     """
     Class for one file
 
@@ -179,12 +183,10 @@ class DOIfile(NameResolverFile):
 
     """
 
-    # TODO get ContentHash to build a DOIfile
-
     def __init__(self, doi=None, multihash=None, metadata=None, verbose=False):
         super(NameResolverFile, self).__init__(metadata)    # TODO note this is wrong, superclass expects namespace (but ignores that)
         self.doi = doi
-        self.metadata = metadata or {}    # For now all in one dict
+        self._metadata = metadata or {}    # For now all in one dict
         self.multihash = multihash
         if multihash and not self.doi:
             # Lookup DOI from sha1_hex if not supplied.
@@ -193,39 +195,119 @@ class DOIfile(NameResolverFile):
         if multihash:
             self.sqlite_metadata(verbose)
 
-
     def sqlite_metadata(self, verbose):
             files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [self.multihash.sha1_hex]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
             files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1_hex]))
-            self.metadata = { 'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
-                    'files': [DOI.archive_url(file) for file in files_list]}
-            if verbose: print("multihash base58=",self.multihash.multihash58)
+            self._metadata = {'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
+                              'files': [DOI.archive_url(file) for file in files_list]}
+            if verbose: print("multihash base58=", self.multihash.multihash58)
             #multihash58_sha256 = Multihash(data=doifile.retrieve(), code=SHA256)
-            #print("Saving location", multihash58_sha256, doifile.metadata["urls"][0]  )
-            LocationService.set(self.multihash.multihash58, self.metadata["files"][0],verbose=verbose)
-            MimetypeService.set(self.multihash.multihash58, self.metadata["mimetype"],verbose=verbose)
+            #print("Saving location", multihash58_sha256, doifile._metadata["urls"][0]  )
+            LocationService.set(self.multihash.multihash58, self._metadata["files"][0], verbose=verbose)
+            MimetypeService.set(self.multihash.multihash58, self._metadata["mimetype"], verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
             if not ipldhash:
-                data = httpget(self.metadata["files"][0])
+                data = httpget(self._metadata["files"][0])
                 #TODO move this to a URL or better to TransportIPFS when built
-                ipfsurl = "https://ipfs.dweb.me/api/v0/add" #note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
-                if verbose: print("Fetching IPFS from ",ipfsurl)
+                ipfsurl = "https://ipfs.dweb.me/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
+                if verbose: print("Fetching IPFS from ", ipfsurl)
                 #Debugging - running into problems with 404, not sure if laptop/HTTPS issue or server
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
                 #print("XXX@216",ipldresp)
                 #ipldhash = ipldresp.json()['Hash']
-                ipldhash = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])}).json()['Hash']
+                ipldhash = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
-            self.metadata["ipldhash"] = ipldhash
+            self._metadata["ipldhash"] = ipldhash
             print("XXX@sqlite_metadata done")
 
     def retrieve(self):
-        return httpget(self.metadata["urls"][0])
+        return httpget(self._metadata["urls"][0])
 
-    def content(self): #TODO-URLMETA need to change to metadata, content should get content of first URL
+    def metadata(self):  # Was "content" but content should get content of first URL
         #TODO iterate over urls and find first matching hash
-        return { "Content-type": self.metadata["mimetype"], "data": self.retrieve() }
+        return {"Content-type": self._metadata["mimetype"], "data": self.retrieve()}
+
+class DOIsearchItem(NameResolverSearchItem):
+    # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET
+
+    def __init__(self, result=None):
+        super(DOIsearchItem, search).__init__()
+        if result: # Its a DOI search result
+            # Ensure 'authors' is a list, not a single string
+            if type(result['authors']) is not list:
+                result['authors'] = [result['authors'], ]
+        self._metadata = result
+
+    def metadata(self):
+        return self._metadata   # Will match elastic_schema.json  which is doi, title, author, journal, date, publisher, topic, media
+
+class DOIsearch(NameResolverSearch):
+    # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET
+
+    @classmethod
+    def search(self, querystring, limit=20, do_highlight=False):
+        """
+        Use like  /metadata/search/
+        :param querystring:
+        :param limit:
+        :param do_highlight:
+        :param do_files:
+        :return:
+        """
+        print("Search hit: " + querystring)
+
+        querystring = querystring.replace("author:", "authors:")  # Replace author: with authors: in query
+
+
+        search_request = {
+            "query": {
+                "query_string": {
+                    "query": querystring,
+                    "analyzer": "snowball",
+                    "default_operator": "AND",
+                    "analyze_wildcard": True,
+                },
+            },
+            "size": limit,
+        }
+        if do_highlight:
+            search_request['highlight'] = {
+                "pre_tags": ["<mark>"],
+                "post_tags": ["</mark>"],
+                "fields": {"_all": {}},
+            }
+        url = "http://localhost:9200/crossref-works/_search"  # Might parameterise part of this, but unlikely
+        resp = requests.post(url, json=search_request)
+        if resp.status_code != 200:
+            raise SearchException(search="search_request")  # TODO-SEARCH extract useful part of search_request
+        return resp.json()
+
+    def __init__(self, namespace, querystring, limit=20, do_highlight=False, verbose=False):
+        super(DOIsearch,self).__init__(namespace, querystring, verbose=verbose)
+        results = self.search(querystring,
+                                do_highlight=do_highlight,
+                                limit=min(max(0, int(limit)), 100))
+        this._list = [  DOIsearchItem(result=h) for h in results['hits']['hits'] ]
+        this.count_found = results['hits']['total']
+        this.count_returned = len(this._list)
+        this.highlight = do_highlight
+
+    def metadata(self):
+        """
+        Return metadata in a useful form for the HTML query
+
+        :return:
+        """
+        return {'Content-type': 'application/json',
+                'data': {
+                    count_found: this.count_found,
+                    count_returned: this.count_returned,
+                    highlight: this.highlight,
+                    results: [ result.metadata() for result in this._list ]
+                }
+                }
+
 
 if __name__ == '__main__':
     import sys
