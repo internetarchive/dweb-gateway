@@ -62,7 +62,9 @@ class DOI(NameResolverDir):
         *   self.push(DOIfile)
         """
         verbose = kwargs.get("verbose", False)
-        if verbose: logging.debug("DOI.__init__", namespace, publisher, identifier)
+        if verbose:
+            logging.debug("DOI.__init__({0}, {1}, {2})"
+                          .format(namespace, publisher, identifier))
         super(DOI, self).__init__(namespace, publisher, *identifier)
         db = self.sqliteconnection(verbose)                     # Lazy connection to database
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
