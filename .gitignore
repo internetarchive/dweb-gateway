@@ -5,3 +5,4 @@ idents_files_urls.sqlite
 .cache
 python/.cache
 idents_files_urls_sqlite
+dweb_gateway.log

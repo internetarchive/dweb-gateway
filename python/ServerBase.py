@@ -78,7 +78,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         cls.options = options
         #HTTPServer(cls.ipandport, cls).serve_forever()  # Start http server
         ThreadedHTTPServer(cls.ipandport, cls).serve_forever()  # OR Start http server
-        print("Server exited") # It never should
+        logging.ERROR("Server exited") # It never should
 
     def _dispatch(self, **postvars):
         """
@@ -94,7 +94,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         # In documentation, assuming call with /foo/aaa/bbb?x=ccc,y=ddd
         try:
             httpverbose=True
-            if httpverbose: print("dispatcher",self.path)
+            if httpverbose: logging.DEBUG("dispatcher",self.path)
             o = urlparse(self.path)             # Parsed URL {path:"/foo/aaa/bbb", query: "bbb?x=ccc,y=ddd"}
 
             # Get url args, remove HTTP quote (e.g. %20=' '), ignore leading / and anything before it. Will always be at least one item (empty after /)
@@ -122,14 +122,14 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
                 #    data = dumps(data)            # And maype this should be data.dumps()
                 if isinstance(data, str):
-                    print("converting to utf8")
+                    logging.DEBUG("converting to utf8")
                     if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
                         if contenttype.startswith('text') or contenttype in ('application/json',): # Only convert types we know are strings that could be unicode
                         	data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary -- its still a string
                     if python_version.startswith('3'):
                         data = bytes(data,"utf-8")  # In Python3 requests wont work on strings, have to convert to bytes explicitly
                 if not isinstance(data, (bytes, str)):
-                    print(data)
+                    logging.DEBUG(data)
                     # Raise an exception - will not honor the status already sent, but this shouldnt happen as coding
                     # error in the dispatched function if it returns anything else
                     raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
@@ -152,7 +152,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         self._dispatch()
 
     def do_OPTIONS(self):
-        print("Options request")
+        logging.DEBUG("Options request")
         self.send_response(200)
         self.send_header('Access-Control-Allow-Methods', "POST,GET,OPTIONS")
         self.send_header('Access-Control-Allow-Headers', self.headers['Access-Control-Request-Headers'])    # Allow anythihg, but '*' doesnt work
@@ -170,9 +170,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         """
         try:
             verbose = True
-            if verbose: print(self.headers)
+            if verbose: logging.DEBUG(self.headers)
             ctype, pdict = parse_header(self.headers['content-type'])
-            if verbose: print(ctype, pdict)
+            if verbose: logging.DEBUG(ctype, pdict)
             if ctype == 'multipart/form-data':
                 postvars = parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':
