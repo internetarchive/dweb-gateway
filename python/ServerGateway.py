@@ -12,7 +12,6 @@ from .Errors import ToBeImplementedException
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
 """
 
-#TODO-LOG setup generic logger and move all print calls to use it
 
 class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
@@ -75,7 +74,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         :return: Never Returns
         """
         httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions or {}) # Deepcopy to merge options
-        logging.debug("Starting server with options=", httpoptions)
+        if verbose: logging.DEBUG("Starting server with options=", httpoptions)
         #any code needed once (not per thread) goes here.
         cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)    # Uses defaultipandport
 

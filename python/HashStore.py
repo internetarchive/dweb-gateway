@@ -74,18 +74,18 @@ class HashStore(object):
         raise CodingException(message="It is meaningless to instantiate an instance of HashStore, its all class methods")
 
     @classmethod
-    def hash_set(cls, multihash, field, value):
+    def hash_set(cls, multihash, field, value, verbose=False):
         """
         :param multihash:
         :param field:
         :param value:
         :return:
         """
-        logging.debug("Hash set:", multihash, field, "=", value)
+        if verbose: logging.DEBUG("Hash set:", multihash, field, "=", value)
         cls.redis().hset(multihash, field, value)
 
     @classmethod
-    def hash_get(cls, multihash, field):
+    def hash_get(cls, multihash, field, verbose=False):
         """
 
         :param multihash:
@@ -93,18 +93,18 @@ class HashStore(object):
         :return:
         """
         res = cls.redis().hget(multihash, field)
-        logging.debug("Hash found:", multihash, field, "=", res)
+        if verbose: logging.DEBUG("Hash found:", multihash, field, "=", res)
         return res
 
     @classmethod
-    def set(cls, multihash, value):
+    def set(cls, multihash, value, verbose=False):
         """
 
         :param multihash:
         :param value:   What we want to store in the redisfield
         :return:
         """
-        return cls.hash_set(multihash, cls.redisfield, value)
+        return cls.hash_set(multihash, cls.redisfield, value, verbose)
 
     @classmethod
     def get(cls, multihash, verbose=False):
@@ -113,7 +113,7 @@ class HashStore(object):
         :param multihash:
         :return: string stored in Redis
         """
-        return cls.hash_get(multihash, cls.redisfield)
+        return cls.hash_get(multihash, cls.redisfield, verbose)
 
 
 class LocationService(HashStore):
