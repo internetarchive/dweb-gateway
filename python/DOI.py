@@ -69,13 +69,13 @@ class DOI(NameResolverDir):
         db = self.sqliteconnection(verbose)                     # Lazy connection to database
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self._metadata = {}
-        if verbose: logging.debug("DOI.__init__ getting metadata for", self.doi)
+        if verbose: logging.debug("DOI.__init__ getting metadata for {0}".format(self.doi))
         self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
         self.get_doi_metadata(verbose)
-        if verbose: logging.debug("DOI.__init__ looking up", self.doi)
+        if verbose: logging.debug("DOI.__init__ looking up {0}".format(self.doi))
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
-        if verbose: logging.debug("DOI.__init__ iterating over", len(sha1_list), "rows")
+        if verbose: logging.debug("DOI.__init__ iterating over {0} rows".format(len(sha1_list)))
         for row in sha1_list:
             _, sha1_hex, _ = row
             doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1_hex=sha1_hex), verbose=verbose)
@@ -148,7 +148,7 @@ class DOI(NameResolverDir):
         See if a link is valid (i.e., returns a '200' to the HTML request).
         """
         if verbose:
-            logging.debug("check_if_link_works", url)
+            logging.debug("check_if_link_works {0}".format(url))
         logging.debug("XXX@check_if_link_works - dummied out")
         #return True
         try:
@@ -157,7 +157,7 @@ class DOI(NameResolverDir):
             request = requests.get(url, headers=headers)
         except Exception as e:
             raise e
-        if verbose: logging.debug("result=", request.status_code)
+        if verbose: logging.debug("result={0}".format(request.status_code))
         return request.status_code == 200
 
     def get_doi_metadata(self, verbose):
@@ -169,7 +169,7 @@ class DOI(NameResolverDir):
         url = "http://dx.doi.org/" + self.doi
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
         r = requests.get(url, headers=headers)  # Note that with headers it wont redirect, without it will go to doc which may fail
-        if verbose: logging.debug("get_doi_metadata returned:", r)
+        if verbose: logging.debug("get_doi_metadata returned: {0}".format(r))
         if r.status_code == 200:
             self.doi_org_metadata = r.json()
         else:
@@ -193,7 +193,7 @@ class DOIfile(NameResolverFile):    # Note plural
         self.multihash = multihash
         if multihash and not self.doi:
             # Lookup DOI from sha1_hex if not supplied.
-            if verbose: logging.debug("DOIfile.__init__ looking up", multihash.sha1_hex)
+            if verbose: logging.debug("DOIfile.__init__ looking up {0}".format(multihash.sha1_hex))
             self.doi, _, _ = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))[0]
         if multihash:
             self.sqlite_metadata(verbose)
@@ -204,7 +204,7 @@ class DOIfile(NameResolverFile):    # Note plural
             files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1_hex]))
             self._metadata = {'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
                               'files': [DOI.archive_url(file) for file in files_list]}
-            if verbose: logging.debug("multihash base58=", self.multihash.multihash58)
+            if verbose: logging.debug("multihash base58={0}".format(self.multihash.multihash58))
             #multihash58_sha256 = Multihash(data=doifile.retrieve(), code=SHA256)
             #print("Saving location", multihash58_sha256, doifile._metadata["urls"][0]  )
             LocationService.set(self.multihash.multihash58, self._metadata["files"][0], verbose=verbose)
@@ -214,7 +214,7 @@ class DOIfile(NameResolverFile):    # Note plural
                 data = httpget(self._metadata["files"][0])
                 #TODO move this to a URL or better to TransportIPFS when built
                 ipfsurl = "https://ipfs.dweb.me/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
-                if verbose: logging.debug("Fetching IPFS from ", ipfsurl)
+                if verbose: logging.debug("Fetching IPFS from {0}".format(ipfsurl))
                 #Debugging - running into problems with 404, not sure if laptop/HTTPS issue or server
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
                 #print("XXX@216",ipldresp)
@@ -258,7 +258,7 @@ class DOIsearch(NameResolverSearch):
         :param do_files:
         :return:
         """
-        logging.debug("Search hit: " + querystring)
+        logging.debug("Search hit: {0}".format(querystring))
 
         querystring = querystring.replace("author:", "authors:")  # Replace author: with authors: in query
 
