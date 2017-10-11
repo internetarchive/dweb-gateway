@@ -81,7 +81,7 @@ class HashStore(object):
         :param value:
         :return:
         """
-        if verbose: logging.DEBUG("Hash set:", multihash, field, "=", value)
+        if verbose: logging.debug("Hash set:", multihash, field, "=", value)
         cls.redis().hset(multihash, field, value)
 
     @classmethod
@@ -93,7 +93,7 @@ class HashStore(object):
         :return:
         """
         res = cls.redis().hget(multihash, field)
-        if verbose: logging.DEBUG("Hash found:", multihash, field, "=", res)
+        if verbose: logging.debug("Hash found:", multihash, field, "=", res)
         return res
 
     @classmethod
