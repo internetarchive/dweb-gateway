@@ -65,7 +65,7 @@ class ContentHash(NameResolverFile):
         if not self.url:
             raise NoContentException()
         data = httpget(self.url)
-        if verbose: logging.DEBUG("Retrieved doc size=", len(data))
+        if verbose: logging.debug("Retrieved doc size=", len(data))
         return {'Content-type': self.mimetype,
             'data': data,
             }
