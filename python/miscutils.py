@@ -53,7 +53,7 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
     try:
         return obj.dumps()          # See if the object has its own dumps
     except Exception as e:
-        raise TypeError("Type %s not serializable (%s %s)" % (obj.__class__.__name__, e.__class__.__name__, e))
+        raise TypeError("Type {0} not serializable".format(obj.__class__.__name__)) from e
 
 
 
@@ -75,9 +75,8 @@ def httpget(url):
         if r is not None and (r.status_code == 404):
             raise TransportURLNotFound(url=url)
         else:
-            print(e.__class__.__name__, e)
+            logging.error("HTTP request failed", exc_info=True)
             raise e
     except requests.exceptions.MissingSchema as e:
-            print(e.__class__.__name__, e)
-            # TODO-LOGGING: logger.error(e)
+            logging.error("HTTP request failed", exc_info=True)
             raise e  # For now just raise it

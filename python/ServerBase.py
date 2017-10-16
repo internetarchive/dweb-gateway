@@ -78,7 +78,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         cls.options = options
         #HTTPServer(cls.ipandport, cls).serve_forever()  # Start http server
         ThreadedHTTPServer(cls.ipandport, cls).serve_forever()  # OR Start http server
-        logging.ERROR("Server exited") # It never should
+        logging.error("Server exited") # It never should
 
     def _dispatch(self, **postvars):
         """
@@ -143,8 +143,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             # TypeError Message will be like "sandbox() takes exactly 3 arguments (2 given)" or whatever exception returned by function
             httperror = e.httperror if hasattr(e, "httperror") else 500
             if not (self.expectedExceptions and isinstance(e, self.expectedExceptions)):  # Unexpected error
-                traceback.print_exc(limit=None)  # unfortunately only prints to try above so may need to raise?
-            logging.debug("Sending error: {0} {1}".format(httperror, str(e)))
+                logging.error("Sending Unexpected Error {httperror}:", httperror=httperror, exc_info=True)
+            else:
+                logging.info("Sending Error {httperror}:", httperror=httperror, exc_info=True)
             self.send_error(httperror, str(e))    # Send an error response
 
 
@@ -191,8 +192,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             else:
                 postvars = {}
             self._dispatch(**postvars)
-        #except Exception as e:
-        except ZeroDivisionError as e:  # Uncomment this to actually throw exception
+        except Exception as e:
+        #except ZeroDivisionError as e:  # Uncomment this to actually throw exception (since it wont be caught here)
+            # Return error to user, should have been logged already
             httperror = e.httperror if hasattr(e, "httperror") else 500
             self.send_error(httperror, str(e))  # Send an error response
 

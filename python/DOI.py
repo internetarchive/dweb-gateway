@@ -88,9 +88,9 @@ class DOI(NameResolverDir):
         # This below wont work in a multithreaded server, as sqlite connections cant be used across threads and doesnt appear
         # to be a way to access thread variables.  #TODO-THREADING
         if not cls._sqliteconnection:
-            if verbose: print("DOI.sqliteconnection connecting to DB")
+            if verbose: logging.debug("DOI.sqliteconnection connecting to DB")
             cls._sqliteconnection = sqlite3.connect(cls.SQLITE)
-            if verbose: print("DOI.sqliteconnection connected to DB")
+            if verbose: logging.debug("DOI.sqliteconnection connected to DB")
         return cls._sqliteconnection
         """
         # Using a new sqlite connection for each request
@@ -207,7 +207,7 @@ class DOIfile(NameResolverFile):    # Note plural
                               'files': [DOI.archive_url(file) for file in files_list]}
             if verbose: logging.debug("multihash base58={0}".format(self.multihash.multihash58))
             #multihash58_sha256 = Multihash(data=doifile.retrieve(), code=SHA256)
-            #print("Saving location", multihash58_sha256, doifile._metadata["urls"][0]  )
+            #logging.debug("Saving location "+ multihash58_sha256+":"+doifile._metadata["urls"][0]  )
             LocationService.set(self.multihash.multihash58, self._metadata["files"][0], verbose=verbose)
             MimetypeService.set(self.multihash.multihash58, self._metadata["mimetype"], verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
@@ -220,7 +220,6 @@ class DOIfile(NameResolverFile):    # Note plural
                 if verbose: logging.debug("Fetching IPFS from {0}".format(ipfsurl))
                 #Debugging - running into problems with 404, not sure if laptop/HTTPS issue or server
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
-                #print("XXX@216",ipldresp)
                 #ipldhash = ipldresp.json()['Hash']
                 res = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()
                 console.log("IPFS result=",res)
