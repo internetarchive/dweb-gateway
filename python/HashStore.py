@@ -2,6 +2,7 @@
 Hash Store set of classes for storage and retrieval
 """
 import redis
+import logging
 from .Errors import CodingException
 
 
@@ -60,7 +61,7 @@ class HashStore(object):
     @classmethod
     def redis(cls):
         if not HashStore._redis:
-            print("HashStore connecting to Redis")
+            logging.debug("HashStore connecting to Redis")
             HashStore._redis = redis.StrictRedis(   # Note uses HashStore cos this connection is shared across subclasses
                 host="localhost",
                 port=6379,
@@ -80,7 +81,7 @@ class HashStore(object):
         :param value:
         :return:
         """
-        if verbose: print("Hash set:", multihash, field, "=", value)
+        if verbose: logging.debug("Hash set: {0} {1}={2}".format(multihash, field, value))
         cls.redis().hset(multihash, field, value)
 
     @classmethod
@@ -92,7 +93,7 @@ class HashStore(object):
         :return:
         """
         res = cls.redis().hget(multihash, field)
-        if verbose: print("Hash found:", multihash, field, "=", res)
+        if verbose: logging.debug("Hash found: {0} {1}={2}".format(multihash, field, res))
         return res
 
     @classmethod
