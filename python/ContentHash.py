@@ -54,7 +54,10 @@ class ContentHash(NameResolverFile):
         :return:
         """
         ch = super(ContentHash, cls).new(namespace, multihash58, *args, **kwargs)    # By default calls cls() which goes to __init__
+        verbose=kwargs.get("verbose")
+        print("XXX@CH.new.57 url=",ch.url)
         if not ch.url:
+            if verbose: logging.debug("No URL, looking for DOI file")   
             ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
             pass  # TODO-this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
         if not ch.url:
