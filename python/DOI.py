@@ -63,15 +63,11 @@ class DOI(NameResolverDir):
         """
         verbose = kwargs.get("verbose", False)
         if verbose:
-            logging.debug("DOI.__init__({0}, {1}, {2})"
-                          .format(namespace, publisher, identifier))
+            logging.debug("DOI.__init__({0}, {1}, {2})".format(namespace, publisher, identifier))
         super(DOI, self).__init__(namespace, publisher, *identifier)
         db = self.sqliteconnection(verbose)                     # Lazy connection to database
         self.doi = self.canonical(publisher, *identifier)    # "10.nnnn/xxxx/yyyy"
         self._metadata = {}
-        if verbose: logging.debug("DOI.__init__ getting metadata for {0}".format(self.doi))
-        self.doi_org_metadata = {}  # Will hold metadata retrieved from doi.org
-        self.get_doi_metadata(verbose)
         if verbose: logging.debug("DOI.__init__ looking up {0}".format(self.doi))
         sha1_list = list(db.execute('SELECT * FROM files_id_doi WHERE doi = ?;', [self.doi]))
 
@@ -122,7 +118,7 @@ class DOI(NameResolverDir):
                 'data': {
                     "doi": self.doi,
                     'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
-                    'doi_org_metadata': self.doi_org_metadata,  # Metadata as supplied by DOI.org
+                    'doi_org_metadata': self.doi_org_metadata(verbose),  # Metadata as supplied by DOI.org
                     "files": [
                         doifile._metadata for doifile in self.files()
                     ]
@@ -161,21 +157,36 @@ class DOI(NameResolverDir):
         if verbose: logging.debug("result={0}".format(request.status_code))
         return request.status_code == 200
 
-    def get_doi_metadata(self, verbose):
+    @staticmethod
+    def get_doi_metadata(doi, verbose=False):
         """
         For a DOI, get metadata from doi.org about that file
-        #TODO - move this to browser
+        #TODO - move this to browser - but having problems with CBOR
         :return: metadata on the doi in json format
         """
-        url = "http://dx.doi.org/" + self.doi
+        url = "http://dx.doi.org/" + doi
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
         r = requests.get(url, headers=headers)  # Note that with headers it wont redirect, without it will go to doc which may fail
         if verbose: logging.debug("get_doi_metadata returned: {0}".format(r))
         if r.status_code == 200:
-            self.doi_org_metadata = r.json()
+            return r.json()
         else:
             logging.WARNING("Failed to read metadata at", url)
+            return None
         # If dont get metadata, the rest of our info may still be valid
+
+    def doi_org_metadata(self, verbose=False):
+        """
+        Get and save metadata from DOI.org
+        Same code on DOIfile - which can have doi_org_metadata when invoked singularly as in sha1hex/1a2b3c
+
+        :param verbose:
+        :return:
+        """
+        if verbose: logging.debug("DOI.__init__ getting metadata for {0}".format(self.doi))
+        if not getattr(self,"_doi_org_metadata", None):
+            self._doi_org_metadata = self.get_doi_metadata(self.doi)   # Maybe None if not found
+        return self._doi_org_metadata
 
 
 class DOIfile(NameResolverFile):    # Note plural
@@ -249,15 +260,35 @@ class DOIfile(NameResolverFile):    # Note plural
 
 
     def metadata(self, verbose=False):
-        # TODO iterate over urls and find first matching hash
-        return {"Content-type": 'application/json', "data": self._metadata}
+        return {'Content-type': 'application/json',
+                'data': {
+                    "doi": self.doi,
+                    'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
+                    'doi_org_metadata': self.doi_org_metadata(verbose),  # Metadata as supplied by DOI.org
+                    "files": [
+                        self._metadata  # Just one, but in array to keep HTML consistent with DOI, note same as metadata above
+                    ]
+                }
+                }
 
+
+    def doi_org_metadata(self, verbose=False):
+        """
+        Get and save metadata from DOI.org
+
+        :param verbose:
+        :return:
+        """
+        if verbose: logging.debug("DOI.__init__ getting metadata for {0}".format(self.doi))
+        if not getattr(self,"_doi_org_metadata", None):
+            self._doi_org_metadata = DOI.get_doi_metadata(self.doi)   # Maybe None if not ound
+        return self._doi_org_metadata
 
 class DOIsearchItem(NameResolverSearchItem):
     # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET
 
     def __init__(self, result=None):
-        super(DOIsearchItem, search).__init__()
+        super(DOIsearchItem, self).__init__()
         if result: # Its a DOI search result
             # Ensure 'authors' is a list, not a single string
             if type(result['authors']) is not list:
@@ -277,7 +308,6 @@ class DOIsearch(NameResolverSearch):
         :param querystring:
         :param limit:
         :param do_highlight:
-        :param do_files:
         :return:
         """
         logging.debug("Search hit: {0}".format(querystring))
@@ -313,10 +343,10 @@ class DOIsearch(NameResolverSearch):
         results = self.search(querystring,
                                 do_highlight=do_highlight,
                                 limit=min(max(0, int(limit)), 100))
-        this._list = [  DOIsearchItem(result=h) for h in results['hits']['hits'] ]
-        this.count_found = results['hits']['total']
-        this.count_returned = len(this._list)
-        this.highlight = do_highlight
+        self._list = [  DOIsearchItem(result=h) for h in results['hits']['hits'] ]
+        self.count_found = results['hits']['total']
+        self.count_returned = len(self._list)
+        self.highlight = do_highlight
 
     def metadata(self):
         """
@@ -326,10 +356,10 @@ class DOIsearch(NameResolverSearch):
         """
         return {'Content-type': 'application/json',
                 'data': {
-                    count_found: this.count_found,
-                    count_returned: this.count_returned,
-                    highlight: this.highlight,
-                    results: [ result.metadata() for result in this._list ]
+                    "count_found": self.count_found,
+                    "count_returned": self.count_returned,
+                    "highlight": self.highlight,
+                    "results": [ result.metadata() for result in self._list ]
                 }
                 }
 
