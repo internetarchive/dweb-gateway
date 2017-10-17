@@ -171,7 +171,7 @@ class DOI(NameResolverDir):
         if r.status_code == 200:
             return r.json()
         else:
-            logging.WARNING("Failed to read metadata at", url)
+            logging.warning("Failed to read metadata at {0}".format(url))
             return None
         # If dont get metadata, the rest of our info may still be valid
 

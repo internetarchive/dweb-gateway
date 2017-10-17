@@ -5,7 +5,7 @@ from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
 from .IPLD import IPLDdir, IPLDfile
-from .Errors import ToBeImplementedException
+from .Errors import ToBeImplementedException, NoContentException
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .ContentHash import ContentHash
 from .Sha1Hex import Sha1Hex
@@ -56,7 +56,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     defaulthttpoptions = { "ipandport": ('localhost', 4244) }
     onlyexposed = True          # Only allow calls to @exposed methods
-    expectedExceptions = []     # List any exceptions that you "expect" (and dont want stacktraces for)
+    expectedExceptions = (NoContentException,)     # List any exceptions that you "expect" (and dont want stacktraces for)
 
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
         #!SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients
@@ -77,7 +77,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         :return: Never Returns
         """
         httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions or {}) # Deepcopy to merge options
-        logging.info("Starting server with options=", httpoptions)
+        logging.info("Starting server with options={0}".format(httpoptions))
         #any code needed once (not per thread) goes here.
         cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)    # Uses defaultipandport
 
