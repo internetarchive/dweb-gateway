@@ -193,7 +193,7 @@ class DOIfile(NameResolverFile):    # Note plural
         self._metadata = metadata or {}    # For now all in one dict
         self.multihash = multihash
         if multihash and not self.doi:
-            # Lookup DOI from sha1_hex if not supplied.
+            # Lookup DOI from sha1_hex if DOI not supplied.
             if verbose: logging.debug("DOIfile.__init__ looking up {0}".format(multihash.sha1_hex))
             self.doi, _, _ = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))[0]
         if multihash:
@@ -227,12 +227,31 @@ class DOIfile(NameResolverFile):    # Note plural
             self._metadata["ipldhash"] = ipldhash
             logging.debug("XXX@sqlite_metadata done")
 
-    def retrieve(self):
-        return httpget(self._metadata["urls"][0])
+    @property
+    def url(self):
+        """
+        Find the url for this DOIfile, if necessary reading the metadata and finding first URL in it.
+        :return:
+        """
+        if not self._url:
+            if not self._metadata:
+                self.sqlite_metadata(verbose=False)
+            self._url = self._metadata["urls"][0]
+        return self._url
 
-    def metadata(self):  # Was "content" but content should get content of first URL
+
+    def retrieve(self):
+        return httpget(self.url)
+
+    def content(self, verbose=False):
         #TODO iterate over urls and find first matching hash
         return {"Content-type": self._metadata["mimetype"], "data": self.retrieve()}
+
+
+    def metadata(self, verbose=False):
+        # TODO iterate over urls and find first matching hash
+        return {"Content-type": 'application/json', "data": self._metadata}
+
 
 class DOIsearchItem(NameResolverSearchItem):
     # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET

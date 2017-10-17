@@ -43,7 +43,7 @@ class NameResolver(object):
         """
         raise ToBeImplementedException(name=self.__class__.__name__+".content()")
 
-    def metadata(self):
+    def metadata(self, verbose=False):
         """
 
         :return:

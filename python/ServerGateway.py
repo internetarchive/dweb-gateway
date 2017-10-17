@@ -4,9 +4,11 @@ import logging
 from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
-from .ContentHash import ContentHash
 from .IPLD import IPLDdir, IPLDfile
 from .Errors import ToBeImplementedException
+#!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
+from .ContentHash import ContentHash
+from .Sha1Hex import Sha1Hex
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -57,9 +59,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     expectedExceptions = []     # List any exceptions that you "expect" (and dont want stacktraces for)
 
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
+        #!SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients
         "doi": DOI,
         "contenthash": ContentHash,
-        # TODO-OTHERNAMESPACE add new namespaces here and see other TODO-OTHERNAMESPACE here and in clients
+        "sha1hex": Sha1Hex,
     }
 
 

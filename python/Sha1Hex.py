@@ -6,10 +6,10 @@ from .HashStore import LocationService, MimetypeService
 from .Multihash import Multihash
 from .DOI import DOIfile
 
-class ContentHash(NameResolverFile):
+class Sha1Hex(NameResolverFile):
     """
-    ContentHash is a class for retrieval by content hash
-    typically of form   contenthash/Qmd.... for SHA256 or contenthahs/5.... for SHA1
+    Sha1Hex is a class for retrieval by Sha1Hex hash - based on ContentHash
+    typically of form   sha1hex/1a2b3c for SHA1
     URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
 
     Implements name resolution of the ContentHash namespace, via a local store and any other internal archive method
@@ -18,30 +18,30 @@ class ContentHash(NameResolverFile):
     * Build way to preload the hashstore with the hashes and URLs from various parts of the Archive
     """
 
-    def __init__(self, namespace, multihash58, **kwargs):
+    def __init__(self, namespace, sha1_hex, **kwargs):
         """
         Creates the object
 
         :param namespace:   "contenthash"
-        :param multihash:   Base58 representation of multihash (could be sha256 or sha1, we may not have both)
+        :param sha1_hex:   Base58 representation of multihash (could be sha256 or sha1, we may not have both)
         :param kwargs:      Any other args to the URL, ignored for now.
         """
         """
         Pseudo-code
         Looks up the multihash in Location Service to find where can be retrieved from.
         """
-        super(ContentHash, self).__init__(self, namespace, multihash58, **kwargs)
+        super(Sha1Hex, self).__init__(self, namespace, sha1_hex, **kwargs)
         verbose=kwargs.get("verbose")
-        if namespace != "contenthash":
-            raise CodingException(message="namespace != contenthash")
-        self.multihash = Multihash(multihash58=multihash58)   #TODO-SHA1HEX note ContentHash does this and next line wrong
+        if namespace != "sha1hex":
+            raise CodingException(message="namespace != sha1hex")
+        self.multihash = Multihash(sha1_hex=sha1_hex)   #TODO-SHA1HEX note ContentHash does this and next line wrong
         self.url = LocationService.get(self.multihash.multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
         self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose)    # Should be after DOIfile resolution, which will set mimetype in MimetypeService
         self._metadata = None   # Not resolved yet
         self._doifile = None   # Not resolved yet
 
     @classmethod
-    def new(cls, namespace, multihash58, *args, **kwargs):
+    def new(cls, namespace, sha1_hex, *args, **kwargs):
         """
         #TODO-SHA1HEX create a superclass once tested
         Called by ServerGateway to handle a URL - passed the parts of the remainder of the URL after the requested format,
@@ -51,7 +51,7 @@ class ContentHash(NameResolverFile):
         :param kwargs:
         :return:
         """
-        ch = super(ContentHash, cls).new(namespace, multihash58, *args, **kwargs)    # By default calls cls() which goes to __init__
+        ch = super(Sha1Hex, cls).new(namespace, sha1_hex, *args, **kwargs)    # By default calls cls() which goes to __init__
         if not ch.url:
             ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
             pass  # TODO-this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
