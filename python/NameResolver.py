@@ -34,7 +34,18 @@ class NameResolver(object):
 
     @classmethod
     def new(cls, namespace, *args, **kwargs):
-        return cls(namespace, *args, **kwargs)
+        """
+        Default creation of new obj, returns None if not found (to allow multiple attempts to instantiate)
+
+        :param namespace:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        try:
+            return cls(namespace, *args, **kwargs)
+        except NoContentException:
+            return None
 
     def content(self, verbose=False):
         """

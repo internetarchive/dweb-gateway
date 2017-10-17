@@ -7,7 +7,7 @@ from .HashStore import LocationService, MimetypeService, IPLDHashService
 from .Multihash import Multihash
 from .NameResolver import NameResolverDir, NameResolverFile, NameResolverSearchItem, NameResolverSearch
 from .miscutils import httpget
-from .Errors import SearchException
+from .Errors import SearchException, NoContentException
 
 class DOI(NameResolverDir):
     """
@@ -199,6 +199,15 @@ class DOIfile(NameResolverFile):    # Note plural
     """
 
     def __init__(self, doi=None, multihash=None, metadata=None, verbose=False):
+        """
+        Initilize a new DOIfile, usually called from new()
+
+        :param doi:
+        :param multihash:
+        :param metadata:
+        :param verbose:
+        :raises NoContentException: if no DOI and cant find sha1 in index
+        """
         super(NameResolverFile, self).__init__(metadata)    # TODO note this is wrong, superclass expects namespace (but ignores that)
         self.doi = doi
         self._metadata = metadata or {}    # For now all in one dict
@@ -206,7 +215,10 @@ class DOIfile(NameResolverFile):    # Note plural
         if multihash and not self.doi:
             # Lookup DOI from sha1_hex if DOI not supplied.
             if verbose: logging.debug("DOIfile.__init__ looking up {0}".format(multihash.sha1_hex))
-            self.doi, _, _ = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))[0]
+            l = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))
+            if not l:
+                raise NoContentException    # If cant find a doi, no point continuing
+            self.doi, _, _ = l[0]
         if multihash:
             self.sqlite_metadata(verbose)
 

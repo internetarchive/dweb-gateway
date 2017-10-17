@@ -77,7 +77,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         cls.verbose = verbose
         cls.options = options
         #HTTPServer(cls.ipandport, cls).serve_forever()  # Start http server
-        logging.debug("Server starting on {0}:{1}:{2}".format(cls.ipandport[0], cls.ipandport[1], cls.options or ""))
+        logging.info("Server starting on {0}:{1}:{2}".format(cls.ipandport[0], cls.ipandport[1], cls.options or ""))
         ThreadedHTTPServer(cls.ipandport, cls).serve_forever()  # OR Start http server
         logging.error("Server exited") # It never should
 
