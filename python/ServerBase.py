@@ -143,9 +143,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             # TypeError Message will be like "sandbox() takes exactly 3 arguments (2 given)" or whatever exception returned by function
             httperror = e.httperror if hasattr(e, "httperror") else 500
             if not (self.expectedExceptions and isinstance(e, self.expectedExceptions)):  # Unexpected error
-                logging.error("Sending Unexpected Error {httperror}:", httperror=httperror, exc_info=True)
+                logging.error("Sending Unexpected Error {0}:".format(httperror), exc_info=True)
             else:
-                logging.info("Sending Error {httperror}:", httperror=httperror, exc_info=True)
+                logging.info("Sending Error {0}:{1}".format(httperror, str(e)))
             self.send_error(httperror, str(e))    # Send an error response
 
 
@@ -172,7 +172,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             #logging.debug(self.headers)
             ctype, pdict = parse_header(self.headers['content-type'])
-            #logging.debug(ctype, pdict)
+            #logging.debug("Contenttype={0}, dict={1}".format(ctype, pdict))
             if ctype == 'multipart/form-data':
                 postvars = parse_multipart(self.rfile, pdict)
             elif ctype == 'application/x-www-form-urlencoded':

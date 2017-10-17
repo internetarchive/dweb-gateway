@@ -32,7 +32,7 @@ class ContentHash(NameResolverFile):
         """
         verbose=kwargs.get("verbose")
         if verbose:
-            logging.debug("{0}.__init__({1}, {2}, {3})".format(self.__class__.__name__, namespace, sha1_hex, kwargs))
+            logging.debug("{0}.__init__({1}, {2}, {3})".format(self.__class__.__name__, namespace, multihash58, kwargs))
         super(ContentHash, self).__init__(self, namespace, multihash58, **kwargs)
         if namespace != "contenthash":
             raise CodingException(message="namespace != contenthash")
