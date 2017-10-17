@@ -32,11 +32,11 @@ class Sha1Hex(NameResolverFile):
         """
         verbose=kwargs.get("verbose")
         if verbose:
-            logging.debug("Sha1Hex.__init__({0}, {1}, {2})".format(namespace, sha1_hex, kwargs))
+            logging.debug("{0}.__init__({1}, {2}, {3})".format(self.__class__.__name__, namespace, sha1_hex, kwargs))
         super(Sha1Hex, self).__init__(self, namespace, sha1_hex, **kwargs)
         if namespace != "sha1hex":
             raise CodingException(message="namespace != sha1hex")
-        self.multihash = Multihash(sha1_hex=sha1_hex)   #TODO-SHA1HEX note ContentHash does this and next line wrong
+        self.multihash = Multihash(sha1_hex=sha1_hex)
         self.url = LocationService.get(self.multihash.multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
         self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose)    # Should be after DOIfile resolution, which will set mimetype in MimetypeService
         self._metadata = None   # Not resolved yet

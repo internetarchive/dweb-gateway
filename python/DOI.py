@@ -300,6 +300,7 @@ class DOIsearchItem(NameResolverSearchItem):
 
 class DOIsearch(NameResolverSearch):
     # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET
+    #TODO-SEARCH add search of scholar.archivelab.org?q=harvard or direct to elasticsearch.openjournal.foundation - this is Bryan's
 
     @classmethod
     def search(self, querystring, limit=20, do_highlight=False):

@@ -30,11 +30,13 @@ class ContentHash(NameResolverFile):
         Pseudo-code
         Looks up the multihash in Location Service to find where can be retrieved from.
         """
-        super(ContentHash, self).__init__(self, namespace, multihash58, **kwargs)
         verbose=kwargs.get("verbose")
+        if verbose:
+            logging.debug("{0}.__init__({1}, {2}, {3})".format(self.__class__.__name__, namespace, sha1_hex, kwargs))
+        super(ContentHash, self).__init__(self, namespace, multihash58, **kwargs)
         if namespace != "contenthash":
             raise CodingException(message="namespace != contenthash")
-        self.multihash = Multihash(multihash58=multihash58)   #TODO-SHA1HEX note ContentHash does this and next line wrong
+        self.multihash = Multihash(multihash58=multihash58)
         self.url = LocationService.get(self.multihash.multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
         self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose)    # Should be after DOIfile resolution, which will set mimetype in MimetypeService
         self._metadata = None   # Not resolved yet
