@@ -77,7 +77,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         :return: Never Returns
         """
         httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions or {}) # Deepcopy to merge options
-        if verbose: logging.debug("Starting server with options=", httpoptions)
+        logging.debug("Starting server with options=", httpoptions)
         #any code needed once (not per thread) goes here.
         cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)    # Uses defaultipandport
 

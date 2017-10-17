@@ -30,8 +30,10 @@ class Sha1Hex(NameResolverFile):
         Pseudo-code
         Looks up the multihash in Location Service to find where can be retrieved from.
         """
-        super(Sha1Hex, self).__init__(self, namespace, sha1_hex, **kwargs)
         verbose=kwargs.get("verbose")
+        if verbose:
+            logging.debug("Sha1Hex.__init__({0}, {1}, {2})".format(namespace, sha1_hex, kwargs))
+        super(Sha1Hex, self).__init__(self, namespace, sha1_hex, **kwargs)
         if namespace != "sha1hex":
             raise CodingException(message="namespace != sha1hex")
         self.multihash = Multihash(sha1_hex=sha1_hex)   #TODO-SHA1HEX note ContentHash does this and next line wrong

@@ -225,7 +225,7 @@ class DOIfile(NameResolverFile):    # Note plural
                 ipldhash = res['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
             self._metadata["ipldhash"] = ipldhash
-            logging.debug("XXX@sqlite_metadata done")
+            if verbose: logging.debug("sqlite_metadata done")
 
     @property
     def url(self):
