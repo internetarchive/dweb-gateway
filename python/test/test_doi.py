@@ -56,6 +56,7 @@ def test_sha1hexcontent_resolve():
 def test_sha1hexmetadata_resolve():
     verbose = True  # True to debug
     res = _processurl(SHA1HEXMETADATAURL, verbose)  # Simulate what the server would do with the URL
+    print(res)
     assert res["Content-type"] == "application/json", "Check retrieved content of expected type"
-    assert res["data"]["size_bytes"] == CONTENTSIZE
-    assert res["data"]["multihash58"] == CONTENTMULTIHASH, "Expecting multihash58 of sha1"
+    assert res["data"]["metadata"]["size_bytes"] == CONTENTSIZE
+    assert res["data"]["metadata"]["multihash58"] == CONTENTMULTIHASH, "Expecting multihash58 of sha1"
