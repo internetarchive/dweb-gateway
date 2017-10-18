@@ -133,6 +133,7 @@ class NameResolverFile(NameResolver):
             * Store the mapping between that multihash, and location (inc byterange) in locationstore
         * May Need to cache the structure, but since the IPLD that calls this will be cached, that might not be needed.
         """
+        raise ToBeImplementedException(name="NameResolverFile.shards")
         pass
 
 class NameResolverShard(NameResolver):

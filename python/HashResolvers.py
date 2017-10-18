@@ -100,16 +100,16 @@ class HashResolver(NameResolverFile):
         return self._metadata
     # def canonical - not needed as already in a canonical form
 
-    class Sha1Hex(NameResolverFile):
-        """
-        URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
-        """
-        namespace="sha1hex"
-        multihashfield="sha1hex"    # Field to Multihash.init
+class Sha1Hex(HashResolver):
+    """
+    URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
+    """
+    namespace="sha1hex"
+    multihashfield="sha1hex"    # Field to Multihash.init
 
-    class ContentHash(NameResolverFile):
-        """
-        URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
-        """
-        namespace="contenthash"
-        multihashfield="multihash58"    # Field to Multihash.init
+class ContentHash(HashResolver):
+    """
+    URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
+    """
+    namespace="contenthash"
+    multihashfield="multihash58"    # Field to Multihash.init

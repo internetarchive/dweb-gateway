@@ -208,7 +208,7 @@ class DOIfile(NameResolverFile):    # Note plural
         :param verbose:
         :raises NoContentException: if no DOI and cant find sha1 in index
         """
-        super(NameResolverFile, self).__init__(metadata)    # TODO note this is wrong, superclass expects namespace (but ignores that)
+        super(NameResolverFile, self).__init__(None)    # TODO note this is wrong, superclass expects namespace (but ignores it)
         self.doi = doi
         self._metadata = metadata or {}    # For now all in one dict
         self.multihash = multihash
@@ -267,7 +267,6 @@ class DOIfile(NameResolverFile):    # Note plural
         return httpget(self.url)
 
     def content(self, verbose=False):
-        #TODO iterate over urls and find first matching hash
         return {"Content-type": self._metadata["mimetype"], "data": self.retrieve()}
 
 

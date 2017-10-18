@@ -59,7 +59,7 @@ class Multihash(object):
             return MultihashError(message="Unsupported Hash type {}".format(self.code)),
         if (self.digestlength != len(self.digest)) or (self.digestlength != self.LENGTHS[self.code]):
             return MultihashError(message="Invalid lengths: expect {}, byte {}, len {}"
-                                  .format(self.LENGTHS[self.code], self.digestlength, len(self.digest)))    # TODO what is xxx
+                                  .format(self.LENGTHS[self.code], self.digestlength, len(self.digest)))
 
     def __init__(self, multihash58=None, sha1hex=None, data=None, code=None):
         """

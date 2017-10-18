@@ -36,18 +36,18 @@ class CodingException(MyBaseException):
     msg = "Coding Error: {message}"
 
 class EncryptionException(MyBaseException):
-    httperror = 500  # Forbidden (Authentication won't help)
+    httperror = 500  # Failure in the encryption code other than lack of authentication
     msg = "Encryption error: {message}"
 
 class ForbiddenException(MyBaseException):
-    httperror = 403     # Forbidden (Authentication won't help)
+    httperror = 403     # Forbidden (WWW Authentication won't help (note there is no real HTTP error for authentication (other than HTTP authentication) failed )
     msg = "Not allowed: {what}"
 
 class AuthenticationException(MyBaseException):
     """
     Raised when some code has not been implemented yet
     """
-    httperror = 500  # TODO-AUTHENTICATON - which code
+    httperror = 403     # Forbidden - this should be 401 except that requires extra headers (see RFC2616)
     msg = "Authentication Exception: {message}"
 
 class IntentionallyUnimplementedException(MyBaseException):
@@ -61,6 +61,7 @@ class DecryptionFailException(MyBaseException):
     """
     Raised if decrypytion failed - this could be cos its the wrong (e.g. old) key
     """
+    httperror = 500
     msg = "Decryption fail"
 
 class SecurityWarning(MyBaseException):
