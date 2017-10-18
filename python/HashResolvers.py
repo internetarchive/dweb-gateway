@@ -56,9 +56,12 @@ class HashResolver(NameResolverFile):
         :param args:
         :param kwargs:
         :return:
+        :raise NoContentException: if cant find content directly or via other classes (like DOIfile)
         """
+        verbose=kwargs.get("verbose")
         ch = super(HashResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
         if not ch.url:
+            if verbose: logging.debug("No URL, looking for DOI file for {0}.{1}".format(namespace,hash))   
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
             ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
         if not (ch and ch.url):
