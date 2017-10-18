@@ -61,7 +61,7 @@ class Multihash(object):
             return MultihashError(message="Invalid lengths: expect {}, byte {}, len {}"
                                   .format(self.LENGTHS[self.code], self.digestlength, len(self.digest)))    # TODO what is xxx
 
-    def __init__(self, multihash58=None, sha1_hex=None, data=None, code=None):
+    def __init__(self, multihash58=None, sha1hex=None, data=None, code=None):
         """
         Accept variety of parameters,
 
@@ -70,11 +70,11 @@ class Multihash(object):
         digest = None
         if multihash58:
             self._multihash_binary = base58.b58decode(multihash58)
-        if sha1_hex:
+        if sha1hex:
             if python_version.startswith('2'):
-                digest = sha1_hex.decode('hex')  # Python2
+                digest = sha1hex.decode('hex')  # Python2
             else:
-                digest = bytes.fromhex(sha1_hex)  # Python3
+                digest = bytes.fromhex(sha1hex)  # Python3
             code = self.SHA1
         if data and code:
                 if not code in self.FUNCS:
@@ -106,7 +106,7 @@ class Multihash(object):
         return self._multihash_binary[2:]
 
     @property
-    def sha1_hex(self):
+    def sha1hex(self):
         """
         :return: The hex of the sha1 (as used in DOI sqlite tables)
         """

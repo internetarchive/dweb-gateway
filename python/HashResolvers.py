@@ -6,24 +6,27 @@ from .HashStore import LocationService, MimetypeService
 from .Multihash import Multihash
 from .DOI import DOIfile
 
-class Sha1Hex(NameResolverFile):
+class HashResolver(NameResolverFile):
     """
-    Sha1Hex is a class for retrieval by Sha1Hex hash - based on ContentHash
+    Base class for Sha1Hex and ContentHash - used where we are instantiating something of unknown type from a hash of some form.
+
+    Sha1Hex & ContentHash are classes for retrieval by a hash
     typically of form   sha1hex/1a2b3c for SHA1
-    URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
 
     Implements name resolution of the ContentHash namespace, via a local store and any other internal archive method
 
     Future Work
     * Build way to preload the hashstore with the hashes and URLs from various parts of the Archive
     """
+    namespace=None      # Defined in subclasses
+    multihashfield=None # Defined in subclasses
 
-    def __init__(self, namespace, sha1_hex, **kwargs):
+    def __init__(self, namespace, hash, **kwargs):
         """
         Creates the object
 
         :param namespace:   "contenthash"
-        :param sha1_hex:   Base58 representation of multihash (could be sha256 or sha1, we may not have both)
+        :param hash:        Hash representing the object - format is specified by namespace
         :param kwargs:      Any other args to the URL, ignored for now.
         """
         """
@@ -32,18 +35,19 @@ class Sha1Hex(NameResolverFile):
         """
         verbose=kwargs.get("verbose")
         if verbose:
-            logging.debug("{0}.__init__({1}, {2}, {3})".format(self.__class__.__name__, namespace, sha1_hex, kwargs))
-        super(Sha1Hex, self).__init__(self, namespace, sha1_hex, **kwargs)
-        if namespace != "sha1hex":
-            raise CodingException(message="namespace != sha1hex")
-        self.multihash = Multihash(sha1_hex=sha1_hex)
+            logging.debug("{0}.__init__({1}, {2}, {3})".format(self.__class__.__name__, namespace, hash, kwargs))
+        if namespace != self.namespace: # Defined in subclasses
+            raise CodingException(message="namespace != "+self.namespace)
+        super(HashResolver, self).__init__(self, namespace, hash, **kwargs) # Note ignores the name
+        self.multihash = Multihash(**{self.multihashfield: hash})
         self.url = LocationService.get(self.multihash.multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
         self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose)    # Should be after DOIfile resolution, which will set mimetype in MimetypeService
         self._metadata = None   # Not resolved yet
         self._doifile = None   # Not resolved yet
 
+
     @classmethod
-    def new(cls, namespace, sha1_hex, *args, **kwargs):
+    def new(cls, namespace, hash, *args, **kwargs):
         """
         #TODO-SHA1HEX create a superclass once tested
         Called by ServerGateway to handle a URL - passed the parts of the remainder of the URL after the requested format,
@@ -53,11 +57,11 @@ class Sha1Hex(NameResolverFile):
         :param kwargs:
         :return:
         """
-        ch = super(Sha1Hex, cls).new(namespace, sha1_hex, *args, **kwargs)    # By default calls cls() which goes to __init__
+        ch = super(HashResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
         if not ch.url:
+            #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
             ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
-            pass  # TODO-this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
-        if not ch.url:
+        if not (ch and ch.url):
             raise NoContentException()
         return ch
 
@@ -92,3 +96,17 @@ class Sha1Hex(NameResolverFile):
             self._metadata = self._metadata or (self._doifile and self._doifile.metadata(verbose=verbose))
         return self._metadata
     # def canonical - not needed as already in a canonical form
+
+    class Sha1Hex(NameResolverFile):
+        """
+        URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
+        """
+        namespace="sha1hex"
+        multihashfield="sha1hex"    # Field to Multihash.init
+
+    class ContentHash(NameResolverFile):
+        """
+        URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
+        """
+        namespace="contenthash"
+        multihashfield="multihash58"    # Field to Multihash.init

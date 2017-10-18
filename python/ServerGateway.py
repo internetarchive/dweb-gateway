@@ -7,8 +7,7 @@ from .DOI import DOI
 from .IPLD import IPLDdir, IPLDfile
 from .Errors import ToBeImplementedException, NoContentException
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
-from .ContentHash import ContentHash
-from .Sha1Hex import Sha1Hex
+from .HashResolvers import ContentHash, Sha1Hex
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 

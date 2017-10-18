@@ -73,8 +73,8 @@ class DOI(NameResolverDir):
 
         if verbose: logging.debug("DOI.__init__ iterating over {0} rows".format(len(sha1_list)))
         for row in sha1_list:
-            _, sha1_hex, _ = row
-            doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1_hex=sha1_hex), verbose=verbose)
+            _, sha1hex, _ = row
+            doifile = DOIfile(doi=self.doi, multihash=Multihash(sha1hex=sha1hex), verbose=verbose)
             self.push(doifile)
         if verbose: logging.debug("DOI.__init__ completing")
 
@@ -213,9 +213,9 @@ class DOIfile(NameResolverFile):    # Note plural
         self._metadata = metadata or {}    # For now all in one dict
         self.multihash = multihash
         if multihash and not self.doi:
-            # Lookup DOI from sha1_hex if DOI not supplied.
-            if verbose: logging.debug("DOIfile.__init__ looking up {0}".format(multihash.sha1_hex))
-            l = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1_hex]))
+            # Lookup DOI from sha1hex if DOI not supplied.
+            if verbose: logging.debug("DOIfile.__init__ looking up {0}".format(multihash.sha1hex))
+            l = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_id_doi WHERE sha1 = ?;', [multihash.sha1hex]))
             if not l:
                 raise NoContentException    # If cant find a doi, no point continuing
             self.doi, _, _ = l[0]
@@ -223,9 +223,9 @@ class DOIfile(NameResolverFile):    # Note plural
             self.sqlite_metadata(verbose)
 
     def sqlite_metadata(self, verbose):
-            files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [self.multihash.sha1_hex]))
+            files_metadata_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM files_metadata WHERE sha1 = ?;', [self.multihash.sha1hex]))
             _, mimetype, size_bytes, md5 = files_metadata_list[0]
-            files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1_hex]))
+            files_list = list(DOI.sqliteconnection(verbose).execute('SELECT * FROM urls WHERE sha1 = ?;', [self.multihash.sha1hex]))
             self._metadata = {'mimetype': mimetype, 'size_bytes': size_bytes, 'md5': md5, 'multihash58': self.multihash.multihash58,
                               'files': [DOI.archive_url(file) for file in files_list]}
             if verbose: logging.debug("multihash base58={0}".format(self.multihash.multihash58))
