@@ -47,12 +47,21 @@ class NameResolver(object):
         except NoContentException:
             return None
 
-    def content(self, verbose=False):
+    def retrieve(self, verbose=False):
         """
 
         :return:
         """
-        raise ToBeImplementedException(name=self.__class__.__name__+".content()")
+        raise ToBeImplementedException(name=self.__class__.__name__+".retrieve()")
+
+    def content(self, verbose=False):
+        """
+        Return the content, by default its just the result of self.retrieve() which must be defined in superclass
+
+        :param verbose:
+        :return:
+        """
+        return {"Content-type": self.mimetype, "data": self.retrieve()}
 
     def metadata(self, verbose=False):
         """
@@ -67,8 +76,10 @@ class NameResolver(object):
 
         :return:
         """
+        if not self._contenthash:
+            self._contenthash = Multihash(data=self.content(), code=Multihash.SHA2_256)
         return {'Content-type': 'text/plain',
-         'data': Multihash(data=self.content(), code=Multihash.SHA2_256).multihash58  # A list of names of services supported below  (not currently consumed anywhere)
+         'data': self._contenthash.multihash58  # A list of names of services supported below  (not currently consumed anywhere)
          }
 
     def push(self,obj):

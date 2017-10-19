@@ -122,7 +122,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
                 #    data = dumps(data)            # And maype this should be data.dumps()
                 if isinstance(data, str):
-                    #logging.debug("converting to utf8")
+                    #logging.debug("converting to utf-8")
                     if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
                         if contenttype.startswith('text') or contenttype in ('application/json',): # Only convert types we know are strings that could be unicode
                         	data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary -- its still a string

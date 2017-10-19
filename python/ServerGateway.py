@@ -8,6 +8,7 @@ from .IPLD import IPLDdir, IPLDfile
 from .Errors import ToBeImplementedException, NoContentException
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
+from .LocalResolver import LocalResolver
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -62,6 +63,8 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "doi": DOI,
         "contenthash": ContentHash,
         "sha1hex": Sha1Hex,
+        "rawstore": LocalResolver,
+        "rawfetch": LocalResolver,
     }
 
 

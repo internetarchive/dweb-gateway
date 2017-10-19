@@ -194,7 +194,7 @@ class DOIfile(NameResolverFile):    # Note plural
     Class for one file
 
     Fields:
-    multihash   A Multihash instance either found from the DOI, or being searched on.
+    multihash   A Multihash instance either found from the DOI, or being searched on - note its contenthash, not ipldhash
 
     """
 
@@ -262,13 +262,14 @@ class DOIfile(NameResolverFile):    # Note plural
             self._url = self._metadata["urls"][0]
         return self._url
 
+    @property
+    def mimetype(self):     # Defined as property because NameResolver.content() needs mimetypes from various superclasses
+        if not self._metadata:
+            self.sqlite_metadata(verbose=False)
+        return self._metadata["mimetype"]
 
     def retrieve(self):
-        return httpget(self.url)
-
-    def content(self, verbose=False):
-        return {"Content-type": self._metadata["mimetype"], "data": self.retrieve()}
-
+        return httpget(self.url)    #TODO-STREAM handle streams from URl
 
     def metadata(self, verbose=False):
         return {'Content-type': 'application/json',

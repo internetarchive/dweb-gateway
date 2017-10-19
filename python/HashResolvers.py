@@ -3,6 +3,7 @@ from .NameResolver import NameResolverFile
 from .miscutils import httpget
 from .Errors import CodingException, NoContentException
 from .HashStore import LocationService, MimetypeService
+from .LocalResolver import LocalResolver
 from .Multihash import Multihash
 from .DOI import DOIfile
 
@@ -64,6 +65,8 @@ class HashResolver(NameResolverFile):
             if verbose: logging.debug("No URL, looking for DOI file for {0}.{1}".format(namespace,hash))   
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
             ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
+        if ch.url.startswith("local:"):
+            ch = LocalResolver.new("rawfetch", hash, **kwargs)
         if not (ch and ch.url):
             raise NoContentException()
         return ch
@@ -75,6 +78,24 @@ class HashResolver(NameResolverFile):
         """
         pass  # Note could probably be defined on NameResolverFile class
 
+    def retrieve(self, verbose=False):
+        """
+        :returns:   content - i.e. bytes
+        """
+        # TODO-STREAMS future work to return a stream
+        if not self.url:
+            raise NoContentException()
+        if self.url.startswith("local:"):
+            u = self.url.split('/')
+            if u[1] == "rawfetch":
+                assert(False)
+                #TODO-LOCAL hook to LocalResolver/rawfetch when it is tested
+            else:
+                raise CodingException(message="unsupported for local: {0}".format(self.url))
+
+        else:
+            return httpget(self.url)
+
     def content(self, verbose=False):
         """
         :returns:   content - i.e. bytes
@@ -82,7 +103,17 @@ class HashResolver(NameResolverFile):
         # TODO-STREAMS future work to return a stream
         if not self.url:
             raise NoContentException()
-        data = httpget(self.url)
+        if self.url.startswith("local:"):
+            raise CodingException(message="Shouldnt get here, should convert to LocalResolver in HashResolver.new: {0}".format(self.url))
+            """
+            u = self.url.split('/')
+            if u[1] == "rawfetch":
+                assert(False) # hook to LocalResolver/rawfetch if need this
+            else:
+                raise CodingException(message="unsupported for local: {0}".format(self.url))
+            """
+        else:
+            data = httpget(self.url)
         if verbose: logging.debug("Retrieved doc size=", len(data))
         return {'Content-type': self.mimetype,
             'data': data,

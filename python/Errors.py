@@ -85,11 +85,15 @@ class NoContentException(MyBaseException):
 
 class MultihashError(MyBaseException):
     httperror = 500
-    msg = "Multihash error {message} {hash}"
+    msg = "Multihash error {message}"
 
 class SearchException(MyBaseException):
     httperror = 404
     msg = "{search} not found"
+
+class TransportFileNotFound(MyBaseException):
+    httperror = 404
+    msg = "file {file} not found"
 
 """
 

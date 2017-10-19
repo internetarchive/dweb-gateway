@@ -12,6 +12,10 @@ import pyblake2
 import base58
 import binascii
 from sys import version as python_version
+if python_version.startswith('3'):
+    from urllib.parse import urlparse
+else:
+    from urlparse import urlparse        # See https://docs.python.org/2/library/urlparse.html
 from .Errors import MultihashError
 
 class Multihash(object):
@@ -54,20 +58,27 @@ class Multihash(object):
 
     def assertions(self, code=None):
         if code and code != self.code:
-            return MultihashError(message="Expecting code {}, got {}".format(code, self.code))
+            raise MultihashError(message="Expecting code {}, got {}".format(code, self.code))
         if self.code not in self.FUNCS:
-            return MultihashError(message="Unsupported Hash type {}".format(self.code)),
+            raise MultihashError(message="Unsupported Hash type {}".format(self.code))
         if (self.digestlength != len(self.digest)) or (self.digestlength != self.LENGTHS[self.code]):
-            return MultihashError(message="Invalid lengths: expect {}, byte {}, len {}"
+            raise MultihashError(message="Invalid lengths: expect {}, byte {}, len {}"
                                   .format(self.LENGTHS[self.code], self.digestlength, len(self.digest)))
 
-    def __init__(self, multihash58=None, sha1hex=None, data=None, code=None):
+    def __init__(self, multihash58=None, sha1hex=None, data=None, code=None, url=None):
         """
         Accept variety of parameters,
 
         :param multihash_58:
         """
         digest = None
+
+        if url:
+            if isinstance(url, str):
+                url = urlparse(url)
+            multihash58 = url.path.split('/')[-1]
+            if multihash58[0] not in ('5','Q'):     # Simplistic check that it looks ok-ish
+                raise MultihashError(message="Invalid hash portion of URL {}".format(url))
         if multihash58:
             self._multihash_binary = base58.b58decode(multihash58)
         if sha1hex:
@@ -83,6 +94,7 @@ class Multihash(object):
                 if isinstance(data, bytes):
                     hashfn.update(data)
                 elif isinstance(data, str):
+                    raise MultihashError(message="Should be passing bytes, not strings as could encode multiple ways")  # TODO can remove this if really need to handle UTF8 strings, but better to push conversion upstream
                     hashfn.update(data.encode('utf-8'))
                 digest = hashfn.digest()
         if digest and code:
@@ -111,7 +123,7 @@ class Multihash(object):
         :return: The hex of the sha1 (as used in DOI sqlite tables)
         """
         self.assertions(self.SHA1)
-        return binascii.hexlify(self.digest).decode('utf8')  # The decode is turn bytes b'a1b2' to str 'a1b2'
+        return binascii.hexlify(self.digest).decode('utf-8')  # The decode is turn bytes b'a1b2' to str 'a1b2'
 
     @property
     def multihash58(self):

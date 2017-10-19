@@ -4,6 +4,7 @@ This is a place to put miscellaneous utilities, not specific to this project
 import json  # Note dont "from json import dumps" as clashes with overdefined dumps below
 from datetime import datetime
 import requests
+import logging
 from .Errors import TransportURLNotFound
 
 
@@ -39,6 +40,8 @@ def dumps(obj):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transport to
     # separators = (,:) gets the most compact representation
     return json.dumps(obj, sort_keys=True, separators=(',', ':'), default=json_default)
 
+def loads(s):
+    return json.loads(s)    # Will fail if s empty, or not json
 
 def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transport to miscutils
     """
