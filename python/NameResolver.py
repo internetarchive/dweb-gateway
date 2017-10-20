@@ -1,4 +1,4 @@
-from .Errors import ToBeImplementedException
+from .Errors import ToBeImplementedException, NoContentException
 from .Multihash import Multihash
 
 

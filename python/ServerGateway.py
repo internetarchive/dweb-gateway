@@ -8,7 +8,7 @@ from .IPLD import IPLDdir, IPLDfile
 from .Errors import ToBeImplementedException, NoContentException
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
-from .LocalResolver import LocalResolver
+from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -63,8 +63,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "doi": DOI,
         "contenthash": ContentHash,
         "sha1hex": Sha1Hex,
-        "rawstore": LocalResolver,
-        "rawfetch": LocalResolver,
+        "rawstore": LocalResolverStore,
+        "rawfetch": LocalResolverFetch,
+        "rawlist": LocalResolverList,
+        "rawadd": LocalResolverAdd,
     }
 
 
@@ -133,6 +135,12 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
         i = IPLDdir(obj)
         return i.content()
+
+    @exposed
+    def void(self, namespace, *args, **kwargs):
+        self.namespaceclasses[namespace].new(namespace, *args, **kwargs)
+        return {'Content-type': 'application/json',
+                 'data': None }
 
     def storeipld(self, namespace, *args, **kwargs):
         """

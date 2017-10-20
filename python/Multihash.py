@@ -74,9 +74,9 @@ class Multihash(object):
         digest = None
 
         if url:
-            if isinstance(url, str):
+            if isinstance(url, str) and "/" in url:
                 url = urlparse(url)
-            multihash58 = url.path.split('/')[-1]
+            multihash58 = url.path.split('/')[-1] if "/" in url else url
             if multihash58[0] not in ('5','Q'):     # Simplistic check that it looks ok-ish
                 raise MultihashError(message="Invalid hash portion of URL {}".format(url))
         if multihash58:

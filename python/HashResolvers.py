@@ -3,7 +3,7 @@ from .NameResolver import NameResolverFile
 from .miscutils import httpget
 from .Errors import CodingException, NoContentException
 from .HashStore import LocationService, MimetypeService
-from .LocalResolver import LocalResolver
+from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile
 
@@ -66,7 +66,7 @@ class HashResolver(NameResolverFile):
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
             ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
         if ch.url.startswith("local:"):
-            ch = LocalResolver.new("rawfetch", hash, **kwargs)
+            ch = LocalResolverFetch.new("rawfetch", hash, **kwargs)
         if not (ch and ch.url):
             raise NoContentException()
         return ch

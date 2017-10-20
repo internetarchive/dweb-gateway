@@ -13,9 +13,10 @@ import os   # For isdir and exists
 from .Errors import TransportFileNotFound
 from .Multihash import Multihash
 from .miscutils import loads, dumps
+from .Transport import Transport
 
 
-class TransportLocal(object):
+class TransportLocal(Transport):
     """
     Subclass of Transport.
     Implements the raw primitives as reads and writes of file system.
@@ -112,7 +113,7 @@ class TransportLocal(object):
         Retrieve record(s) matching a url (usually the url of a key), in this case from a local directory
         Exception: IOError if file doesnt exist
 
-        :param url: Hash in table to be retrieved
+        :param url: Hash in table to be retrieved or url ending in that hash
         :return: list of dictionaries for each item retrieved
         """
         filename = self._filename(subdir, multihash= Multihash(url=url), verbose=verbose, **options)
@@ -144,7 +145,7 @@ class TransportLocal(object):
         Retrieve record(s) matching a url (usually the url of a key), in this case from a local directory
         Exception: IOError if file doesnt exist
 
-        :param url: Hash in table to be retrieved
+        :param url: Hash in table to be retrieved or url ending in hash
         :return: list of dictionaries for each item retrieved
         """
         return self._rawlistreverse(subdir="reverse", url=url, verbose=False, **options)
@@ -180,7 +181,7 @@ class TransportLocal(object):
         Store a signature in a pair of DHTs
         Exception: IOError if file doesnt exist
 
-        :param url:        url to store under
+        :param url:        url to store under or url ending in hash
         :param date:
         :param signature:
         :param signedby:
@@ -193,6 +194,7 @@ class TransportLocal(object):
         if verbose: logging.debug("TransportLocal.rawadd {0} date={1} signature={2}, signedby={3} subdir={4} options={5}"
                                   .format(url, date, signature, signedby, subdir, options))
         value = self._add_value(url=url, date=date, signature=signature, signedby=signedby, verbose=verbose, **options) + "\n"
+        value = value.encode('utf-8')
         if "list" in subdir:
             filenameL = self._filename("list", multihash= Multihash(url=signedby), verbose=verbose, **options)   # List of things signedby
             try:
