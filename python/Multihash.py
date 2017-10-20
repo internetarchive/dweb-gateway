@@ -74,11 +74,15 @@ class Multihash(object):
         digest = None
 
         if url:
-            if isinstance(url, str) and "/" in url:
+            print("url=",url.__class__.__name__,url)
+            if isinstance(url, str) and "/" in url:   # https://.../Q...
                 url = urlparse(url)
-            multihash58 = url.path.split('/')[-1] if "/" in url else url
+            if not isinstance(url, str):
+                multihash58 = url.path.split('/')[-1]
+            else:
+                multihash58 = url
             if multihash58[0] not in ('5','Q'):     # Simplistic check that it looks ok-ish
-                raise MultihashError(message="Invalid hash portion of URL {}".format(url))
+                raise MultihashError(message="Invalid hash portion of URL {}".format(multihash58))
         if multihash58:
             self._multihash_binary = base58.b58decode(multihash58)
         if sha1hex:

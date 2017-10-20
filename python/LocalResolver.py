@@ -66,7 +66,7 @@ class LocalResolverAdd(LocalResolver):
     def new(cls, namespace, *args, data=None, **kwargs):  # Used by Gateway
         verbose = kwargs.get("verbose")
         obj = super(LocalResolverAdd, cls).new(namespace, *args, **kwargs)  # Calls __init__() by default
-        if isinstance(data, str): # Assume its JSON
+        if isinstance(data, (str, bytes)): # Assume its JSON
             data = loads(data)    # HTTP just delivers bytes
         cls.transport(verbose=verbose).rawadd(**data)
         return obj

@@ -139,7 +139,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def void(self, namespace, *args, **kwargs):
         self.namespaceclasses[namespace].new(namespace, *args, **kwargs)
-        return {'Content-type': 'application/json',
+        return {'Content-type': 'application/octet-stream',
                  'data': None }
 
     def storeipld(self, namespace, *args, **kwargs):
