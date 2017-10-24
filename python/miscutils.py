@@ -70,10 +70,10 @@ def httpget(url):
     try:
         r = requests.get(url)
         r.raise_for_status()
-        if r.encoding:
-            return r.text
-        else:
+        if not r.encoding or ("application/pdf" in r.headers.get('content-type')):
             return r.content  # Should work for PDF or other binary types
+        else:
+            return r.text
         #TODO-STREAM support streams in future
 
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
