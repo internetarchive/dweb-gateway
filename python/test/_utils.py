@@ -9,6 +9,5 @@ def _processurl(url, verbose, **kwargs):
     assert f
     namespace = args.pop(0)
     if verbose: kwargs["verbose"] = True
-    print("XXX@_pu args=",args)
     res = f(DwebGatewayHTTPRequestHandler, namespace, *args, **kwargs)
     return res

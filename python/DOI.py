@@ -146,8 +146,6 @@ class DOI(NameResolverDir):
         """
         if verbose:
             logging.debug("check_if_link_works {0}".format(url))
-        logging.debug("XXX@check_if_link_works - dummied out")
-        #return True
         try:
             headers = {"accept": "*/*"}
             # This next link can fail, it follows a redirection and then can fail on th actual PDF, which isnt what we want cos we'll use a Archive URL
