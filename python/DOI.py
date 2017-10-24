@@ -234,8 +234,9 @@ class DOIfile(NameResolverFile):    # Note plural
             LocationService.set(self.multihash.multihash58, self._metadata["files"][0], verbose=verbose)
             MimetypeService.set(self.multihash.multihash58, self._metadata["mimetype"], verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
-            if not ipldhash:
+            if True: #not ipldhash:
                 data = httpget(self._metadata["files"][0])
+                logging.debug("XX@239 {0}".format(len(data)))
                 #TODO move this to a URL or better to TransportIPFS when built
                 #ipfsurl = "https://ipfs.dweb.me/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
                 ipfsurl = "http://localhost:5001/api/v0/add"  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.

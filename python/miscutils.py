@@ -68,12 +68,16 @@ def httpget(url):
 
     r = None  # So that if exception in get, r is still defined and can be tested for None
     try:
+        print("GET ",url)
         r = requests.get(url)
         r.raise_for_status()
-        if r.encoding:
-            return r.text
-        else:
+        print("XXX@73",r.encoding)
+        if not r.encoding or ("application/pdf" in r.headers.get('content-type')):
+            print("XXX@74")
             return r.content  # Should work for PDF or other binary types
+        else:
+            print("XXX@76")
+            return r.text
         #TODO-STREAM support streams in future
 
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
