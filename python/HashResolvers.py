@@ -80,24 +80,8 @@ class HashResolver(NameResolverFile):
 
     def retrieve(self, verbose=False):
         """
-        :returns:   content - i.e. bytes
-        """
-        # TODO-STREAMS future work to return a stream
-        if not self.url:
-            raise NoContentException()
-        if self.url.startswith("local:"):
-            u = self.url.split('/')
-            if u[1] == "rawfetch":
-                assert(False)
-                #TODO-LOCAL hook to LocalResolver/rawfetch when it is tested
-            else:
-                raise CodingException(message="unsupported for local: {0}".format(self.url))
+        Fetch the content, dont pass to caller (typically called by NameResolver.content()
 
-        else:
-            return httpget(self.url)
-
-    def content(self, verbose=False):
-        """
         :returns:   content - i.e. bytes
         """
         # TODO-STREAMS future work to return a stream
@@ -113,7 +97,13 @@ class HashResolver(NameResolverFile):
                 raise CodingException(message="unsupported for local: {0}".format(self.url))
             """
         else:
-            data = httpget(self.url)
+            return httpget(self.url)
+
+    def content(self, verbose=False):
+        """
+        :returns:   content - i.e. bytes
+        """
+        data = self.retrieve()
         if verbose: logging.debug("Retrieved doc size=", len(data))
         return {'Content-type': self.mimetype,
             'data': data,

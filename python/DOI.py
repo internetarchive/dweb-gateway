@@ -269,6 +269,11 @@ class DOIfile(NameResolverFile):    # Note plural
         return self._metadata["mimetype"]
 
     def retrieve(self):
+        """
+        Return content of DOI from its URL.  (typically called by NameResolver.content()
+
+        :return:
+        """
         return httpget(self.url)    #TODO-STREAM handle streams from URl
 
     def metadata(self, verbose=False):
