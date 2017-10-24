@@ -71,18 +71,9 @@ def httpget(url):
         print("GET ",url)
         r = requests.get(url)
         r.raise_for_status()
-<<<<<<< HEAD
-        print("XXX@73",r.encoding)
-        if not r.encoding or ("application/pdf" in r.headers.get('content-type')):
-            print("XXX@74")
-            return r.content  # Should work for PDF or other binary types
-        else:
-            print("XXX@76")
-=======
         if not r.encoding or ("application/pdf" in r.headers.get('content-type')):
             return r.content  # Should work for PDF or other binary types
         else:
->>>>>>> origin/deployable
             return r.text
         #TODO-STREAM support streams in future
 
