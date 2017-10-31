@@ -5,6 +5,8 @@ from .HashStore import LocationService
 from .Multihash import Multihash
 from .miscutils import loads, dumps
 
+#TODO add caching to headers returned so not repeatedly pinged for same file
+
 class LocalResolver(NameResolverFile):
     """
     Subclass of NameResolverFile to resolve hashes locally

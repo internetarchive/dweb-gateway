@@ -91,7 +91,7 @@ class NameResolver(object):
         if not self._contenthash:
             self._contenthash = Multihash(data=self.content(), code=Multihash.SHA2_256)
         return {'Content-type': 'text/plain',
-                'data': "https://dweb.me/content/rawfetch/"+self._contenthash.multihash58,   #TODO parameterise server name, maybe store from incoming URL
+                'data': "https://gateway.dweb.me/content/rawfetch/"+self._contenthash.multihash58,   #TODO parameterise server name, maybe store from incoming URL
                 }
 
     def push(self,obj):
