@@ -79,8 +79,20 @@ class NameResolver(object):
         if not self._contenthash:
             self._contenthash = Multihash(data=self.content(), code=Multihash.SHA2_256)
         return {'Content-type': 'text/plain',
-         'data': self._contenthash.multihash58  # A list of names of services supported below  (not currently consumed anywhere)
+         'data': self._contenthash.multihash58
          }
+
+    def contenturl(self, verbose=False):
+        """
+        By default contenthash is the hash of the content.
+
+        :return:
+        """
+        if not self._contenthash:
+            self._contenthash = Multihash(data=self.content(), code=Multihash.SHA2_256)
+        return {'Content-type': 'text/plain',
+                'data': "https://dweb.me/content/rawfetch/"+self._contenthash.multihash58,   #TODO parameterise server name, maybe store from incoming URL
+                }
 
     def push(self,obj):
         """

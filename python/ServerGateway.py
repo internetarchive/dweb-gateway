@@ -130,6 +130,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     # Now complex ones where have to create a class to handle conversion e.g. IPLDdirs
 
     @exposed
+    def contenturl(self, namespace, *args, **kwargs):
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenturl(verbose=verbose)
+
+    @exposed
     def iplddir(self, namespace, *args, **kwargs):
         #TODO-IPLD This is not complete yet
         obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
