@@ -65,12 +65,12 @@ class LocalResolverFetch(LocalResolver):
 class LocalResolverAdd(LocalResolver):
 
     @classmethod
-    def new(cls, namespace, *args, data=None, **kwargs):  # Used by Gateway
+    def new(cls, namespace, url, *args, data=None, **kwargs):  # Used by Gateway
         verbose = kwargs.get("verbose")
         obj = super(LocalResolverAdd, cls).new(namespace, *args, **kwargs)  # Calls __init__() by default
         if isinstance(data, (str, bytes)): # Assume its JSON
             data = loads(data)    # HTTP just delivers bytes
-        cls.transport(verbose=verbose).rawadd(**data)
+        cls.transport(verbose=verbose).rawadd(url, data)
         return obj
 
 class LocalResolverList(LocalResolver):

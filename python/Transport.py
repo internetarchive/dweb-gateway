@@ -150,15 +150,15 @@ class Transport(object):
                 raise TransportUnrecognizedCommand(command=command, classname=cls.__name__)
             return func(verbose=verbose, **options)
 
-    def rawadd(self, url=None, date=None, signature=None, signedby=None, verbose=False, subdir=None, **options):
+    def rawadd(self, url, sig, verbose=False, subdir=None, **options):
         raise ToBeImplementedException(name=cls.__name__+".rawadd")
 
-    def add(self, url=None, date=None, signature=None, signedby=None, verbose=False, obj=None, **options ):
+    def add(self, urls=None, date=None, signature=None, signedby=None, verbose=False, obj=None, **options ):
         #TODO-BACKPORTING check if still needed after Backport - not used in JS
         #add(dataurl, sig, date, keyurl)
         if (obj and not url):
             url = obj._url
-        return self.rawadd(url=url, date=date, signature=signature, signedby=signedby, verbose=verbose, **options)
+        return self.rawadd(urls=urls, date=date, signature=signature, signedby=signedby, verbose=verbose, **options)  # TODO would be better to store object
 
     def rawlist(self, url=None, verbose=False, **options):
         raise ToBeImplementedException(name=cls.__name__+".rawlist")
@@ -218,7 +218,3 @@ class Transport(object):
         return res
 
     #TODO-BACKPORT add listmonitor
-
-    def _add_value(self, url=None, date=None, signature=None, signedby=None, verbose=False, **options ):
-        store = {"url": url, "date": date, "signature": signature, "signedby": signedby}
-        return dumps(store)
