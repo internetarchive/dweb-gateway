@@ -24,8 +24,8 @@ def test_local():
 def test_list():
     verbose = True
     date =  datetime.utcnow().isoformat()
-    adddict = { "url": CONTENTMULTIHASH, "date": date, "signature": "XXYYYZZZ", "signedby": SHA1BASESTRING, "verbose": verbose }
-    res = _processurl("void/rawadd/", verbose, data=dumps(adddict))
+    adddict = { "urls": [ CONTENTMULTIHASH ], "date": date, "signature": "XXYYYZZZ", "signedby": [ SHA1BASESTRING ], "verbose": verbose }
+    res = _processurl("void/rawadd/"+SHA1BASESTRING, verbose, data=dumps(adddict))
     if verbose: logging.debug("test_list {0}".format(res))
     res = _processurl("metadata/rawlist/{0}".format(SHA1BASESTRING), verbose, data=dumps(adddict))
     if verbose: logging.debug("rawlist returned {0}".format(res))

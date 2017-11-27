@@ -131,6 +131,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     @exposed
     def contenturl(self, namespace, *args, **kwargs):
+        verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenturl(verbose=verbose)
 
     @exposed

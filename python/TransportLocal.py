@@ -176,36 +176,43 @@ class TransportLocal(Transport):
             return url
 
 
-    def rawadd(self, url=None, date=None, signature=None, signedby=None, verbose=False, subdir=None, **options):    #TODO-API
+    def _rawadd(self, filename, value):
+        try:
+            with open(filename, 'ab') as f:
+                f.write(value)
+        except IOError as e:
+            raise TransportFileNotFound(file=filename)
+
+    def rawadd(self, url, sig, verbose=False, subdir=None, **options):
         """
         Store a signature in a pair of DHTs
         Exception: IOError if file doesnt exist
 
-        :param url:        url to store under or url ending in hash
-        :param date:
-        :param signature:
-        :param signedby:
+        :param url:         List to store on
+        :param Signature sig: including { date, signature, signedby, urls}
         :param subdir: Can select list or reverse to store only one or both halfs of the list. This is used in TransportDistPeer as the two halfs are stored in diffrent parts of the DHT
         :param verbose:
         :param options:
         :return:
         """
+        print("XXX@200 verbosing url=",url, "sig", sig)
+        verbose=True
         subdir = subdir or ("list","reverse")   # By default store forward and backwards
-        if verbose: logging.debug("TransportLocal.rawadd {0} date={1} signature={2}, signedby={3} subdir={4} options={5}"
-                                  .format(url, date, signature, signedby, subdir, options))
-        value = self._add_value(url=url, date=date, signature=signature, signedby=signedby, verbose=verbose, **options) + "\n"
+        if verbose: logging.debug("TransportLocal.rawadd {0} {1} subdir={2} options={3}"
+                                  .format(url, sig, subdir, options))
+        value = dumps(sig) + "\n" #Note this is a compact dump
         value = value.encode('utf-8')
         if "list" in subdir:
-            filenameL = self._filename("list", multihash= Multihash(url=signedby), verbose=verbose, **options)   # List of things signedby
-            try:
-                with open(filenameL, 'ab') as f:
-                    f.write(value)
-            except IOError as e:
-                raise TransportFileNotFound(file=filenameL)
+            self._rawadd(
+                self._filename("list", multihash= Multihash(url=url), verbose=verbose, **options),   # List of things signedby
+                value)
+        """
+        # Reverse removed for now, as not used, and causes revision issues with Multi.
         if "reverse" in subdir:
-            filenameR = self._filename("reverse", multihash= Multihash(url=url), verbose=verbose, **options)    # Lists that this object is on
-            try:
-                with open(filenameR, 'ab') as f:
-                    f.write(value)
-            except IOError as e:
-                raise TransportFileNotFound(file=filenameR)
+            if not isinstance(urls, (list, tuple, set)):
+                urls = [urls]
+            for u in urls:
+                self._rawadd(
+                    self._filename("reverse", multihash= Multihash(url=u), verbose=verbose, **options),    # Lists that this object is on
+                    value)
+        """
