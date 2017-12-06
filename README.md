@@ -15,6 +15,7 @@ A decentralized web gateway for open academic papers on the Internet Archive
 * [Main README](./README.md) << You are here
 * [Use Cases](./Usecases.md)
 * [Classes](./Classes.md)
+* [HTTP API](./HTTPAPI.md)
 * [Data for the project - sqlite etc](https://archive.org/download/ia_papers_manifest_20170919)
 * [Proposal for meta data](./MetaData.md) - first draft - looks like got deleted :-(
 * [google doc with IPFS integration comments](https://docs.google.com/document/d/1kqETK1kmvbdgApCMQEfmajBdHzqiNTB-TSbJDePj0hM/edit#heading=h.roqqzmshx7ww) #TODO: Needs revision ot match this.
@@ -58,7 +59,9 @@ and then a "content" method is called to output something for the client.
 
 See [HTTPServer](httpserver) for how this is processed in an extensible form.
 
-See [UseCases](./Usecases.md) amd [Classes](./Classes.md) for expansion of this
+See [UseCases](./Usecases.md) and [Classes](./Classes.md) for expansion of this
+
+See [HTTPS API](./HTTPSAPI.md) for the API exposed by the URLs.
 
 ## Installation
 
