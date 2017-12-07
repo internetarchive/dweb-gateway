@@ -40,10 +40,10 @@ class AdvancedSearch(NameResolverDir):
         return obj
 
     def metadata(self, verbose=False):
-        /*
+        """
         Pass metadata (i.e. what retrieved in AdancedSearcch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
-        */
+        """
         return {'Content-type': 'application/json',
                 'data': self.res
                 }
