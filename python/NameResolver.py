@@ -13,7 +13,7 @@ class NameResolver(object):
     and may have default code for some of them based on assumptions about the data structure of subclasses.
 
     Each subclass of NameResolver must support:
-    content()   Generate an output to return to a browser. (Can be a dict, array or string, later will add Streams)
+    content()   Generate an output to return to a browser. (Can be a dict, array or string, later will add Streams) (?? Not sure if should implement content for dirs)
 
     Each subclass of NameResolver can provide, but can also use default:
     contenthash()   The hash of the content

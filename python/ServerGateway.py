@@ -9,6 +9,7 @@ from .Errors import ToBeImplementedException, NoContentException
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
+from .Archive import AdvancedSearch
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -60,6 +61,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
         #!SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients
+        "advancedsearch": AdvancedSearch,
         "doi": DOI,
         "contenthash": ContentHash,
         "sha1hex": Sha1Hex,
@@ -183,5 +185,5 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
 if __name__ == "__main__":
     logging.basicConfig(filename='dweb_gateway.log', level=logging.DEBUG)
-    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}) # Run local gateway
+    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}, verbose=True) # Run local gateway
 
