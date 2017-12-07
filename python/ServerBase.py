@@ -146,6 +146,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 logging.error("Sending Unexpected Error {0}:".format(httperror), exc_info=True)
             else:
                 logging.info("Sending Error {0}:{1}".format(httperror, str(e)))
+            if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
+                self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
             self.send_error(httperror, str(e))    # Send an error response
 
 

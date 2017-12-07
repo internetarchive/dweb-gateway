@@ -26,10 +26,10 @@ class AdvancedSearch(NameResolverDir):
         :return:
         """
         verbose = kwargs.get("verbose")
+        if verbose: del kwargs["verbose"]
         if verbose: logging.debug("AdvancedSearch for {0} {1}".format(args, kwargs))
         obj = super(AdvancedSearch, cls).new(namespace, *args, **kwargs)
         # args is ignored, there are none to advancedsearch
-        del kwargs["verbose"]
         obj.query = "https://archive.org/advancedsearch.php?" + ('&').join([ k+"="+v for (k,v) in kwargs.items()])
         #TODO-DETAILS may need to handle url escaping, i.e. some queries may be invalid till that is done
         if verbose: logging.debug("AdvancedSearch url={0}".format(obj.query))
@@ -40,6 +40,10 @@ class AdvancedSearch(NameResolverDir):
         return obj
 
     def metadata(self, verbose=False):
+        /*
+        Pass metadata (i.e. what retrieved in AdancedSearcch) directly back to client
+        This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
+        */
         return {'Content-type': 'application/json',
                 'data': self.res
                 }
