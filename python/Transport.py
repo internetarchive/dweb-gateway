@@ -1,5 +1,6 @@
 # encoding: utf-8
 from datetime import datetime
+import logging
 
 from .miscutils import dumps, loads
 from .Errors import ToBeImplementedException, MyBaseException, IntentionallyUnimplementedException
@@ -124,7 +125,7 @@ class Transport(object):
         :param options: Passed to command, NOT passed to subcalls as for example mucks up sb.__init__ by dirtying - this might be reconsidered
         :return:
         """
-        if verbose: print("Transport.fetch command={0} cls={1} url={2} path={3} options={4}".format(command, cls, url, path, options))
+        if verbose: logging.debug("Transport.fetch command={0} cls={1} url={2} path={3} options={4}".format(command, cls, url, path, options))
         #TODO-BACKPORTING see if needed after full port - hint it was used in ServerHTTP but not on client side
         if cls:
             if isinstance(cls, basestring):  # Handle abbreviations for cls
@@ -134,7 +135,7 @@ class Transport(object):
             # Not passing **options to fetch, but probably could
         else:
             obj = self.rawfetch(url, verbose=verbose)   # Not passing **options, probably could but not used
-        #if verbose: print("Transport.fetch obj={0}".format(obj))
+        #if verbose: logging.debug("Transport.fetch obj={0}".format(obj))
         if path:
             obj = obj.path(path, verbose=verbose)   # Not passing **options as ignored, but probably could
             #TODO handle not found exception

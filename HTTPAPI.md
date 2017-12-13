@@ -25,7 +25,7 @@ In practice some combinations don't make any sense.
 * content: Return the file itself
 * contenthash: Return the hash of the content, suitable for a contenthash/xyz request
 * contenturl: Return a URL that could be used to retrieve the content  
-* metadata: Return a JSON with metadata about the file
+* metadata: Return a JSON with metadata about the file - its format is type dependent
 * void: Return emptiness
 
 ### Not yet working, but reserved for future development
@@ -43,6 +43,8 @@ In practice some combinations don't make any sense.
 * rawfetch: Equivalent to contenthash except only retrieves from a local data store (so is faster)
 * rawadd: Adds a JSON data structure to a named list e.g. rawadd/Q123
 * rawlist: Returns an array of data structures added to a list with rawadd
+* archiveid: An item (a collection of related files) represented by an Archive.org itemid.
+* advancedsearch: A collection of items returned by a search on archive.org
 
 (Note this set is mapped in ServerGateway.py to the classes that serve them)
 
@@ -50,3 +52,4 @@ In practice some combinations don't make any sense.
 ## Odd cases
 
 * info - returns a JSON describing the server - format will change except that always contains { type: "gateway" }
+

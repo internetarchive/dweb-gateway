@@ -48,7 +48,7 @@ class HashStore(object):
     
     @app.route("/content/contenthash/<contenthash>")
     def get_content_hash(contenthash):
-        print('l:%s' % contenthash)
+        logging.debug('l:{}'.format(contenthash))
         location = r.hgetall('location_%s' % contenthash)
         if 'url' in location:
             return location['url']

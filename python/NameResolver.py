@@ -1,5 +1,10 @@
+import logging
+import requests
 from .Errors import ToBeImplementedException, NoContentException
 from .Multihash import Multihash
+from .HashStore import LocationService, MimetypeService, IPLDHashService
+from .config import config
+from .miscutils import httpget
 
 
 class NameResolver(object):
@@ -29,7 +34,7 @@ class NameResolver(object):
     contentType:    The mime-type of the content, (TODO check against schema.org), not compatible with standard Archive metadata which uses three letter types like PNG
     """
 
-    def __init__(self, namespace, *args, **kwargs): # Careful if change, note its the default __init__ for NameResolverDir, NameResolverFile, NameResolverSearch etc
+    def __init__(self, namespace, *args, **kwargs):  # Careful if change, note its the default __init__ for NameResolverDir, NameResolverFile, NameResolverSearch etc
         self._list = []
 
     @classmethod
@@ -57,6 +62,7 @@ class NameResolver(object):
     def content(self, verbose=False):
         """
         Return the content, by default its just the result of self.retrieve() which must be defined in superclass
+        Requires mimetype to be set in subclass
 
         :param verbose:
         :return:
@@ -78,9 +84,9 @@ class NameResolver(object):
         """
         if not self._contenthash:
             self._contenthash = Multihash(data=self.content(), code=Multihash.SHA2_256)
-        return {'Content-type': 'text/plain',
-         'data': self._contenthash.multihash58
-         }
+        return  {'Content-type': 'text/plain',
+                'data': self._contenthash.multihash58
+                }
 
     def contenturl(self, verbose=False):
         """
@@ -91,10 +97,10 @@ class NameResolver(object):
         if not self._contenthash:
             self._contenthash = Multihash(data=self.content(), code=Multihash.SHA2_256)
         return {'Content-type': 'text/plain',
-                'data': "https://gateway.dweb.me/content/rawfetch/"+self._contenthash.multihash58,   #TODO parameterise server name, maybe store from incoming URL
+                'data': "https://gateway.dweb.me/content/rawfetch/"+self._contenthash.multihash58,   # TODO parameterise server name, maybe store from incoming URL
                 }
 
-    def push(self,obj):
+    def push(self, obj):
         """
         Add a NameResolverShard to a NameResolverFile or a NameResolverFile to a NameResolverDir - in both cases on _list field
         Doesnt check class of object added to allow for variety of nested constructs.
@@ -111,7 +117,7 @@ class NameResolver(object):
 
         :param cls:
         :param namespace:
-        :param args:    List of arguments to URL
+        :param [args]:    List of arguments to URL
         :return:        Concatenated args with / by default (subclasses will override)
         """
         return namespace, args.join('/')    # By default reconcatonate args
@@ -129,6 +135,7 @@ class NameResolverDir(NameResolver):
     """
     def files(self):
         return self._list
+
 
 class NameResolverFile(NameResolver):
     """
@@ -159,6 +166,39 @@ class NameResolverFile(NameResolver):
         raise ToBeImplementedException(name="NameResolverFile.shards")
         pass
 
+    def cache_content(self, url, verbose):
+        """
+        Retrieve content from a URL, cache it in various places especially IPFS and set tables so can be retrieved by contenthash
+
+        Requires multihash to be set prior to this, if required it could be set from the retrieved data
+
+        :param url:         URL - typically inside archive.org of contents
+        :param verbose:
+        :return:
+        """
+        ipldhash = self.multihash and IPLDHashService.get(self.multihash.multihash58)    # May be None, we don't know it
+        if ipldhash:
+            self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose=verbose)
+            ipldhash = IPLDHashService.get(self.multihash.multihash58, verbose=verbose)
+        else:
+            (data, self.mimetype) = httpget(url, wantmime=True)
+            #TODO could check sha1 here, but would be slow
+            if not self.multihash:
+                if verbose: logging.debug("Computing SHA1 hash of url {}".format(url))
+                self.multihash = Multihash(data=data, code=Multihash.SHA1)
+            MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
+            #TODO move this to TransportIPFS when python implementation of IPFS done
+            ipfsurl = config["ipfs"]["url_add_data"]
+            if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
+            res = requests.post(ipfsurl, files={'file': ('', data, self.mimetype)}).json()
+            logging.debug("IPFS result={}".format(res))
+            ipldhash = res['Hash']
+            IPLDHashService.set(self.multihash.multihash58, ipldhash)
+            if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
+        LocationService.set(self.multihash.multihash58, url, verbose=verbose)
+        return {"ipldhash": ipldhash}
+
+
 class NameResolverShard(NameResolver):
     """
     Represents a single shard returned by a NameResolverFile.shards() iterator
@@ -167,11 +207,13 @@ class NameResolverShard(NameResolver):
     """
     pass
 
+
 class NameResolverSearchItem(NameResolver):
     """
     Represents each element in a search
     """
     pass
+
 
 class NameResolverSearch(NameResolver):
     """

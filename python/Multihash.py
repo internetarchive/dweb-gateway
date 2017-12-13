@@ -11,6 +11,8 @@ import sha3
 import pyblake2
 import base58
 import binascii
+import logging
+
 from sys import version as python_version
 if python_version.startswith('3'):
     from urllib.parse import urlparse
@@ -74,7 +76,7 @@ class Multihash(object):
         digest = None
 
         if url:
-            print("url=",url.__class__.__name__,url)
+            logging.debug("url={} {}".format(url.__class__.__name__,url))
             if isinstance(url, str) and "/" in url:   # https://.../Q...
                 url = urlparse(url)
             if not isinstance(url, str):
@@ -92,19 +94,26 @@ class Multihash(object):
                 digest = bytes.fromhex(sha1hex)  # Python3
             code = self.SHA1
         if data and code:
-                if not code in self.FUNCS:
-                    raise MultihashError(message="Cant encode hash code={}".format(code))
-                hashfn = self.FUNCS.get(code)()  # Note it calls the function in that strange way hashes work!
-                if isinstance(data, bytes):
-                    hashfn.update(data)
-                elif isinstance(data, str):
-                    raise MultihashError(message="Should be passing bytes, not strings as could encode multiple ways")  # TODO can remove this if really need to handle UTF8 strings, but better to push conversion upstream
-                    hashfn.update(data.encode('utf-8'))
-                digest = hashfn.digest()
+                digest = self._hash(code, data)
         if digest and code:
             self._multihash_binary = bytearray([code, len(digest)])
             self._multihash_binary.extend(digest)
         self.assertions()   # Check consistency
+
+    def _hash(self, code, data):
+        if not code in self.FUNCS:
+            raise MultihashError(message="Cant encode hash code={}".format(code))
+        hashfn = self.FUNCS.get(code)()  # Note it calls the function in that strange way hashes work!
+        if isinstance(data, bytes):
+            hashfn.update(data)
+        elif isinstance(data, str):
+            # In Python 3 this is ok, would be better if we were sure it was utf8
+            # raise MultihashError(message="Should be passing bytes, not strings as could encode multiple ways")  # TODO can remove this if really need to handle UTF8 strings, but better to push conversion upstream
+            hashfn.update(data.encode('utf-8'))
+        return hashfn.digest()
+
+    def check(self, data):
+        assert(self.digest == self._hash(self.code, data), "Hash doesnt match expected")
 
     @property
     def code(self):

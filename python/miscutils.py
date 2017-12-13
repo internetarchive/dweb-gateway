@@ -61,20 +61,23 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
         raise TypeError("Type {0} not serializable".format(obj.__class__.__name__)) from e
 
 
-
-def httpget(url):
+def httpget(url, wantmime=False):
     # Returns the content - i.e. bytes
     #TODO-STREAMS future work to return a stream
 
     r = None  # So that if exception in get, r is still defined and can be tested for None
     try:
-        print("GET ",url)
+        logging.debug("GET {}".format(url))
         r = requests.get(url)
         r.raise_for_status()
         if not r.encoding or ("application/pdf" in r.headers.get('content-type')):
-            return r.content  # Should work for PDF or other binary types
+            data = r.content  # Should work for PDF or other binary types
         else:
-            return r.text
+            data = r.text
+        if wantmime:
+            return data, r.headers.get('content-type')
+        else:
+            return data
         #TODO-STREAM support streams in future
 
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
@@ -86,3 +89,4 @@ def httpget(url):
     except requests.exceptions.MissingSchema as e:
             logging.error("HTTP request failed", exc_info=True)
             raise e  # For now just raise it
+

@@ -242,7 +242,7 @@ class DOIfile(NameResolverFile):    # Note plural
                 #ipldresp = requests.post(ipfsurl, files={'file': ('', data, self.metadata["mimetype"])})
                 #ipldhash = ipldresp.json()['Hash']
                 res = requests.post(ipfsurl, files={'file': ('', data, self._metadata["mimetype"])}).json()
-                print("IPFS result=",res)
+                logging.debug("IPFS result={}".format(res))
                 ipldhash = res['Hash']
                 IPLDHashService.set(self.multihash.multihash58, ipldhash)
             self._metadata["ipldhash"] = ipldhash

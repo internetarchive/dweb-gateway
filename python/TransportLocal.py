@@ -195,8 +195,6 @@ class TransportLocal(Transport):
         :param options:
         :return:
         """
-        print("XXX@200 verbosing url=",url, "sig", sig)
-        verbose=True
         subdir = subdir or ("list","reverse")   # By default store forward and backwards
         if verbose: logging.debug("TransportLocal.rawadd {0} {1} subdir={2} options={3}"
                                   .format(url, sig, subdir, options))

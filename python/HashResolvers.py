@@ -104,7 +104,7 @@ class HashResolver(NameResolverFile):
         :returns:   content - i.e. bytes
         """
         data = self.retrieve()
-        if verbose: logging.debug("Retrieved doc size=", len(data))
+        if verbose: logging.debug("Retrieved doc size={}".format(len(data)))
         return {'Content-type': self.mimetype,
             'data': data,
             }

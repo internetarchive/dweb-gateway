@@ -9,7 +9,7 @@ from .Errors import ToBeImplementedException, NoContentException
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
-from .Archive import AdvancedSearch
+from .Archive import AdvancedSearch, ArchiveItem
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -62,6 +62,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
         #!SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients
         "advancedsearch": AdvancedSearch,
+        "archiveid": ArchiveItem,
         "doi": DOI,
         "contenthash": ContentHash,
         "sha1hex": Sha1Hex,
@@ -90,7 +91,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed    # Exposes this function for outside use
     def sandbox(self, foo, bar, **kwargs):
         # Changeable, just for testing HTTP etc, feel free to play with in your branch, and expect it to be overwritten on master branch.
-        logging.debug("foo=",foo,"bar=",bar, kwargs)
+        logging.debug("foo={} bar={}, kwargs={}".formate(foo, bar,  kwargs))
         return { 'Content-type': 'application/json',
                  'data': { "FOO": foo, "BAR": bar, "kwargs": kwargs}
                }
