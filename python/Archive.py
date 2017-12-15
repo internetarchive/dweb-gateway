@@ -64,32 +64,39 @@ class ArchiveItem(NameResolverDir):
     """
 
     @classmethod
-    def new(cls, namespace, itemid, *args, **kwargs):
+    def new(cls, namespace, itemid, name, *args, **kwargs):
         """
         Create a AdvancedSearch object, just pass on kwargs to Archive's advancedsearch API
         The existance of this is mostly because of the CORS issues with the archive.org/advancedsearch which (reasonably) blocks CORS but doesn't yet have a
         mode to ignore cookies in a CORS case. (based on discussions between Mitra & Sam)
 
         :param namespace:   "archiveid"
-        :param args:        identifier as used by archive
+        :param itemid:      Archive item id
+        :param name:        Name of file - case sensitive or none for the item
+        :param args:
         :param kwargs:
-        :return:
+        :return:            ArchiveItem or ArchiveFile instance.
         """
         verbose = kwargs.get("verbose")
-        logging.debug("XXX@79 verbose={}".format(verbose))
         if verbose: del kwargs["verbose"]
-        if verbose: logging.debug("ArchiveItem lookup for {0} {1} {2}".format(itemid, args, kwargs))
-        obj = super(ArchiveItem, cls).new(namespace, itemid, *args, **kwargs)
+        if verbose: logging.debug("ArchiveItem lookup for {0}/{1} {2} {3}".format(itemid, name, args, kwargs))
+        obj = super(ArchiveItem, cls).new(namespace, itemid, name, *args, **kwargs)
         # kwargs is ignored, there are none to archive.org/metadata
         obj.query = "https://archive.org/metadata/{}".format(itemid)
         #TODO-DETAILS may need to handle url escaping, i.e. some queries may be invalid till that is done
         if verbose: logging.debug("Archive Metadata url={0}".format(obj.query))
         res = httpget(obj.query)
         obj._metadata = loads(res) #TODO-ERRORS handle error if cant find item for example
-        logging.debug("XXX@86 {}".format(obj._metadata['files']))
-        obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, verbose=verbose) for f in obj._metadata["files"]]
-        if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
-        return obj
+        if name: # Its a single file just cache that one
+            f = [ f for f in obj._metadata["files"] if f["name"] == name ]
+            if (not f): raise Error("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
+            return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
+        else: # Its an item - cache all the files
+            logging.debug("XXX@86 {}".format(obj._metadata['files']))
+            obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, verbose=verbose) for f in obj._metadata["files"]]
+            if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
+            return obj
+
 
     def metadata(self, verbose=False):
         """
@@ -142,8 +149,10 @@ class ArchiveFile(NameResolverFile):
                 'data': self._metadata
                 }
 
-
     @property
     def archive_url(self):
         return "{}{}/{}".format(config["archive"]["url_download"], self.itemid, self._metadata["name"])
 
+    def content(self, verbose=False):   // Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
+        (data, self.mimetype) = httpget(self.archive_url, wantmime=True)
+        return {"Content-type": self.mimetype, "data": data}
