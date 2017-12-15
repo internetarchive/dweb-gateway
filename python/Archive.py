@@ -153,6 +153,6 @@ class ArchiveFile(NameResolverFile):
     def archive_url(self):
         return "{}{}/{}".format(config["archive"]["url_download"], self.itemid, self._metadata["name"])
 
-    def content(self, verbose=False):   // Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
+    def content(self, verbose=False):   #Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
         (data, self.mimetype) = httpget(self.archive_url, wantmime=True)
         return {"Content-type": self.mimetype, "data": data}
