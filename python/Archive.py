@@ -64,7 +64,7 @@ class ArchiveItem(NameResolverDir):
     """
 
     @classmethod
-    def new(cls, namespace, itemid, name, *args, **kwargs):
+    def new(cls, namespace, itemid, *args, **kwargs):
         """
         Create a AdvancedSearch object, just pass on kwargs to Archive's advancedsearch API
         The existance of this is mostly because of the CORS issues with the archive.org/advancedsearch which (reasonably) blocks CORS but doesn't yet have a
@@ -72,21 +72,22 @@ class ArchiveItem(NameResolverDir):
 
         :param namespace:   "archiveid"
         :param itemid:      Archive item id
-        :param name:        Name of file - case sensitive or none for the item
-        :param args:
+        :param name:
+        :param optional *args: Name of file - case sensitive or none for the item
         :param kwargs:
         :return:            ArchiveItem or ArchiveFile instance.
         """
         verbose = kwargs.get("verbose")
         if verbose: del kwargs["verbose"]
-        if verbose: logging.debug("ArchiveItem lookup for {0}/{1} {2} {3}".format(itemid, name, args, kwargs))
-        obj = super(ArchiveItem, cls).new(namespace, itemid, name, *args, **kwargs)
+        if verbose: logging.debug("ArchiveItem lookup for {0} {1} {2}".format(itemid, args, kwargs))
+        obj = super(ArchiveItem, cls).new(namespace, itemid, *args, **kwargs)
         # kwargs is ignored, there are none to archive.org/metadata
         obj.query = "https://archive.org/metadata/{}".format(itemid)
         #TODO-DETAILS may need to handle url escaping, i.e. some queries may be invalid till that is done
         if verbose: logging.debug("Archive Metadata url={0}".format(obj.query))
         res = httpget(obj.query)
         obj._metadata = loads(res) #TODO-ERRORS handle error if cant find item for example
+        name = name = args.pop(0) if args else None
         if name: # Its a single file just cache that one
             f = [ f for f in obj._metadata["files"] if f["name"] == name ]
             if (not f): raise Error("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
