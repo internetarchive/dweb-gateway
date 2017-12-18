@@ -4,6 +4,7 @@ from .NameResolver import NameResolverFile
 from .HashStore import LocationService
 from .Multihash import Multihash
 from .miscutils import loads, dumps
+from .Errors import TransportFileNotFound
 
 #TODO add caching to headers returned so not repeatedly pinged for same file
 
@@ -60,7 +61,16 @@ class LocalResolverFetch(LocalResolver):
         return "application/octet-stream"   # By default we don't know what it is #TODO-LOCAL look up in MimetypeService just in case ...
 
     def retrieve(self, verbose=False):
-        return self.transport(verbose=verbose).rawfetch(multihash=self._contenthash)
+        try:
+            return self.transport(verbose=verbose).rawfetch(multihash=self._contenthash)
+        except TransportFileNotFound as e1:  # Not found in block store, lets try contenthash
+            try:
+                from .HashResolvers import ContentHash  # Avoid a circular reference
+                logging.debug("Falling back to contenthash")
+                return ContentHash.new("contenthash", self._contenthash, verbose=verbose).retrieve(verbose=verbose)
+            except Error as e:
+                logging.debug("Fallback failed, raising original error")
+                raise e1    # Raise the original error
 
 class LocalResolverAdd(LocalResolver):
 
