@@ -94,6 +94,7 @@ class TransportLocal(Transport):
         #TODO-STREAM make return stream to HTTP and so on
 
         :param url:
+        :param multihash: a Multihash structure
         :param options:
         :return:
         """
