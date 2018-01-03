@@ -1,6 +1,6 @@
 import logging
 from .NameResolver import NameResolverDir, NameResolverFile
-from .miscutils import loads, dumps, httpget
+from .miscutils import loads, dumps, httpget, from_torrent_data
 from .config import config
 from .Multihash import Multihash
 
@@ -93,9 +93,11 @@ class ArchiveItem(NameResolverDir):
             if (not f): raise Error("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
             return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
         else: # Its an item - cache all the files
-            logging.debug("XXX@86 {}".format(obj._metadata['files']))
             obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, verbose=verbose) for f in obj._metadata["files"]]
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
+            magnets = [ f._metadata["magnetlink"] for f in obj._list if f._metadata.get("format") == "Archive BitTorrent" ]
+            if magnets:
+                obj._metadata["metadata"]["magnetlink"] = magnets[0]
             return obj
 
 
@@ -109,6 +111,7 @@ class ArchiveItem(NameResolverDir):
                 'data':
                     self._metadata
                 }
+
 
 class ArchiveFile(NameResolverFile):
     """
@@ -130,6 +133,10 @@ class ArchiveFile(NameResolverFile):
             logging.debug("No sha1 for file:".format(itemid, filename))
         # Currently remaining args an kwargs ignored
         cached = obj.cache_content(obj.archive_url, verbose)    # Setup for IPFS and contenthash {ipldhash}
+        if obj._metadata.get("format") == "Archive BitTorrent":
+            data = httpget(obj.archive_url, wantmime=False)
+            magnetlink = from_torrent_data(obj.archive_url, data);
+            obj._metadata["magnetlink"] = magnetlink
         obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"]) # Add to IPFS hash returned
         obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
         # Comment out next line unless checking integrity
@@ -158,3 +165,5 @@ class ArchiveFile(NameResolverFile):
     def content(self, verbose=False):   #Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
         (data, self.mimetype) = httpget(self.archive_url, wantmime=True)
         return {"Content-type": self.mimetype, "data": data}
+
+
