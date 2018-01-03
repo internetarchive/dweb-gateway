@@ -122,5 +122,5 @@ def from_torrent_data(torrenturl, torrent_contents):
 
     torrenturlparm = '&xs='+urllib.parse.quote_plus(torrenturl)
 
-    result = ''.join([b32hash.decode('ASCII'), tracker_list, url_list,torrenturlparm],tracker_community_list)
+    result = ''.join([b32hash.decode('ASCII'), tracker_list, url_list,torrenturlparm,tracker_community_list])
     return 'magnet:?xt=urn:btih:%s' % result
