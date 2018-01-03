@@ -114,11 +114,13 @@ def from_torrent_data(torrenturl, torrent_contents):
     else:
         tracker_list = ''
 
+    tracker_community_list = ''.join(['&tr='+urllib.parse.quote_plus(t) for t in [
+        'wss://tracker.btorrent.xyz','wss://tracker.openwebtorrent.com' , 'wss://tracker.fastcast.nz' ]]);
     if 'url-list' in metadata:
         url_list = ''.join(['&ws='+urllib.parse.quote_plus(t) \
                                 for t in metadata['url-list']])
 
     torrenturlparm = '&xs='+urllib.parse.quote_plus(torrenturl)
 
-    result = ''.join([b32hash.decode('ASCII'), tracker_list, url_list,torrenturlparm])
+    result = ''.join([b32hash.decode('ASCII'), tracker_list, url_list,torrenturlparm],tracker_community_list)
     return 'magnet:?xt=urn:btih:%s' % result
