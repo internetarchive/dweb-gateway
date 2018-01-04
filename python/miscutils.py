@@ -10,6 +10,8 @@ import base64
 import hashlib
 import urllib.parse
 from .Errors import TransportURLNotFound
+from .config import config
+
 
 
 def mergeoptions(a, b):
@@ -65,14 +67,16 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
         raise TypeError("Type {0} not serializable".format(obj.__class__.__name__)) from e
 
 
-def httpget(url, wantmime=False):
+def httpget(url, wantmime=False, range=None):
     # Returns the content - i.e. bytes
     #TODO-STREAMS future work to return a stream
 
     r = None  # So that if exception in get, r is still defined and can be tested for None
     try:
         logging.debug("GET {}".format(url))
-        r = requests.get(url)
+        headers = {}
+        if range: headers["range"] = range
+        r = requests.get(url, headers=headers)
         r.raise_for_status()
         if not r.encoding or ("application/pdf" in r.headers.get('content-type')) or ("image/" in r.headers.get('content-type')):
             data = r.content  # Should work for PDF or other binary types

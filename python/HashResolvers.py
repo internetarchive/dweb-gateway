@@ -78,7 +78,7 @@ class HashResolver(NameResolverFile):
         """
         pass  # Note could probably be defined on NameResolverFile class
 
-    def retrieve(self, verbose=False):
+    def retrieve(self, verbose=False, **kwargs):
         """
         Fetch the content, dont pass to caller (typically called by NameResolver.content()
 
@@ -99,7 +99,7 @@ class HashResolver(NameResolverFile):
         else:
             return httpget(self.url)
 
-    def content(self, verbose=False):
+    def content(self, verbose=False, **kwargs):
         """
         :returns:   content - i.e. bytes
         """

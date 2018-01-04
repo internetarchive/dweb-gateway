@@ -60,7 +60,7 @@ class LocalResolverFetch(LocalResolver):
     def mimetype(self):
         return "application/octet-stream"   # By default we don't know what it is #TODO-LOCAL look up in MimetypeService just in case ...
 
-    def retrieve(self, verbose=False):
+    def retrieve(self, verbose=False, **kwargs):
         try:
             return self.transport(verbose=verbose).rawfetch(multihash=self._contenthash)
         except TransportFileNotFound as e1:  # Not found in block store, lets try contenthash

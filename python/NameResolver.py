@@ -52,14 +52,14 @@ class NameResolver(object):
         except NoContentException:
             return None
 
-    def retrieve(self, verbose=False):
+    def retrieve(self, _headers=None, verbose=False, **kwargs):
         """
 
         :return:
         """
         raise ToBeImplementedException(name=self.__class__.__name__+".retrieve()")
 
-    def content(self, verbose=False):
+    def content(self, _headers=None, verbose=False, **kwargs):
         """
         Return the content, by default its just the result of self.retrieve() which must be defined in superclass
         Requires mimetype to be set in subclass
@@ -67,7 +67,7 @@ class NameResolver(object):
         :param verbose:
         :return:
         """
-        return {"Content-type": self.mimetype, "data": self.retrieve()}
+        return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers)}
 
     def metadata(self, verbose=False):
         """

@@ -213,8 +213,16 @@ class ArchiveFile(NameResolverFile):
     def archive_url(self):
         return "{}{}/{}".format(config["archive"]["url_download"], self.itemid, self._metadata["name"]) # Note similar code in torrentdata
 
-    def content(self, verbose=False):   #Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
-        (data, self.mimetype) = httpget(self.archive_url, wantmime=True)
-        return {"Content-type": self.mimetype, "data": data}
+    # NOT COMPLETE YET
+    # @property
+    #ef cachefilename(self):
+    #    return "{}/{}/{}".format(config["cache"]["archiveid"],self.itemid, self._metadata["name"])
+
+    def retrieve(self, _headers=None, verbose=False, **kwargs):
+        (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range"))
+        return data
+
+    def content(self, _headers=None, verbose=False, **kwargs):   #Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
+        return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers, verbose=verbose)}
 
 

@@ -35,6 +35,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     namespace: is a extensible descripter for name spaces e.g. "doi"
     namespace-dependent-string: is a string, that may contain additional "/" dependent on the namespace.
     aaa=bbb,ccc=ddd are optional arguments to the name space resolver.
+    _headers contains a dictioanry of HTTP headers, especially "range"
 
     Pseudo Code for each service
     * lookup namespace in a config table to get a class
@@ -114,16 +115,14 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.
     @exposed
-    def content(self, namespace, *args, **kwargs):
+    def content(self, namespace, *args, _headers=None, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose, _headers=_headers)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def download(self, namespace, *args, **kwargs):
         # Synonym for "content" to match Archive API
-        verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
-
+        return self.content(namespace, *args, **kwargs)
 
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.

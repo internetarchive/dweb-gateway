@@ -266,7 +266,7 @@ class DOIfile(NameResolverFile):    # Note plural
             self.sqlite_metadata(verbose=False)
         return self._metadata["mimetype"]
 
-    def retrieve(self):
+    def retrieve(self, **kwargs):
         """
         Return content of DOI from its URL.  (typically called by NameResolver.content()
 
