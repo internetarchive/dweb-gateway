@@ -95,7 +95,7 @@ class ArchiveItem(NameResolverDir):
         res = httpget(obj.query)
         obj._metadata = loads(res) #TODO-ERRORS handle error if cant find item for example
         obj.setmagnetlink(True)    # Set a modified magnet link suitable for WebTorrent
-        name = name = args.pop(0) if args else None # Get the name of the file if present
+        name = name = args[0] if args else None # Get the name of the file if present
         if name: # Its a single file just cache that one
             f = [ f for f in obj._metadata["files"] if f["name"] == name ]
             if (not f): raise Error("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
@@ -145,7 +145,7 @@ class ArchiveItem(NameResolverDir):
             #  Replace http with https (as cant call http from https) BUT still has cors issues
             # self.torrentdata["url-list"] = [ u.replace("http://","https://") for u in self.torrentdata["url-list"] ]
             self.torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash
-            externaltorrenturl = "{}{}/{}".format(config["gateway"]["url_torrent"], self.itemid, torrentfilemeta["name"] )
+            externaltorrenturl = "{}{}".format(config["gateway"]["url_torrent"], self.itemid) # Intentionally no file name, we are modifying it
         else:
             externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"] )
         magnetlink = ''.join([

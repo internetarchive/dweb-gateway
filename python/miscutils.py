@@ -74,7 +74,7 @@ def httpget(url, wantmime=False):
         logging.debug("GET {}".format(url))
         r = requests.get(url)
         r.raise_for_status()
-        if not r.encoding or ("application/pdf" in r.headers.get('content-type')):
+        if not r.encoding or ("application/pdf" in r.headers.get('content-type')) or ("image/" in r.headers.get('content-type')):
             data = r.content  # Should work for PDF or other binary types
         else:
             data = r.text

@@ -152,6 +152,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
     def do_GET(self):
+        logging.debug(self.headers)
         self._dispatch()
 
     def do_OPTIONS(self):
