@@ -137,8 +137,11 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             if data:
                 self.wfile.write(data)                   # Write content of result if applicable
+                                                        # Thows BrokenPipeError if browser has gone away
             #self.wfile.close()
-
+        except BrokenPipeError as e:
+            logging.error("Broken Pipe Error (browser probably gave up waiting) url={}".format(self.path))
+            # Don't send error as the browser has gone away
         except Exception as e:         # Gentle errors, entry in log is sufficient (note line is app specific)
             # TypeError Message will be like "sandbox() takes exactly 3 arguments (2 given)" or whatever exception returned by function
             httperror = e.httperror if hasattr(e, "httperror") else 500
