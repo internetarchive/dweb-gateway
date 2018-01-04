@@ -118,6 +118,13 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
 
+    @exposed
+    def download(self, namespace, *args, **kwargs):
+        # Synonym for "content" to match Archive API
+        verbose = kwargs.get("verbose")
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
+
+
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.
     @exposed
@@ -149,6 +156,11 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         self.namespaceclasses[namespace].new(namespace, *args, **kwargs)
         return {'Content-type': 'application/octet-stream',
                  'data': None }
+
+    @exposed
+    def torrent(self, namespace, *args, **kwargs):
+        verbose = kwargs.get("verbose")
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).torrent(verbose=verbose, headers=True)
 
     def storeipld(self, namespace, *args, **kwargs):
         """

@@ -94,33 +94,3 @@ def httpget(url, wantmime=False):
             logging.error("HTTP request failed", exc_info=True)
             raise e  # For now just raise it
 
-
-# Copied from https://github.com/thomasleveil/magneturi/blob/master/magneturi/__init__.py
-# Which is pip3 install magneturi - but adding the HTTP url
-def from_torrent_data(torrenturl, torrent_contents):
-    """
-    return a magnet URI given Bittorrent torrent file content
-    """
-    metadata = bencode.bdecode(torrent_contents)
-    hash_contents = bencode.bencode(metadata['info'])
-    digest = hashlib.sha1(hash_contents).digest()
-    b32hash = base64.b32encode(digest)
-
-    if 'announce-list' in metadata:
-        tracker_list = ''.join(['&tr='+urllib.parse.quote_plus(t[0]) \
-                                for t in metadata['announce-list']])
-    elif 'announce' in metadata:
-        tracker_list = '&tr='+urllib.parse.quote_plus(metadata['announce'])
-    else:
-        tracker_list = ''
-
-    tracker_community_list = ''.join(['&tr='+urllib.parse.quote_plus(t) for t in [
-        'wss://tracker.btorrent.xyz','wss://tracker.openwebtorrent.com' , 'wss://tracker.fastcast.nz' ]]);
-    if 'url-list' in metadata:
-        url_list = ''.join(['&ws='+urllib.parse.quote_plus(t) \
-                                for t in metadata['url-list']])
-
-    torrenturlparm = '&xs='+urllib.parse.quote_plus(torrenturl)
-
-    result = ''.join([b32hash.decode('ASCII'), tracker_list, url_list,torrenturlparm,tracker_community_list])
-    return 'magnet:?xt=urn:btih:%s' % result
