@@ -115,9 +115,9 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.
     @exposed
-    def content(self, namespace, *args, _headers=None, **kwargs):
+    def content(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose, _headers=_headers)   # { Content-Type: xxx; data: "bytes" }
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def download(self, namespace, *args, **kwargs):

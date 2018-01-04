@@ -102,7 +102,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             cmd = args.pop(0)                   # foo
             kwargs = dict(parse_qsl(o.query))  # { baz: bbb, bar: aaa }
             kwargs.update(postvars)
-            kwargs["_headers"] = self.headers   # Especially want range
             func = getattr(self, self.command + "_" + cmd, None) or getattr(self, cmd, None) # self.POST_foo or self.foo (should be a method)
             if not func or (self.onlyexposed and not func.exposed):
                 raise HTTPdispatcherException(req=cmd)  # Will be caught in except
