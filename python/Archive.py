@@ -187,7 +187,8 @@ class ArchiveFile(NameResolverFile):
             logging.debug("No sha1 for file:".format(itemid, filename))
         # Currently remaining args an kwargs ignored
         cached = obj.cache_content(obj.archive_url, verbose)    # Setup for IPFS and contenthash {ipldhash}
-        obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
+        if obj.parent._metadata["metadata"]["magnetlink"]:
+            obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
         obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"]) # Add to IPFS hash returned
         obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
         # Comment out next line unless checking integrity
