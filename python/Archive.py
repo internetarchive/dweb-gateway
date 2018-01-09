@@ -95,10 +95,10 @@ class ArchiveItem(NameResolverDir):
         res = httpget(obj.query)
         obj._metadata = loads(res) #TODO-ERRORS handle error if cant find item for example
         obj.setmagnetlink(True)    # Set a modified magnet link suitable for WebTorrent
-        name = name = args[0] if args else None # Get the name of the file if present
+        name = name = "/".join(args) if args else None # Get the name of the file if present
         if name: # Its a single file just cache that one
             f = [ f for f in obj._metadata["files"] if f["name"] == name ]
-            if (not f): raise Error("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
+            if (not f): raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
             return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
         else: # Its an item - cache all the files
             obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, verbose=verbose) for f in obj._metadata["files"]]
