@@ -78,7 +78,7 @@ class HashResolver(NameResolverFile):
         """
         pass  # Note could probably be defined on NameResolverFile class
 
-    def retrieve(self, verbose=False, **kwargs):
+    def retrieve(self, verbose=False, **kwargsx):
         """
         Fetch the content, dont pass to caller (typically called by NameResolver.content()
 

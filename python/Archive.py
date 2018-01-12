@@ -8,6 +8,7 @@ from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
 from .Errors import CodingException
+from .HashStore import MagnetLinkService
 
 class AdvancedSearch(NameResolverDir):
     """
@@ -94,7 +95,7 @@ class ArchiveItem(NameResolverDir):
         if verbose: logging.debug("Archive Metadata url={0}".format(obj.query))
         res = httpget(obj.query)
         obj._metadata = loads(res) #TODO-ERRORS handle error if cant find item for example
-        obj.setmagnetlink(True)    # Set a modified magnet link suitable for WebTorrent
+        obj.setmagnetlink(True, verbose=verbose)    # Set a modified magnet link suitable for WebTorrent
         name = name = "/".join(args) if args else None # Get the name of the file if present
         if name: # Its a single file just cache that one
             f = [ f for f in obj._metadata["files"] if f["name"] == name ]
@@ -117,46 +118,56 @@ class ArchiveItem(NameResolverDir):
                     self._metadata
                 }
 
-    def setmagnetlink(self, wantmodified):
+    def setmagnetlink(self, wantmodified, verbose=False):
         """
         Set magnet link (note could easily be modified to return torrentdata or torrentfile if wanted)
         - assume that metadata already fetched but that _metadata.files not converted to _list yet (as that process  will use this data.
         :return:
         """
         if not self._metadata: raise CodingException(message="Must have fetched metadata before read torrentdata")
-        ff = [ f for f in self._metadata["files"] if f.get("format") == "Archive BitTorrent" ]
-        if len(ff):
-            if len(ff) > 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
-            torrentfilemeta = ff[0]
-            torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
-            torrentcontents = httpget(torrentfileurl, wantmime=False)
-            self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
-            assert (bencode.bencode(self.torrentdata) == torrentcontents)
-            hash_contents = bencode.bencode(self.torrentdata['info'])
-            digest = hashlib.sha1(hash_contents).digest()
-            b32hash = base64.b32encode(digest)  # Get the hash of the torrent file
-            # Now revise the data since IA torrents as of Dec2017 have issues
+        magnetlink = self._metadata["metadata"].get("magnetlink")   # First check the metadata
+        if not magnetlink:    # Skip if its already set.
+            magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)    # Look for cached version
+            if not magnetlink:  # If not cached then build new one
+                ff = [ f for f in self._metadata["files"] if f.get("format") == "Archive BitTorrent" ] # Should be one or none
+                if len(ff):
+                    if len(ff) > 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
+                    torrentfilemeta = ff[0]
+                    torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
+                    torrentcontents = httpget(torrentfileurl, wantmime=False)
+                    self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
+                    assert (bencode.bencode(self.torrentdata) == torrentcontents)
+                    hash_contents = bencode.bencode(self.torrentdata['info'])
+                    digest = hashlib.sha1(hash_contents).digest()
+                    b32hash = base64.b32encode(digest)  # Get the hash of the torrent file
+                    b32hashascii = b32hash.decode('ASCII')
+                    # Now possible revise the data since IA torrents as of Dec2017 have issues, this doesnt change the hash.
 
-            if wantmodified:
-                # The trackers at bt1 and bt2 are http, but they dont support webtorrent anyway so that doesnt matter.
-                webtorrenttrackerlist = ['wss://tracker.btorrent.xyz', 'wss://tracker.openwebtorrent.com',
-                                         'wss://tracker.fastcast.nz']
-                self.torrentdata["announce-list"] += [[wtt] for wtt in webtorrenttrackerlist]
-                # Note announce-list is never empty after this, so can ignore announce field
-                #  Replace http with https (as cant call http from https) BUT still has cors issues
-                # self.torrentdata["url-list"] = [ u.replace("http://","https://") for u in self.torrentdata["url-list"] ]
-                self.torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash
-                externaltorrenturl = "{}{}".format(config["gateway"]["url_torrent"], self.itemid) # Intentionally no file name, we are modifying it
-            else:
-                externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"] )
-            magnetlink = ''.join([
-                'magnet:?xt=urn:btih:', b32hash.decode('ASCII'),
-                ''.join(['&tr=' + urllib.parse.quote_plus(t[0]) for t in self.torrentdata['announce-list']]),
-                ''.join(['&ws=' + urllib.parse.quote_plus(t) \
-                         for t in self.torrentdata['url-list']]),
-                '&xs=', urllib.parse.quote_plus(externaltorrenturl),
-            ])
-            self._metadata["metadata"]["magnetlink"] = magnetlink
+                    if wantmodified: # Normally we want the torrent file modified to support WebTorrent and not use HTTP URLs
+                        # The trackers at bt1 and bt2 are http, but they dont support webtorrent anyway so that doesnt matter.
+                        webtorrenttrackerlist = ['wss://tracker.btorrent.xyz', 'wss://tracker.openwebtorrent.com',
+                                                 'wss://tracker.fastcast.nz']
+                        self.torrentdata["announce-list"] += [[wtt] for wtt in webtorrenttrackerlist]
+                        # Note announce-list is never empty after this, so can ignore announce field
+                        #  Replace http with https (as cant call http from https) BUT still has cors issues
+                        # self.torrentdata["url-list"] = [ u.replace("http://","https://") for u in self.torrentdata["url-list"] ]
+                        self.torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash
+                        externaltorrenturl = "{}{}".format(config["gateway"]["url_torrent"], self.itemid) # Intentionally no file name, we are modifying it
+                    else:
+                        externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"] )
+                    magnetlink = ''.join([
+                        'magnet:?xt=urn:btih:', b32hashascii,
+                        ''.join(['&tr=' + urllib.parse.quote_plus(t[0]) for t in self.torrentdata['announce-list']]),
+                        ''.join(['&ws=' + urllib.parse.quote_plus(t) \
+                                 for t in self.torrentdata['url-list']]),
+                        '&xs=', urllib.parse.quote_plus(externaltorrenturl),
+                    ])
+                    MagnetLinkService.archiveidset(self.itemid, magnetlink, verbose) # Cache it
+                    if verbose: logging.info("New magnetlink for item: {}, {}".format(self.itemid, magnetlink))
+            if magnetlink:
+                self._metadata["metadata"]["magnetlink"] = magnetlink       # Store on metadata if have one
+        MagnetLinkService.btihset(b32hashascii, magnetlink, verbose)  # Cache mapping from torrenthash to magnetlink
+        if verbose: logging.info("XXX@170: {}, {}".format(self.itemid, magnetlink))
 
     def torrent(self, headers=True, verbose=False):
         """
