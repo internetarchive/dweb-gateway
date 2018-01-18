@@ -105,43 +105,48 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             for (k,b) in parse_qsl(o.query):
                 a = kwargs.get(k)
                 kwargs[k] = b if (a is None) else a+[b] if (isinstance(a,list)) else [a,b]
-            kwargs.update(postvars)
-            func = getattr(self, self.command + "_" + cmd, None) or getattr(self, cmd, None) # self.POST_foo or self.foo (should be a method)
-            if not func or (self.onlyexposed and not func.exposed):
-                raise HTTPdispatcherException(req=cmd)  # Will be caught in except
-            res = func(*args, **kwargs)
-            # Function should return
+            if cmd == "favicon.ico":    # May general case this for a set of top level links e.g. robots.txt
+                self.send_response(301)
+                self.send_header('Location','https://dweb.me/favicon.ico')
+                self.end_headers()
+            else:
+                kwargs.update(postvars)
+                func = getattr(self, self.command + "_" + cmd, None) or getattr(self, cmd, None) # self.POST_foo or self.foo (should be a method)
+                if not func or (self.onlyexposed and not func.exposed):
+                    raise HTTPdispatcherException(req=cmd)  # Will be caught in except
+                res = func(*args, **kwargs)
+                # Function should return
 
-            # Send the content-type
-            self.send_response(200)  # Send an ok response
-            contenttype = res.get("Content-type","application/octet-stream")
-            self.send_header('Content-type', contenttype)
-            if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
-                self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
-            data = res.get("data","")
-            if data or isinstance(data, (list, tuple)): # Allow empty arrays toreturn as []
-                if isinstance(data, (dict, list, tuple)):    # Turn it into JSON
-                    data = dumps(data)        # Does our own version to handle classes like datetime
-                #elif hasattr(data, "dumps"):                # Unclear if this is used except maybe in TransportDist_Peer
-                #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
-                #    data = dumps(data)            # And maype this should be data.dumps()
-                if isinstance(data, str):
-                    #logging.debug("converting to utf-8")
-                    if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
-                        if contenttype.startswith('text') or contenttype in ('application/json',): # Only convert types we know are strings that could be unicode
-                        	data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary -- its still a string
-                    if python_version.startswith('3'):
-                        data = bytes(data,"utf-8")  # In Python3 requests wont work on strings, have to convert to bytes explicitly
-                if not isinstance(data, (bytes, str)):
-                    #logging.debug(data)
-                    # Raise an exception - will not honor the status already sent, but this shouldnt happen as coding
-                    # error in the dispatched function if it returns anything else
-                    raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
-            self.send_header('content-length', str(len(data)) if data else 0)
-            self.end_headers()
-            if data:
-                self.wfile.write(data)                   # Write content of result if applicable
-                                                        # Thows BrokenPipeError if browser has gone away
+                # Send the content-type
+                self.send_response(200)  # Send an ok response
+                contenttype = res.get("Content-type","application/octet-stream")
+                self.send_header('Content-type', contenttype)
+                if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
+                    self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
+                data = res.get("data","")
+                if data or isinstance(data, (list, tuple)): # Allow empty arrays toreturn as []
+                    if isinstance(data, (dict, list, tuple)):    # Turn it into JSON
+                        data = dumps(data)        # Does our own version to handle classes like datetime
+                    #elif hasattr(data, "dumps"):                # Unclear if this is used except maybe in TransportDist_Peer
+                    #    raise ToBeImplementedException(message="Just checking if this is used anywhere, dont think so")
+                    #    data = dumps(data)            # And maype this should be data.dumps()
+                    if isinstance(data, str):
+                        #logging.debug("converting to utf-8")
+                        if python_version.startswith('2'): # Python3 should be unicode, need to be careful if convert
+                            if contenttype.startswith('text') or contenttype in ('application/json',): # Only convert types we know are strings that could be unicode
+                                data = data.encode("utf-8") # Needed to make sure any unicode in data converted to utf8 BUT wont work for intended binary -- its still a string
+                        if python_version.startswith('3'):
+                            data = bytes(data,"utf-8")  # In Python3 requests wont work on strings, have to convert to bytes explicitly
+                    if not isinstance(data, (bytes, str)):
+                        #logging.debug(data)
+                        # Raise an exception - will not honor the status already sent, but this shouldnt happen as coding
+                        # error in the dispatched function if it returns anything else
+                        raise ToBeImplementedException(name=self.__class__.__name__+"._dispatch for return data "+data.__class__.__name__)
+                self.send_header('content-length', str(len(data)) if data else 0)
+                self.end_headers()
+                if data:
+                    self.wfile.write(data)                   # Write content of result if applicable
+                                                            # Thows BrokenPipeError if browser has gone away
             #self.wfile.close()
         except BrokenPipeError as e:
             logging.error("Broken Pipe Error (browser probably gave up waiting) url={}".format(self.path))
