@@ -100,7 +100,11 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             # Get url args, remove HTTP quote (e.g. %20=' '), ignore leading / and anything before it. Will always be at least one item (empty after /)
             args = [ unquote(u) for u in o.path.split('/')][1:]
             cmd = args.pop(0)                   # foo
-            kwargs = dict(parse_qsl(o.query))  # { baz: bbb, bar: aaa }
+            #kwargs = dict(parse_qsl(o.query))  # { baz: bbb, bar: aaa }
+            kwargs = {}
+            for (k,b) in parse_qsl(o.query):
+                a = kwargs.get(k)
+                kwargs[k] = b if (a is None) else a+[b] if (isinstance(a,list)) else [a,b]
             kwargs.update(postvars)
             func = getattr(self, self.command + "_" + cmd, None) or getattr(self, cmd, None) # self.POST_foo or self.foo (should be a method)
             if not func or (self.onlyexposed and not func.exposed):

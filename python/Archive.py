@@ -86,6 +86,7 @@ class ArchiveItem(NameResolverDir):
         """
         verbose = kwargs.get("verbose")
         if verbose: del kwargs["verbose"]
+        transport = kwargs.get("transport")
         if verbose: logging.debug("ArchiveItem lookup for {0} {1} {2}".format(itemid, args, kwargs))
         obj = super(ArchiveItem, cls).new(namespace, itemid, *args, **kwargs)
         obj.itemid = itemid
@@ -102,7 +103,7 @@ class ArchiveItem(NameResolverDir):
             if (not f): raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
             return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
         else: # Its an item - cache all the files
-            obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, verbose=verbose) for f in obj._metadata["files"]]
+            obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, transport=transport, verbose=verbose) for f in obj._metadata["files"]]
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
@@ -185,6 +186,7 @@ class ArchiveFile(NameResolverFile):
     @classmethod
     def new(cls, namespace, itemid, filename, *args, **kwargs):
         verbose = kwargs.get("verbose")
+        transport = kwargs.get("transport") # None or list of transports
         if verbose: logging.debug("ArchiveFile: {}/{}".format(itemid, filename))
         obj = super(ArchiveFile, cls).new(namespace, itemid, filename, *args, **kwargs)
         obj.itemid = itemid
@@ -197,11 +199,13 @@ class ArchiveFile(NameResolverFile):
             obj.multihash = None
             logging.debug("No sha1 for file:".format(itemid, filename))
         # Currently remaining args an kwargs ignored
-        cached = obj.cache_content(obj.archive_url, verbose)    # Setup for IPFS and contenthash {ipldhash}
+        cached = obj.cache_content(obj.archive_url, transport, verbose)    # Setup for IPFS and contenthash {ipldhash}
         if obj.parent._metadata["metadata"].get("magnetlink"):
             obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
-        obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"]) # Add to IPFS hash returned
-        obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
+        if cached.get("ipldhash") is not None:
+            obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"]) # Add to IPFS hash returned
+        if obj.multihash: # For the _files.xml there is no SHA1 and if didn't fetch to cache for IPFS then we cant set it
+            obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
         # Comment out next line unless checking integrity
         #obj.check(verbose)
         return obj
