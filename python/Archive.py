@@ -197,7 +197,7 @@ class ArchiveFile(NameResolverFile):
             obj.multihash = Multihash(sha1hex=obj._metadata["sha1"])
         else:
             obj.multihash = None
-            logging.debug("No sha1 for file:".format(itemid, filename))
+            logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
         # Currently remaining args an kwargs ignored
         cached = obj.cache_content(obj.archive_url, transport, verbose)    # Setup for IPFS and contenthash {ipldhash}
         if obj.parent._metadata["metadata"].get("magnetlink"):
