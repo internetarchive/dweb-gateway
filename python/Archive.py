@@ -257,7 +257,7 @@ class ArchiveFilePadding(ArchiveFile):
         range = _headers.get("range")
         logging.debug("XXX@255 {}".format(range))   # bytes=32976781-33501068
         rr = range[6:].split('-')
-        rangelength = rr[1]-rr[0]+1
+        rangelength = int(rr[1])-int(rr[0])+1
         logging.debug("XXX@261 {} bytes".format(rangelength))   # bytes=32976781-33501068
         return '\0'*rangelength
 
