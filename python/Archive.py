@@ -249,7 +249,7 @@ class ArchiveFilePadding(ArchiveFile):
     def __init__(self, verbose=False):
         #TODO-WEBTORRENT
         logging.debug("XXX@251 padding file spotted")
-        pass
+        self.mimetype = "application/octet-stream"
 
     def retrieve(self, _headers=None, verbose=False, **kwargs):
         # Return a string of nulls of a length specified by the range header
