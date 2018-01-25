@@ -57,7 +57,6 @@ class AdvancedSearch(NameResolverDir):
                 'data': self.res
                 }
 
-
 class ArchiveItem(NameResolverDir):
     """
     Subclass of NameResolverDir to do an Archive item metadata retrieval
@@ -99,9 +98,12 @@ class ArchiveItem(NameResolverDir):
         obj.setmagnetlink(True, verbose=verbose)    # Set a modified magnet link suitable for WebTorrent
         name = name = "/".join(args) if args else None # Get the name of the file if present
         if name: # Its a single file just cache that one
-            f = [ f for f in obj._metadata["files"] if f["name"] == name ]
-            if (not f): raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
-            return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
+            if (name.startswith(".____padding_file")): #TODO-WEBTORRENT convention
+                return ArchiveFilePadding(verbose=verbose);
+            else:
+                f = [ f for f in obj._metadata["files"] if f["name"] == name ]
+                if (not f): raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
+                return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
         else: # Its an item - cache all the files
             obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, transport=transport, verbose=verbose) for f in obj._metadata["files"]]
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
@@ -240,5 +242,23 @@ class ArchiveFile(NameResolverFile):
 
     def content(self, _headers=None, verbose=False, **kwargs):   #Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
         return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers, verbose=verbose)}
+
+class ArchiveFilePadding(ArchiveFile):
+    # Catch special case of ".____padding_file/nnn"
+
+    def __init__(verbose=False):
+        #TODO-WEBTORRENT
+        console.log("XXX@251 padding file spotted")
+        pass
+
+    def retrieve(self, _headers=None, verbose=False, **kwargs):
+        # Return a string of nulls of a length specified by the range header
+        # TODO better error handling
+        range = _headers.get("range")
+        logging.debug("XXX@255 {}".format(range))   # bytes=32976781-33501068
+        rr = range[6:].split('-')
+        rangelength = rr[1]-rr[0]+1
+        logging.debug("XXX@261 {} bytes".format(rangelength))   # bytes=32976781-33501068
+        return '\0'*rangelength
 
 

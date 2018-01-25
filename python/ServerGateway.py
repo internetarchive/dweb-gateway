@@ -116,6 +116,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.
+    # Can throw Exception if "new" fails e.g. because file doesnt exist
     @exposed
     def content(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
