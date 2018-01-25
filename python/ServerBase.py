@@ -164,11 +164,11 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
     def do_GET(self):
-        logging.debug(self.headers)
+        #logging.debug(self.headers)
         self._dispatch()
 
     def do_OPTIONS(self):
-        logging.info("Options request")
+        #logging.info("Options request")
         self.send_response(200)
         self.send_header('Access-Control-Allow-Methods', "POST,GET,OPTIONS")
         self.send_header('Access-Control-Allow-Headers', self.headers['Access-Control-Request-Headers'])    # Allow anythihg, but '*' doesnt work
