@@ -246,9 +246,9 @@ class ArchiveFile(NameResolverFile):
 class ArchiveFilePadding(ArchiveFile):
     # Catch special case of ".____padding_file/nnn"
 
-    def __init__(verbose=False):
+    def __init__(self, verbose=False):
         #TODO-WEBTORRENT
-        console.log("XXX@251 padding file spotted")
+        logging.debug("XXX@251 padding file spotted")
         pass
 
     def retrieve(self, _headers=None, verbose=False, **kwargs):
