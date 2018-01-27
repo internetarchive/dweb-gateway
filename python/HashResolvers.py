@@ -6,7 +6,7 @@ from .HashStore import LocationService, MimetypeService
 from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile
-from .Archive import ArchiveFile
+from .Archive import ArchiveItem
 
 class HashResolver(NameResolverFile):
     """
@@ -66,7 +66,7 @@ class HashResolver(NameResolverFile):
             if verbose: logging.debug("No URL, looking for DOI file for {0}.{1}".format(namespace,hash))   
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
             # ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
-            ch = ch.searcharchivefor(verbose=verbose) # Will now be a ArchiveFile
+            return ch.searcharchivefor(verbose=verbose) # Will now be a ArchiveFile
         if ch.url.startswith("local:"):
             ch = LocalResolverFetch.new("rawfetch", hash, **kwargs)
         if not (ch and ch.url):
@@ -116,7 +116,7 @@ class HashResolver(NameResolverFile):
         # {"key": "sha1", "val": "88...2", "hits": {"total": 1, "matches": [{"identifier": ["<ITEMID>"],"name": ["<FILENAME>"]}]}}
         firstmatch = res["hits"]["matches"][0]
         logging.info("ArchiveFile.new({},{},{}".format("archiveid", firstmatch["identifier"][0], firstmatch["name"][0]))
-        return ArchiveFile.new("archiveid", firstmatch["identifier"][0], firstmatch["name"][0], verbose=verbose)
+        return ArchiveItem.new("archiveid", firstmatch["identifier"][0], firstmatch["name"][0], verbose=True) # Note uses ArchiveItem because need to retrieve item level metadata as well
 
     def content(self, verbose=False, **kwargs):
         """
