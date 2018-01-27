@@ -167,9 +167,10 @@ class ArchiveItem(NameResolverDir):
                     ])
                     MagnetLinkService.archiveidset(self.itemid, magnetlink, verbose) # Cache it
                     if verbose: logging.info("New magnetlink for item: {}, {}".format(self.itemid, magnetlink))
+                    # We should probably extract the b32hashascii from the magnetlink if we already have one
+                    MagnetLinkService.btihset(b32hashascii, magnetlink, verbose)  # Cache mapping from torrenthash to magnetlink
             if magnetlink:
                 self._metadata["metadata"]["magnetlink"] = magnetlink       # Store on metadata if have one
-        MagnetLinkService.btihset(b32hashascii, magnetlink, verbose)  # Cache mapping from torrenthash to magnetlink
         if verbose: logging.info("XXX@170: {}, {}".format(self.itemid, magnetlink))
 
     def torrent(self, headers=True, verbose=False):
