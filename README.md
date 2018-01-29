@@ -68,19 +68,27 @@ See [HTTPS API](./HTTPSAPI.md) for the API exposed by the URLs.
 
 This should work, someone please confirm on a clean(er) machine and remove this comment.
 
-You'll also need REDIS and IPFS
+You'll also need REDIS, Supervisor and IPFS
 On a Mac
 ```bash
 brew install redis
 brew services start redis
+brew install supervisor
 
 << need install info for go-ipfs running on port 5001>>
+ipfs config show #To view ipfs port settings
 ```
+
+On a Linux
+Supervisor install details
+  https://pastebin.com/ctEKvcZt
+  http://supervisord.org/installing.html
+
 
 ```bash
 git clone http://github.com/ArchiveLabs/dweb_gateway.cid
 cd dweb_gateway
-scripts/run_dweb_me.sh # Should install, get data and run
+scripts/install.sh # Should install, get data and run
 
 # Then try
 curl http://localhost:4244/info
