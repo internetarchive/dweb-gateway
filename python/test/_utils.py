@@ -1,7 +1,7 @@
 from python.ServerGateway import DwebGatewayHTTPRequestHandler
 
 
-def _processurl(url, verbose, headers={}, **kwargs):
+def _processurl(url, verbose=False, headers={}, **kwargs):
     # Simulates HTTP Server process - wont work for all methods
     args = url.split('/')
     method = args.pop(0)

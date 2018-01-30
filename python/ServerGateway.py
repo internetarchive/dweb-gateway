@@ -11,6 +11,7 @@ from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
 from .Archive import AdvancedSearch, ArchiveItem
 from .Btih import BtihResolver
+from .LocalResolver import KeyValueTable
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -73,9 +74,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "rawlist": LocalResolverList,
         "rawadd": LocalResolverAdd,
         "btih": BtihResolver,
+        "table": KeyValueTable,
     }
 
-
+    _voidreturn = {'Content-type': 'application/octet-stream', 'data': None }
 
     @classmethod
     def DwebGatewayHTTPServeForever(cls, httpoptions=None, verbose=False):
@@ -94,7 +96,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed    # Exposes this function for outside use
     def sandbox(self, foo, bar, **kwargs):
         # Changeable, just for testing HTTP etc, feel free to play with in your branch, and expect it to be overwritten on master branch.
-        logging.debug("foo={} bar={}, kwargs={}".formate(foo, bar,  kwargs))
+        logging.debug("foo={} bar={}, kwargs={}".format(foo, bar,  kwargs))
         return { 'Content-type': 'application/json',
                  'data': { "FOO": foo, "BAR": bar, "kwargs": kwargs}
                }
@@ -156,8 +158,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def void(self, namespace, *args, **kwargs):
         self.namespaceclasses[namespace].new(namespace, *args, **kwargs)
-        return {'Content-type': 'application/octet-stream',
-                 'data': None }
+        return self._voidreturn
 
     @exposed
     def torrent(self, namespace, *args, **kwargs):
@@ -169,6 +170,33 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         # Get a magnetlink - only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
         verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).magnetlink(verbose=verbose, headers=True)
+
+    @exposed
+    def set(self, namespace, *args, verbose=False, **kwargs):
+        verbose = kwargs.get("verbose")
+        self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).set(verbose=verbose, **kwargs)
+        return self._voidreturn
+
+    @exposed
+    def get(self, namespace, *args, verbose=False, **kwargs):
+        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).get(headers=True, verbose=verbose, **kwargs)
+
+    @exposed
+    def delete(self, namespace, *args, verbose=False, **kwargs):
+        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).delete(headers=True, verbose=verbose, **kwargs)
+        return self._voidreturn
+
+    @exposed
+    def keys(self, namespace, *args, verbose=False, **kwargs):
+        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).keys(headers=True, verbose=verbose, **kwargs)
+
+    @exposed
+    def getall(self, namespace, *args, verbose=False, **kwargs):
+        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).getall(headers=True, verbose=verbose, **kwargs)
 
     def storeipld(self, namespace, *args, **kwargs):
         """

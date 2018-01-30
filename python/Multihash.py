@@ -75,7 +75,7 @@ class Multihash(object):
         """
         digest = None
 
-        if url:
+        if url: # Assume its of the form somescheme:/somescheme/Q...
             logging.debug("url={} {}".format(url.__class__.__name__,url))
             if isinstance(url, str) and "/" in url:   # https://.../Q...
                 url = urlparse(url)
@@ -113,7 +113,7 @@ class Multihash(object):
         return hashfn.digest()
 
     def check(self, data):
-        assert(self.digest == self._hash(self.code, data), "Hash doesnt match expected")
+        assert self.digest == self._hash(self.code, data), "Hash doesnt match expected"
 
     @property
     def code(self):

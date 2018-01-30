@@ -74,6 +74,13 @@ class TransportLocal(Transport):
         # Utility function to get filename to use for storage
         return "%s/%s/%s" % (self.dir, subdir, multihash.multihash58)
 
+    def _tablefilename(self, database, table, subdir="table", createdatabase=False):
+        # Utility function to get filename to use for storage
+        dir = "{}/{}/{}".format(self.dir, subdir, database)
+        if createdatabase and not os.path.isdir(dir):
+            os.mkdir(dir)
+        return "{}/{}".format(dir, table)
+
     def url(self, data=None, multihash=None):
         """
          Return an identifier for the data without storing
@@ -93,7 +100,7 @@ class TransportLocal(Transport):
         Exception: TransportFileNotFound if file doesnt exist
         #TODO-STREAM make return stream to HTTP and so on
 
-        :param url:
+        :param url: Of form somescheme:/something/hash
         :param multihash: a Multihash structure
         :param options:
         :return:
@@ -109,7 +116,7 @@ class TransportLocal(Transport):
         except IOError as e:
             raise TransportFileNotFound(file=filename)
 
-    def _rawlistreverse(self, subdir=None, url=None, verbose=False, **options):
+    def _rawlistreverse(self, filename=None, verbose=False, **options):
         """
         Retrieve record(s) matching a url (usually the url of a key), in this case from a local directory
         Exception: IOError if file doesnt exist
@@ -117,7 +124,6 @@ class TransportLocal(Transport):
         :param url: Hash in table to be retrieved or url ending in that hash
         :return: list of dictionaries for each item retrieved
         """
-        filename = self._filename(subdir, multihash= Multihash(url=url), verbose=verbose, **options)
         try:
             f = open(filename, 'rb')
             s = [ loads(s) for s in f.readlines() ]
@@ -137,7 +143,8 @@ class TransportLocal(Transport):
         :return: list of dictionaries for each item retrieved
         """
         if verbose: logging.debug("TransportLocal:rawlist {0}".format(url))
-        return self._rawlistreverse(subdir="list", url=url, verbose=False, **options)
+        filename = self._filename("list", multihash= Multihash(url=url), verbose=verbose, **options)
+        return self._rawlistreverse(filename=filename, verbose=False, **options)
 
 
     def rawreverse(self, url, verbose=False, **options):
@@ -149,7 +156,8 @@ class TransportLocal(Transport):
         :param url: Hash in table to be retrieved or url ending in hash
         :return: list of dictionaries for each item retrieved
         """
-        return self._rawlistreverse(subdir="reverse", url=url, verbose=False, **options)
+        filename = self._filename("reverse", multihash= Multihash(url=url), verbose=verbose, **options)
+        return self._rawlistreverse(filename=filename, verbose=False, **options)
 
     def rawstore(self, data=None, verbose=False, returns=None, **options):
         """
@@ -215,3 +223,46 @@ class TransportLocal(Transport):
                     self._filename("reverse", multihash= Multihash(url=u), verbose=verbose, **options),    # Lists that this object is on
                     value)
         """
+
+    def set(self, url=None, database=None, table=None, keyvaluelist=None, keyvalues=None, value=None, verbose=False):
+        #Add keyvalues to a table, note it doesnt delete existing keys and values, just writes to end
+        #Each line is a seperate keyvalue pair since each needs to be signed so that they can be verified by recipients who might only read one key
+        # Note url & keyvalues or keyvalues|value are not supported yet
+        filename = self._tablefilename(database, table, createdatabase=True)
+        #TODO-KEYVALUE check and store sig which has to be on each keyvalue, not on entire set
+        #TODO-KEYVALUE encode string in value for storing in quoted string
+        appendable = "".join([ dumps(kv)+"\n" for kv in keyvaluelist ]).encode('utf-8')    # Essentially jSON for array but without enclosing [ ]
+        self._rawadd(filename, appendable)
+
+    def get(self, url=None, database=None, table=None, keys=None, verbose=False):
+        #Add keyvalues to a table, note it doesnt delete existing keys and values, just writes to end
+        filename = self._tablefilename(database, table, createdatabase=True)
+        resarr = self._rawlistreverse(filename=filename, verbose=False) # [ {key:k1, value:v1} {key:k2, value:v2}, {key:k1, value:v3}]
+        #TODO-KEYVALUE check sig which has to be on each keyvalue, not on entire set
+        resdict = { kv["key"]: kv.get("value") for kv in resarr if kv["key"] in keys }               # {k1:v3, k2:v2} - replaces earlier with later values for same key
+        return resdict
+
+    def delete(self, url=None, database=None, table=None, keys=None, verbose=False):
+        # Add keyvalues to a table, note it doesnt delete existing keys and values, just writes to end
+        filename = self._tablefilename(database, table)
+        # TODO-KEYVALUE check and store sig which has to be on each keyvalue, not on entire set
+        appendable = ("\n".join([dumps({"key": key}) for key in keys]) + "\n").encode('utf-8')
+        self._rawadd(filename, appendable)
+
+    def keys(self, url=None, database=None, table=None, verbose=False):
+        # Add keyvalues to a table, note it doesnt delete existing keys and values, just writes to end
+        filename = self._tablefilename(database, table, createdatabase=True)
+        resarr = self._rawlistreverse(filename=filename, verbose=False) # [ {key:k1, value:v1} {key:k2, value:v2}, {key:k1, value:v3}]
+        #TODO-KEYVALUE check sig which has to be on each keyvalue, not on entire set
+        resdict = { kv["key"]: kv.get("value") for kv in resarr }               # {k1:v3, k2:v2} - replaces earlier with later values for same key
+        return list(resdict.keys()) # keys() returns a dict_keys object, want to return a list
+
+    def getall(self, url=None, database=None, table=None, verbose=False):
+        # Add keyvalues to a table, note it doesnt delete existing keys and values, just writes to end
+        filename = self._tablefilename(database, table, createdatabase=True)
+        resarr = self._rawlistreverse(filename=filename, verbose=False) # [ {key:k1, value:v1} {key:k2, value:v2}, {key:k1, value:v3}]
+        #TODO-KEYVALUE check sig which has to be on each keyvalue, not on entire set
+        resdict = { kv["key"]: kv.get("value") for kv in resarr }               # {k1:v3, k2:v2} - replaces earlier with later values for same key
+        return resdict
+
+

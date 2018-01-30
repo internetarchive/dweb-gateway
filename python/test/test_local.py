@@ -30,3 +30,20 @@ def test_list():
     res = _processurl("metadata/rawlist/{0}".format(SHA1BASESTRING), verbose, data=dumps(adddict))
     if verbose: logging.debug("rawlist returned {0}".format(res))
     assert res["data"][-1]["date"] == date
+
+def test_keyvaluetable():
+    verbose=True
+    database = "Q123456789"
+    table = "mytesttable"
+    res = _processurl("set/table/{}/{}".format(database, table), data=dumps([{"key": "aaa", "value": "AAA"}, {"key": "bbb", "value": "BBB"}]), verbose=verbose)
+    res = _processurl("get/table/{}/{}".format(database, table), key="aaa", verbose=verbose)
+    assert res["data"]["aaa"] == "AAA"
+    res = _processurl("get/table/{}/{}".format(database, table), key=["aaa","bbb"], verbose=verbose)
+    assert res["data"]["aaa"] == "AAA" and res["data"]["bbb"] == "BBB"
+    res = _processurl("delete/table/{}/{}".format(database, table), key="aaa", verbose=verbose)
+    res = _processurl("get/table/{}/{}".format(database, table), key="aaa", verbose=verbose)
+    assert res["data"]["aaa"] is None
+    res = _processurl("keys/table/{}/{}".format(database, table), verbose=verbose)
+    assert len(res["data"]) == 2
+    res = _processurl("getall/table/{}/{}".format(database, table), verbose=verbose)
+    assert res["data"]["aaa"] is None and res["data"]["bbb"] == "BBB"

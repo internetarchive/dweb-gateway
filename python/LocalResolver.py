@@ -97,3 +97,42 @@ class LocalResolverList(LocalResolver):
                  "data": self.transport(verbose=verbose).rawlist(self._contenthash.multihash58, verbose=verbose)
                }
 
+class KeyValueTable(LocalResolver):
+    @classmethod
+    def new(cls, namespace, database, table, *args, data=None, **kwargs):  # Used by Gateway
+        verbose = kwargs.get("verbose")
+        obj = super(KeyValueTable, cls).new(namespace, database, table, *args, **kwargs)  # Calls __init__() by default
+        obj.database = database
+        obj.table = table
+        #obj.data = data # For use by command
+        #obj.args = args
+        #obj.kwargs = kwargs   # Esp key=a or key=[a,b,c]
+        return obj
+
+    def set(self, verbose=False, headers=False, data=None, **kwargs):       # set/table/<pubkey>
+        #TODO check pubkey or have transport do it - and save with it
+        if isinstance(data, (str, bytes)): # Assume its JSON
+            data = loads(data)    # HTTP just delivers bytes
+        self.transport(verbose=verbose).set(database=self.database, table=self.table, keyvaluelist=data, value=None, verbose=verbose)
+
+    def get(self, verbose=False, headers=False, **kwargs):  # set/table/<pubkey>
+        # TODO check pubkey or have transport do it - and save with it
+        res = self.transport(verbose=verbose).get(database=self.database, table=self.table, keys = kwargs["key"] if isinstance(kwargs["key"], list) else [kwargs["key"]], verbose=verbose)
+        return { "Content-type": "application/json", "data": res} if headers else res
+
+
+    def delete(self, verbose=False, headers=False, **kwargs):  # set/table/<pubkey>
+        # TODO check pubkey or have transport do it - and save with it
+        self.transport(verbose=verbose).delete(database=self.database, table=self.table, keys = kwargs["key"] if isinstance(kwargs["key"], list) else [kwargs["key"]], verbose=verbose)
+
+    def keys(self, verbose=False, headers=False, **kwargs):  # set/table/<pubkey>
+        # TODO check pubkey or have transport do it - and save with it
+        res = self.transport(verbose=verbose).keys(database=self.database, table=self.table, verbose=verbose)
+        return { "Content-type": "application/json", "data": res} if headers else res
+
+    def getall(self, verbose=False, headers=False, **kwargs):  # set/table/<pubkey>
+        # TODO check pubkey or have transport do it - and save with it
+        res = self.transport(verbose=verbose).getall(database=self.database, table=self.table, verbose=verbose)
+        return { "Content-type": "application/json", "data": res} if headers else res
+
+

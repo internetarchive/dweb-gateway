@@ -124,7 +124,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
                     self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
                 data = res.get("data","")
-                if data or isinstance(data, (list, tuple)): # Allow empty arrays toreturn as []
+                if data or isinstance(data, (list, tuple, dict)): # Allow empty arrays toreturn as [] or empty dict as {}
                     if isinstance(data, (dict, list, tuple)):    # Turn it into JSON
                         data = dumps(data)        # Does our own version to handle classes like datetime
                     #elif hasattr(data, "dumps"):                # Unclear if this is used except maybe in TransportDist_Peer
