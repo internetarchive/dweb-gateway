@@ -8,6 +8,7 @@ from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
 from .Errors import CodingException
+from .HashStore import MagnetLinkService
 
 class AdvancedSearch(NameResolverDir):
     """
@@ -56,7 +57,6 @@ class AdvancedSearch(NameResolverDir):
                 'data': self.res
                 }
 
-
 class ArchiveItem(NameResolverDir):
     """
     Subclass of NameResolverDir to do an Archive item metadata retrieval
@@ -85,6 +85,7 @@ class ArchiveItem(NameResolverDir):
         """
         verbose = kwargs.get("verbose")
         if verbose: del kwargs["verbose"]
+        transport = kwargs.get("transport")
         if verbose: logging.debug("ArchiveItem lookup for {0} {1} {2}".format(itemid, args, kwargs))
         obj = super(ArchiveItem, cls).new(namespace, itemid, *args, **kwargs)
         obj.itemid = itemid
@@ -94,14 +95,17 @@ class ArchiveItem(NameResolverDir):
         if verbose: logging.debug("Archive Metadata url={0}".format(obj.query))
         res = httpget(obj.query)
         obj._metadata = loads(res) #TODO-ERRORS handle error if cant find item for example
-        obj.setmagnetlink(True)    # Set a modified magnet link suitable for WebTorrent
-        name = name = args[0] if args else None # Get the name of the file if present
+        obj.setmagnetlink(True, verbose=verbose)    # Set a modified magnet link suitable for WebTorrent
+        name = name = "/".join(args) if args else None # Get the name of the file if present
         if name: # Its a single file just cache that one
-            f = [ f for f in obj._metadata["files"] if f["name"] == name ]
-            if (not f): raise Error("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
-            return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
+            if (name.startswith(".____padding_file")): #TODO-WEBTORRENT convention
+                return ArchiveFilePadding(verbose=verbose);
+            else:
+                f = [ f for f in obj._metadata["files"] if f["name"] == name ]
+                if (not f): raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    #TODO change to islice
+                return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
         else: # Its an item - cache all the files
-            obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, verbose=verbose) for f in obj._metadata["files"]]
+            obj._list = [ ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, transport=transport, verbose=verbose) for f in obj._metadata["files"]]
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
@@ -117,46 +121,57 @@ class ArchiveItem(NameResolverDir):
                     self._metadata
                 }
 
-    def setmagnetlink(self, wantmodified):
+    def setmagnetlink(self, wantmodified, verbose=False):
         """
         Set magnet link (note could easily be modified to return torrentdata or torrentfile if wanted)
         - assume that metadata already fetched but that _metadata.files not converted to _list yet (as that process  will use this data.
         :return:
         """
         if not self._metadata: raise CodingException(message="Must have fetched metadata before read torrentdata")
-        ff = [ f for f in self._metadata["files"] if f.get("format") == "Archive BitTorrent" ]
-        if not len(ff) == 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
-        torrentfilemeta = ff[0]
-        torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
-        torrentcontents = httpget(torrentfileurl, wantmime=False)
-        self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
-        assert (bencode.bencode(self.torrentdata) == torrentcontents)
-        hash_contents = bencode.bencode(self.torrentdata['info'])
-        digest = hashlib.sha1(hash_contents).digest()
-        b32hash = base64.b32encode(digest)  # Get the hash of the torrent file
-        # Now revise the data since IA torrents as of Dec2017 have issues
+        magnetlink = self._metadata["metadata"].get("magnetlink")   # First check the metadata
+        if not magnetlink:    # Skip if its already set.
+            magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)    # Look for cached version
+            if not magnetlink:  # If not cached then build new one
+                ff = [ f for f in self._metadata["files"] if f.get("format") == "Archive BitTorrent" ] # Should be one or none
+                if len(ff):
+                    if len(ff) > 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
+                    torrentfilemeta = ff[0]
+                    torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
+                    torrentcontents = httpget(torrentfileurl, wantmime=False)
+                    self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
+                    assert (bencode.bencode(self.torrentdata) == torrentcontents)
+                    hash_contents = bencode.bencode(self.torrentdata['info'])
+                    digest = hashlib.sha1(hash_contents).digest()
+                    b32hash = base64.b32encode(digest)  # Get the hash of the torrent file
+                    b32hashascii = b32hash.decode('ASCII')
+                    # Now possible revise the data since IA torrents as of Dec2017 have issues, this doesnt change the hash.
 
-        if wantmodified:
-            # The trackers at bt1 and bt2 are http, but they dont support webtorrent anyway so that doesnt matter.
-            webtorrenttrackerlist = ['wss://tracker.btorrent.xyz', 'wss://tracker.openwebtorrent.com',
-                                     'wss://tracker.fastcast.nz']
-            self.torrentdata["announce-list"] += [[wtt] for wtt in webtorrenttrackerlist]
-            # Note announce-list is never empty after this, so can ignore announce field
-            #  Replace http with https (as cant call http from https) BUT still has cors issues
-            # self.torrentdata["url-list"] = [ u.replace("http://","https://") for u in self.torrentdata["url-list"] ]
-            self.torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash
-            externaltorrenturl = "{}{}".format(config["gateway"]["url_torrent"], self.itemid) # Intentionally no file name, we are modifying it
-        else:
-            externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"] )
-        magnetlink = ''.join([
-            'magnet:?xt=urn:btih:', b32hash.decode('ASCII'),
-            ''.join(['&tr=' + urllib.parse.quote_plus(t[0]) for t in self.torrentdata['announce-list']]),
-            ''.join(['&ws=' + urllib.parse.quote_plus(t) \
-                     for t in self.torrentdata['url-list']]),
-            '&xs=', urllib.parse.quote_plus(externaltorrenturl),
-        ])
-        self._metadata["metadata"]["magnetlink"] = magnetlink
-        return
+                    if wantmodified: # Normally we want the torrent file modified to support WebTorrent and not use HTTP URLs
+                        # The trackers at bt1 and bt2 are http, but they dont support webtorrent anyway so that doesnt matter.
+                        webtorrenttrackerlist = ['wss://tracker.btorrent.xyz', 'wss://tracker.openwebtorrent.com',
+                                                 'wss://tracker.fastcast.nz']
+                        self.torrentdata["announce-list"] += [[wtt] for wtt in webtorrenttrackerlist]
+                        # Note announce-list is never empty after this, so can ignore announce field
+                        #  Replace http with https (as cant call http from https) BUT still has cors issues
+                        # self.torrentdata["url-list"] = [ u.replace("http://","https://") for u in self.torrentdata["url-list"] ]
+                        self.torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash
+                        externaltorrenturl = "{}{}".format(config["gateway"]["url_torrent"], self.itemid) # Intentionally no file name, we are modifying it
+                    else:
+                        externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"] )
+                    magnetlink = ''.join([
+                        'magnet:?xt=urn:btih:', b32hashascii,
+                        ''.join(['&tr=' + urllib.parse.quote_plus(t[0]) for t in self.torrentdata['announce-list']]),
+                        ''.join(['&ws=' + urllib.parse.quote_plus(t) \
+                                 for t in self.torrentdata['url-list']]),
+                        '&xs=', urllib.parse.quote_plus(externaltorrenturl),
+                    ])
+                    MagnetLinkService.archiveidset(self.itemid, magnetlink, verbose) # Cache it
+                    if verbose: logging.info("New magnetlink for item: {}, {}".format(self.itemid, magnetlink))
+                    # We should probably extract the b32hashascii from the magnetlink if we already have one
+                    MagnetLinkService.btihset(b32hashascii, magnetlink, verbose)  # Cache mapping from torrenthash to magnetlink
+            if magnetlink:
+                self._metadata["metadata"]["magnetlink"] = magnetlink       # Store on metadata if have one
+        if verbose: logging.info("XXX@170: {}, {}".format(self.itemid, magnetlink))
 
     def torrent(self, headers=True, verbose=False):
         """
@@ -174,6 +189,7 @@ class ArchiveFile(NameResolverFile):
     @classmethod
     def new(cls, namespace, itemid, filename, *args, **kwargs):
         verbose = kwargs.get("verbose")
+        transport = kwargs.get("transport") # None or list of transports
         if verbose: logging.debug("ArchiveFile: {}/{}".format(itemid, filename))
         obj = super(ArchiveFile, cls).new(namespace, itemid, filename, *args, **kwargs)
         obj.itemid = itemid
@@ -184,12 +200,15 @@ class ArchiveFile(NameResolverFile):
             obj.multihash = Multihash(sha1hex=obj._metadata["sha1"])
         else:
             obj.multihash = None
-            logging.debug("No sha1 for file:".format(itemid, filename))
+            logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
         # Currently remaining args an kwargs ignored
-        cached = obj.cache_content(obj.archive_url, verbose)    # Setup for IPFS and contenthash {ipldhash}
-        obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
-        obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"]) # Add to IPFS hash returned
-        obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
+        cached = obj.cache_content(obj.archive_url, transport, verbose)    # Setup for IPFS and contenthash {ipldhash}
+        if obj.parent._metadata["metadata"].get("magnetlink"):
+            obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
+        if cached.get("ipldhash") is not None:
+            obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"]) # Add to IPFS hash returned
+        if obj.multihash: # For the _files.xml there is no SHA1 and if didn't fetch to cache for IPFS then we cant set it
+            obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
         # Comment out next line unless checking integrity
         #obj.check(verbose)
         return obj
@@ -224,5 +243,23 @@ class ArchiveFile(NameResolverFile):
 
     def content(self, _headers=None, verbose=False, **kwargs):   #Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
         return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers, verbose=verbose)}
+
+class ArchiveFilePadding(ArchiveFile):
+    # Catch special case of ".____padding_file/nnn"
+
+    def __init__(self, verbose=False):
+        #TODO-WEBTORRENT
+        logging.debug("XXX@251 padding file spotted")
+        self.mimetype = "application/octet-stream"
+
+    def retrieve(self, _headers=None, verbose=False, **kwargs):
+        # Return a string of nulls of a length specified by the range header
+        # TODO better error handling
+        range = _headers.get("range")
+        logging.debug("XXX@255 {}".format(range))   # bytes=32976781-33501068
+        rr = range[6:].split('-')
+        rangelength = int(rr[1])-int(rr[0])+1
+        logging.debug("XXX@261 {} bytes".format(rangelength))   # bytes=32976781-33501068
+        return '\0'*rangelength
 
 

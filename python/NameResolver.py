@@ -166,13 +166,14 @@ class NameResolverFile(NameResolver):
         raise ToBeImplementedException(name="NameResolverFile.shards")
         pass
 
-    def cache_content(self, url, verbose):
+    def cache_content(self, url, transport, verbose):
         """
         Retrieve content from a URL, cache it in various places especially IPFS and set tables so can be retrieved by contenthash
 
         Requires multihash to be set prior to this, if required it could be set from the retrieved data
 
         :param url:         URL - typically inside archive.org of contents
+        :param transport:   Either None (for all) or a list of transports to cache for.
         :param verbose:
         :return:
         """
@@ -181,26 +182,30 @@ class NameResolverFile(NameResolver):
             self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58, verbose=verbose)
         else:
-            (data, self.mimetype) = httpget(url, wantmime=True)
-            #TODO could check sha1 here, but would be slow
-            if not self.multihash:
-                if verbose: logging.debug("Computing SHA1 hash of url {}".format(url))
-                self.multihash = Multihash(data=data, code=Multihash.SHA1)
-            MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
-            #TODO move this to TransportIPFS when python implementation of IPFS done
-            ipfsurl = config["ipfs"]["url_add_data"]
-            if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
-            res = requests.post(ipfsurl, files={'file': ('', data, self.mimetype)}).json()
-            logging.debug("IPFS result={}".format(res))
-            ipldhash = res['Hash']
-            IPLDHashService.set(self.multihash.multihash58, ipldhash)
-            if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
-            #This next line is to get around bug in IPFS propogation
-            #See https://github.com/ipfs/js-ipfs/issues/1156
-            ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
-            res = requests.head(ipfsgatewayurl); # Going to ignore the result
-            logging.debug("XXX@202 - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
-        LocationService.set(self.multihash.multihash58, url, verbose=verbose)
+            if not transport or "IPFS" in transport:
+                (data, self.mimetype) = httpget(url, wantmime=True)
+                #TODO could check sha1 here, but would be slow
+                if not self.multihash:
+                    if verbose: logging.debug("Computing SHA1 hash of url {}".format(url))
+                    self.multihash = Multihash(data=data, code=Multihash.SHA1)
+                    ipldhash = self.multihash and IPLDHashService.get(self.multihash.multihash58) # Try again now have hash
+                MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
+                if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
+                    #TODO move this to TransportIPFS when python implementation of IPFS done
+                    ipfsurl = config["ipfs"]["url_add_data"]
+                    if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
+                    res = requests.post(ipfsurl, files={'file': ('', data, self.mimetype)}).json()
+                    logging.debug("IPFS result={}".format(res))
+                    ipldhash = res['Hash']
+                    IPLDHashService.set(self.multihash.multihash58, ipldhash)
+                    if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
+                    #This next line is to get around bug in IPFS propogation
+                    #See https://github.com/ipfs/js-ipfs/issues/1156
+                    ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
+                    res = requests.head(ipfsgatewayurl); # Going to ignore the result
+                    logging.debug("XXX@202 - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
+        if self.multihash:
+            LocationService.set(self.multihash.multihash58, url, verbose=verbose)
         return {"ipldhash": ipldhash}
 
 

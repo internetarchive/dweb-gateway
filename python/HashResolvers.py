@@ -1,11 +1,12 @@
 import logging
 from .NameResolver import NameResolverFile
-from .miscutils import httpget
+from .miscutils import loads, dumps, httpget
 from .Errors import CodingException, NoContentException
 from .HashStore import LocationService, MimetypeService
 from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile
+from .Archive import ArchiveItem
 
 class HashResolver(NameResolverFile):
     """
@@ -32,7 +33,7 @@ class HashResolver(NameResolverFile):
         """
         """
         Pseudo-code
-        Looks up the multihash in Location Service to find where can be retrieved from.
+        Looks up the multihash in Location Service to find where can be retrieved from, does not retrieve it. 
         """
         verbose=kwargs.get("verbose")
         if verbose:
@@ -64,7 +65,8 @@ class HashResolver(NameResolverFile):
         if not ch.url:
             if verbose: logging.debug("No URL, looking for DOI file for {0}.{1}".format(namespace,hash))   
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
-            ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
+            # ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
+            return ch.searcharchivefor(verbose=verbose) # Will now be a ArchiveFile
         if ch.url.startswith("local:"):
             ch = LocalResolverFetch.new("rawfetch", hash, **kwargs)
         if not (ch and ch.url):
@@ -78,7 +80,7 @@ class HashResolver(NameResolverFile):
         """
         pass  # Note could probably be defined on NameResolverFile class
 
-    def retrieve(self, verbose=False, **kwargs):
+    def retrieve(self, verbose=False, **kwargsx):
         """
         Fetch the content, dont pass to caller (typically called by NameResolver.content()
 
@@ -98,6 +100,23 @@ class HashResolver(NameResolverFile):
             """
         else:
             return httpget(self.url)
+
+    def searcharchivefor(self, multihash=None, verbose=False, **kwargs):
+        # Note this only works on certain machines
+        # And will return a ArchiveFile
+        searchurl = "http://archive.org/services/dwhf.php?key=sha1&val={}".format((multihash or self.multihash).sha1hex)
+        res = loads(httpget(searchurl))
+        logging.info("XXX@searcharchivefor res={}".format(res))
+        if res.get("error"):
+            # {"error": "internal use only"}
+            raise ForbiddenException(what="SHA1 search from machine unless its whitelisted by Aaron")
+        if not res["hits"]["total"]:
+            # {"key":"sha1","val":"88d4b0d91acd3c25139804afbf4aef4e675bef63","hits":{"total":0,"matches":[]}}
+            raise NoContentException()
+        # {"key": "sha1", "val": "88...2", "hits": {"total": 1, "matches": [{"identifier": ["<ITEMID>"],"name": ["<FILENAME>"]}]}}
+        firstmatch = res["hits"]["matches"][0]
+        logging.info("ArchiveFile.new({},{},{}".format("archiveid", firstmatch["identifier"][0], firstmatch["name"][0]))
+        return ArchiveItem.new("archiveid", firstmatch["identifier"][0], firstmatch["name"][0], verbose=True) # Note uses ArchiveItem because need to retrieve item level metadata as well
 
     def content(self, verbose=False, **kwargs):
         """
@@ -123,7 +142,7 @@ class HashResolver(NameResolverFile):
 
 class Sha1Hex(HashResolver):
     """
-    URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
+    URL: `/xxx/sha1hex/Q...` (forwarded here by ServerGateway methods)
     """
     namespace="sha1hex"
     multihashfield="sha1hex"    # Field to Multihash.init

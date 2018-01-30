@@ -10,6 +10,7 @@ from .Errors import ToBeImplementedException, NoContentException
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
 from .Archive import AdvancedSearch, ArchiveItem
+from .Btih import BtihResolver
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -71,6 +72,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "rawfetch": LocalResolverFetch,
         "rawlist": LocalResolverList,
         "rawadd": LocalResolverAdd,
+        "btih": BtihResolver,
     }
 
 
@@ -114,6 +116,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     # Create one of these for each output format, by default parse name and create object, then either
     # call a method on it, or create an output class.
+    # Can throw Exception if "new" fails e.g. because file doesnt exist
     @exposed
     def content(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
@@ -159,7 +162,13 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def torrent(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).torrent(verbose=verbose, headers=True)
+        return self.namespaceclasses[namespace].new(namespace, *args, transport="WEBTORRENT", **kwargs).torrent(verbose=verbose, headers=True)
+
+    @exposed
+    def magnetlink(self, namespace, *args, **kwargs):
+        # Get a magnetlink - only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
+        verbose = kwargs.get("verbose")
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).magnetlink(verbose=verbose, headers=True)
 
     def storeipld(self, namespace, *args, **kwargs):
         """

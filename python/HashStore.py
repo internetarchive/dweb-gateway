@@ -8,52 +8,27 @@ from .Errors import CodingException
 
 class HashStore(object):
     """
-    Superclass for key value storage
+    Superclass for key value storage, a shim around REDIS intended to be subclassed (see LocationService for example)
 
     Will tie to a REDIS database initially.
 
-    """
-    """
-    OLD NOTES
-    Stores and retrieves meta data for hashes, NOTE the hash is NOT the hash of the metadata, and metadata is mutable.
-    * Not exposed as a URL (can do internally if reqd)
-    * hash_store(multihash, field, value)    # Replace the data in hash
-    * hash_push(multihash, field, value)     # Append data to anything already there (use a REDIS RPUSH)
-    * hash_delete(multihash, field)          # Delete anything stored (probably not required).
-    * hash_get(multihash, field)             # Return python obj relating to field (list, or string)
-    * param multihash: Base58 string of self describing hash: e.g. SHA256 is "Qm..." and SHA1 is "5..."
-    * param field: Field to store data in.
-    
-    * Consumes: REDIS
-    * ConsumedBy: *TBC*
-    
-    The fields allow essentially for independent indexes. 
-    
-    It should be a simple shim around REDIS, note will have to combine multihash and field to get a redis "key" as if we 
-    used multihash as the key, and field is one field of a Redis dict type, then we won't be able to "push" to it. 
-    
-    Note we can assume that this is used in a consistent fashion, e.g. won't do hash_store then hash_push which would be invalid.
-    """
-    """
-    SAMPLE CODE - THAT ACCESSES REDIS - 
-    import redis
-    from flask import Flask
-    from flask import request
-    import pdb
-    app = Flask(__name__)
-    
-    r = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
-    #.set('foo', 'bar')
-    #print(r.get('foo'))
-    
-    @app.route("/content/contenthash/<contenthash>")
-    def get_content_hash(contenthash):
-        logging.debug('l:{}'.format(contenthash))
-        location = r.hgetall('location_%s' % contenthash)
-        if 'url' in location:
-            return location['url']
-        else:
-            return "", 404
+    Class Fields:
+    _redis: redis object    Redis Connection object once connection to redis once established,
+
+    Fields:
+    redisfield: string  name of field in redis store being used.
+
+    Class methods:
+    redis()             Initiate connection to redis or return already open one.
+
+    Instance methods:
+    hash_set(multihash, field, value, verbose=False)    Set Redis.multihash.field to value
+    hash_get(multihash, field, verbose=False)           Retrieve value of Redis.multihash.field
+    set(multihash, value, verbose=False)                Set Redis.multihash.<redisfield> = value
+    get(multihash, value, verbose=False)                Retrieve Redis.multihash.<redisfield>
+
+    Delete and Push are not supported but could be if required.
+
     """
     _redis = None   # Will be connected to a redis instance by redis()
     redisfield = None   # Subclasses define this, and use set & get
@@ -142,3 +117,22 @@ class IPLDService(HashStore):
 
 class IPLDHashService(HashStore):
     redisfield = "ipldhash"
+
+class MagnetLinkService(HashStore):
+    redisfield = "magnetlink"
+
+    @classmethod
+    def btihget(cls, btihhash, verbose=False):
+        return cls.get("btih:"+btihhash)
+
+    @classmethod
+    def archiveidget(cls, btihhash, verbose=False):
+        return cls.get("archiveid:"+btihhash)
+
+    @classmethod
+    def btihset(cls, btihhash, value, verbose=False):
+        return cls.set("btih:"+btihhash, value)
+
+    @classmethod
+    def archiveidset(cls, btihhash, value, verbose=False):
+        return cls.set("btih:" + btihhash, value)
