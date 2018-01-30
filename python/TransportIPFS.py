@@ -5,6 +5,7 @@ from .miscutils import loads, dumps
 from .Transport import Transport
 from .config import config
 import requests # HTTP requests
+from urllib.parse import quote
 
 
 
@@ -59,11 +60,33 @@ class TransportIPFS(Transport):
 
         :param data: opaque data to store (currently must be bytes, not str)
         :param returns: Comma separated string if want result as a dict, support "url","contenthash"
-        :return: url of data
+        :return: url of data e.g. ipfs:/ipfs/Qm123abc
         """
         ipfsurl = config["ipfs"]["url_add_data"]
         if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
         res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
+        logging.debug("IPFS result={}".format(res))
+        ipldhash = res['Hash']
+        return "ipfs:/ipfs/{}".format(ipldhash)
+
+    def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, **options):
+        """
+        Higher level store semantics
+
+        :param data:
+        :param urlfrom:     URL to fetch from for storage, allows optimisation (e.g. pass it a stream) or mapping in transport
+        :param verbose:
+        :param mimetype:
+        :param options:
+        :return:
+        """
+        if (urlfrom):
+            ipfsurl = config["ipfs"]["url_urlstore"]
+            res = requests.get(ipfsurl, params={'xxx': quote(urlfrom)}).json() #TODO-URLSTORE ask kyle what this is
+        else:   # Inline data
+            ipfsurl = config["ipfs"]["url_add_data"]
+            res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
+        if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
         logging.debug("IPFS result={}".format(res))
         ipldhash = res['Hash']
         return "ipfs:/ipfs/{}".format(ipldhash)

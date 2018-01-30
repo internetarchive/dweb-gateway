@@ -196,7 +196,8 @@ class NameResolverFile(NameResolver):
                 if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
                     #TODO-IPFS create TransportIPFS at startup via "Transports" backported from JS
                     #TODO-IPFS this works as long as using the HTTP API
-                    url = TransportIPFS().rawstore(data, mimetype=self.mimetype)
+                    #url = TransportIPFS().rawstore(data, mimetype=self.mimetype)
+                    url = TransportIPFS().store(urlfrom=url, mimetype=self.mimetype)
                     ipldhash = urlparse(url).path.split('/')[2]
                     IPLDHashService.set(self.multihash.multihash58, ipldhash)
                     if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
