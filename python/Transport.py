@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 
 from .miscutils import dumps, loads
+from urllib.parse import urlparse
 from .Errors import ToBeImplementedException, MyBaseException, IntentionallyUnimplementedException
 
 class TransportBlockNotFound(MyBaseException):
@@ -60,18 +61,19 @@ class Transport(object):
         from letter2class import LetterToClass
         return LetterToClass.get(abbrev, None)
 
-    def supports(self, url): #TODO-API
+    def supports(self, url, func=None): #TODO-API
         """
         Determine if this transport supports a certain set of URLs
 
         :param url: String or parsed URL
+        :param func:    Function being attempted on url
         :return:    True if this protocol supports these URLs
         """
         if not url: return True   # Can handle default URLs
         if isinstance(url, basestring):
             url = urlparse(url)   # For efficiency, only parse once.
         if not url.scheme: raise CodingException(message="url passed with no scheme (part before :): "+url)
-        return url.scheme in self.urlschemes  #Lower case, NO trailing : (unlike JS)
+        return (url.scheme in self.urlschemes) and (not func or func in self.supportFunctions) #Lower case, NO trailing : (unlike JS)
 
 
     def url(self, data):

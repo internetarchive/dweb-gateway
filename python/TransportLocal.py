@@ -63,7 +63,7 @@ class TransportLocal(Transport):
 
     #see other !ADD-TRANSPORT-COMMAND - add a function copying the format below
 
-    def supports(self, url):
+    def supports(self, url, func):
         return True         # Local can handle any kind of URL, since cached.
 
     #TODO-LOCAL - feed this back into ServerGateway.info

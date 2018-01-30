@@ -1,10 +1,13 @@
 import logging
 import requests
+from urllib.parse import urlparse
 from .Errors import ToBeImplementedException, NoContentException
 from .Multihash import Multihash
 from .HashStore import LocationService, MimetypeService, IPLDHashService
 from .config import config
 from .miscutils import httpget
+from .TransportIPFS import TransportIPFS
+
 
 
 class NameResolver(object):
@@ -191,12 +194,10 @@ class NameResolverFile(NameResolver):
                     ipldhash = self.multihash and IPLDHashService.get(self.multihash.multihash58) # Try again now have hash
                 MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
                 if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
-                    #TODO move this to TransportIPFS when python implementation of IPFS done
-                    ipfsurl = config["ipfs"]["url_add_data"]
-                    if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
-                    res = requests.post(ipfsurl, files={'file': ('', data, self.mimetype)}).json()
-                    logging.debug("IPFS result={}".format(res))
-                    ipldhash = res['Hash']
+                    #TODO-IPFS create TransportIPFS at startup via "Transports" backported from JS
+                    #TODO-IPFS this works as long as using the HTTP API
+                    url = TransportIPFS().rawstore(data, mimetype=self.mimetype)
+                    ipldhash = urlparse(url).path.split('/')[2]
                     IPLDHashService.set(self.multihash.multihash58, ipldhash)
                     if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
                     #This next line is to get around bug in IPFS propogation
