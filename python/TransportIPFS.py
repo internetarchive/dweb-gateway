@@ -82,11 +82,12 @@ class TransportIPFS(Transport):
         """
         if (urlfrom):
             ipfsurl = config["ipfs"]["url_urlstore"]
-            res = requests.get(ipfsurl, params={'args': quote(urlfrom)}).json() #TODO-URLSTORE ask kyle what this is
+            res = requests.get(ipfsurl, params={'arg': urlfrom}).json() #TODO-URLSTORE ask kyle what this is
+            ipldhash = res['Key']
         else:   # Inline data
             ipfsurl = config["ipfs"]["url_add_data"]
             res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
+            ipldhash = res['Hash']
         if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
         logging.debug("IPFS result={}".format(res))
-        ipldhash = res['Hash']
         return "ipfs:/ipfs/{}".format(ipldhash)
