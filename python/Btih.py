@@ -2,7 +2,7 @@ import logging
 from .NameResolver import NameResolverFile, NameResolverDir
 from .miscutils import httpget
 from .Errors import CodingException, ToBeImplementedException
-from .HashStore import LocationService, MimetypeService, MagnetLinkService
+from .HashStore import LocationService, MagnetLinkService
 from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile

@@ -186,18 +186,20 @@ class NameResolverFile(NameResolver):
             ipldhash = IPLDHashService.get(self.multihash.multihash58, verbose=verbose)
         else:
             if not transport or "IPFS" in transport:
-                (data, self.mimetype) = httpget(url, wantmime=True)
                 #TODO could check sha1 here, but would be slow
+                #TODO-URLSTORE delete old cache
+                #TODO-URLSTORE - check dont need mimetype
                 if not self.multihash:
+                    (data, self.mimetype) = httpget(url, wantmime=True)
                     if verbose: logging.debug("Computing SHA1 hash of url {}".format(url))
                     self.multihash = Multihash(data=data, code=Multihash.SHA1)
                     ipldhash = self.multihash and IPLDHashService.get(self.multihash.multihash58) # Try again now have hash
-                MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
+                    MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
                 if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
                     #TODO-IPFS create TransportIPFS at startup via "Transports" backported from JS
                     #TODO-IPFS this works as long as using the HTTP API
                     #url = TransportIPFS().rawstore(data, mimetype=self.mimetype)
-                    url = TransportIPFS().store(urlfrom=url, mimetype=self.mimetype)
+                    url = TransportIPFS().store(urlfrom=url)
                     ipldhash = urlparse(url).path.split('/')[2]
                     IPLDHashService.set(self.multihash.multihash58, ipldhash)
                     if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))

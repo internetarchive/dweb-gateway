@@ -82,7 +82,7 @@ class TransportIPFS(Transport):
         """
         if (urlfrom):
             ipfsurl = config["ipfs"]["url_urlstore"]
-            res = requests.get(ipfsurl, params={'xxx': quote(urlfrom)}).json() #TODO-URLSTORE ask kyle what this is
+            res = requests.get(ipfsurl, params={'args': quote(urlfrom)}).json() #TODO-URLSTORE ask kyle what this is
         else:   # Inline data
             ipfsurl = config["ipfs"]["url_add_data"]
             res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()

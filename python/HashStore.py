@@ -90,6 +90,9 @@ class HashStore(object):
         """
         return cls.hash_get(multihash, cls.redisfield, verbose)
 
+    @classmethod
+    def reset(cls, verbose=False):
+        return cls.hash_keys()
 
 class LocationService(HashStore):
     """
@@ -136,3 +139,13 @@ class MagnetLinkService(HashStore):
     @classmethod
     def archiveidset(cls, btihhash, value, verbose=False):
         return cls.set("btih:" + btihhash, value)
+
+
+def resetipfs():
+    r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
+    for i in r.scan_iter():
+        ipfs = r.hget(i, "ipldhash")
+        print(i, ipfs)
+        if ipfs:
+            r.hdel(i, "ipldhash")
+            j = j + 1
