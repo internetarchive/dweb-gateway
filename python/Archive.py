@@ -9,9 +9,12 @@ from .NameResolver import NameResolverDir, NameResolverFile
 from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
-from .Errors import CodingException
+from .Errors import CodingException, MyBaseException
 from .HashStore import MagnetLinkService
 
+class ArchiveItemNotFound(MyBaseException):
+    httperror = 404
+    msg = "Archive item {itemid} not found"
 
 class AdvancedSearch(NameResolverDir):
     """
@@ -89,6 +92,7 @@ class ArchiveItem(NameResolverDir):
         :param args:       *optional - Name of file - case sensitive or none for the item
         :param kwargs:
         :return:            ArchiveItem or ArchiveFile instance.
+        :raises:        ArchiteItemNotFound if itemid invalid
         """
         verbose = kwargs.get("verbose")
         if verbose: del kwargs["verbose"]
@@ -101,11 +105,13 @@ class ArchiveItem(NameResolverDir):
         # TODO-DETAILS may need to handle url escaping, i.e. some queries may be invalid till that is done
         if verbose: logging.debug("Archive Metadata url={0}".format(obj.query))
         res = httpget(obj.query)
-        obj._metadata = loads(res)  # TODO-ERRORS handle error if cant find item for example
+        obj._metadata = loads(res)
+        if not obj._metadata:  # metadata retrieval failed, itemid probably false
+            raise ArchiveItemNotFound(itemid=itemid)
         obj.setmagnetlink(True, verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
-            if name.startswith(".____padding_file"):  # TODO-WEBTORRENT convention
+            if name.startswith(".____padding_file"):    # Webtorrent convention
                 return ArchiveFilePadding(verbose=verbose)
             else:
                 f = [f for f in obj._metadata["files"] if f["name"] == name]
@@ -132,7 +138,8 @@ class ArchiveItem(NameResolverDir):
         - assume that metadata already fetched but that _metadata.files not converted to _list yet (as that process  will use this data.
         :return:
         """
-        if not self._metadata: raise CodingException(message="Must have fetched metadata before read torrentdata")
+        if not self._metadata:
+            raise CodingException(message="Must have fetched metadata before read torrentdata")
         magnetlink = self._metadata["metadata"].get("magnetlink")  # First check the metadata
         if not magnetlink:  # Skip if its already set.
             magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for cached version
