@@ -1,12 +1,10 @@
 # encoding: utf-8
 import logging
-#from .Errors import TransportFileNotFound
 from .miscutils import loads, dumps
 from .Transport import Transport
 from .config import config
 import requests # HTTP requests
-from urllib.parse import quote
-
+from .miscutils import httpget
 
 
 class TransportIPFS(Transport):

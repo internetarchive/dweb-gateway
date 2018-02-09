@@ -21,3 +21,11 @@ def test_archiveid():
     assert res["data"] == magnetlink
 
 
+def test_name():
+    verbose=True
+    if verbose: logging.debug("Starting test_name")
+    # Test it can respond to name requests
+    item = "commute"
+    nameurl="name/archiveid".format(item)
+    res = _processurl(nameurl, verbose=verbose, key=item)  # Simulate what the server would do with the URL
+    if verbose: logging.debug("{} returned {}".format(nameurl, res))

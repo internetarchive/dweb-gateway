@@ -4,6 +4,7 @@ from magneturi import bencode
 import base64
 import hashlib
 import urllib.parse
+import datetime
 from .NameResolver import NameResolverDir, NameResolverFile
 from .miscutils import loads, dumps, httpget
 from .config import config
@@ -177,6 +178,36 @@ class ArchiveItem(NameResolverDir):
         mimetype = "application/x-bittorrent"
         data = bencode.bencode(self.torrentdata)
         return {"Content-type": mimetype, "data": data} if headers else data
+
+    def name(self, headers=True, verbose=False):
+        # TODO-DOMAIN - push metadata to IPFS, save IPFS hash
+        # TODO-DOMAIN - create Domain record from IPFS hash & contenthash
+        # TODO-DOMAIN - store Domain record on local nameservice (set)
+        # TODO-DOMAIN - return Domain record to caller
+        meta = self.metadata(headers=False, verbose=verbose)
+        # Store in IPFS, note cant use urlstore on IPFS as metadata is mutable
+        ipfsurl=TransportIPFS().store(data=metadata, verbose=verbose, mimetype="application/json")
+        #TODO-DOMAIN probably encapsulate construction of name once all tested
+        pkeyMetadataDomain = 'NACL%20VERIFY%3Ah9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0%3D'
+        server = "http://gateway.dweb.me"
+        server = "http://localhost:4244"    # TODO-DOMAIN just for testing
+        name = {
+            #expires:   # Not needed, a later dated version is sufficient.
+            fullname: "/arc/archive.org/metadata/{}".format(this.itemid),
+            signatures: [],
+            table: "name",
+            urls: [ipfsurl, "{}/metadata/archiveid/{}".format(server, this.itemid)] # Where to get the content
+        }
+        datenow = datetime.utcnow().isoformat()
+        signable = dumps({"date": datenow, signed: {k: name[k] for k in ["urls", "fullname", "expires"]});  #TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
+        keypair = None  # TODO-DOMAIN need keypair, which might mean porting the old library.
+        signature = "FAKEFAKEFAKE"  #TODO-DOMAIN obviously remove this fake signature and sign "signable"
+        pubkeyexport = "FAKEFAKEFAKE" #TODO-DOMAIN obviously remove this fake signature
+        name.signatures.append({ "date": datenow, "signature": signature, "signedby": pubkeyexport })
+        #TODO-DOMAIN now have encapsulated name
+        #Store the domain in the http domain server, its also always going to be retrievable from this gateway, we cant write to YJS, but a client can copy it TODO-DOMAIN
+        tableurl = "{}/get/table/{}/domains".format(server, pkeyMetadataDomain)
+        TransportHTTP().p_set(tableurl, this.itemid, dumps(name), verbose); #TODO-DOMAIN need to write TransportHTTP
 
 class ArchiveFile(NameResolverFile):
     """

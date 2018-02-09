@@ -12,6 +12,7 @@ from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolver
 from .Archive import AdvancedSearch, ArchiveItem
 from .Btih import BtihResolver
 from .LocalResolver import KeyValueTable
+from .Arc import Arc
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -75,6 +76,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "rawadd": LocalResolverAdd,
         "btih": BtihResolver,
         "table": KeyValueTable,
+        "arc":  Arc,    # The Arc Namespace
     }
 
     _voidreturn = {'Content-type': 'application/octet-stream', 'data': None }
@@ -190,6 +192,18 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def getall(self, namespace, *args, verbose=False, **kwargs):
         verbose = kwargs.get("verbose") # Also passed on to get in kwargs
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).getall(headers=True, verbose=verbose, **kwargs)
+
+    #### A group for handling naming #####
+
+    @exposed
+    def name(self, namespace, *args, verbose=False, key=None, **kwargs):
+        """
+        This needs to catch the special case of /name/archiveid?key=xyz
+        """
+        verbose = kwargs.get("verbose")
+        args = list(args)
+        if key: args.append(key)              # Push key into place normally held by itemid in URL of archiveid/xyz
+        return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).name(headers=True, verbose=verbose, **kwargs)
 
     #### A group for IPLD assuming we were sharding on server for IPFS - we arent since we use the local IPFS server so this is not complete #####
     @exposed
