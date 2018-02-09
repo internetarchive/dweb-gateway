@@ -92,10 +92,10 @@ class LocalResolverList(LocalResolver):
         obj._contenthash = Multihash(multihash58=hash)
         return obj
 
-    def metadata(self, verbose=False):
-        return { "Content-type": "application/json",
-                 "data": self.transport(verbose=verbose).rawlist(self._contenthash.multihash58, verbose=verbose)
-               }
+    def metadata(self, headers=True, verbose=False):
+        data = self.transport(verbose=verbose).rawlist(self._contenthash.multihash58, verbose=verbose)
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": data} if headers else data
 
 class KeyValueTable(LocalResolver):
     @classmethod

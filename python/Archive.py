@@ -1,3 +1,4 @@
+# encoding: utf-8
 import logging
 from magneturi import bencode
 import base64
@@ -48,14 +49,13 @@ class AdvancedSearch(NameResolverDir):
         if verbose: logging.debug("AdvancedSearch found {0} items".format(len(obj._list)))
         return obj
 
-    def metadata(self, verbose=False):
+    def metadata(self, headers=True, verbose=False):
         """
         Pass metadata (i.e. what retrieved in AdancedSearcch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
-        return {'Content-type': 'application/json',
-                'data': self.res
-                }
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": self.res} if headers else self.res
 
 class ArchiveItem(NameResolverDir):
     """
@@ -109,17 +109,13 @@ class ArchiveItem(NameResolverDir):
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
-
-    def metadata(self, verbose=False):
+    def metadata(self, headers=True, verbose=False):
         """
         Pass metadata (i.e. what retrieved in AdancedSearcch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
-        return {'Content-type': 'application/json',
-
-                'data':
-                    self._metadata
-                }
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
     def setmagnetlink(self, wantmodified, verbose=False):
         """
@@ -218,15 +214,14 @@ class ArchiveFile(NameResolverFile):
         assert self.mimetype == mimetype, "mimetype mismatch on {}/{}".format(self.itemid, self.filename)
         self.multihash.check(data)
 
-    def metadata(self, verbose=False):
+    def metadata(self, headers=True, verbose=False):
         """
         Return metadata for file - note in most cases for a ArchiveFile its metadata is returned from its parent ArchiveItem
         :param verbose:
         :return:
         """
-        return {'Content-type': 'application/json',
-                'data': self._metadata
-                }
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
     @property
     def archive_url(self):
@@ -245,11 +240,11 @@ class ArchiveFile(NameResolverFile):
         return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers, verbose=verbose)}
 
 class ArchiveFilePadding(ArchiveFile):
-    # Catch special case of ".____padding_file/nnn"
+    # Catch special case of ".____padding_file/nnn" and deliver a range of 0 bytes.
+    # This is supposed to be a bittorrent convention, and Archive.org uses it to pad files out to block boundaries, so that new files can be loaded from whole blocks
+    # It also makes it much easier to edit a torrent and rebuild new from old.
 
     def __init__(self, verbose=False):
-        #TODO-WEBTORRENT
-        logging.debug("XXX@251 padding file spotted")
         self.mimetype = "application/octet-stream"
 
     def retrieve(self, _headers=None, verbose=False, **kwargs):

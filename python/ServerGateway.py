@@ -134,14 +134,12 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def metadata(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(headers=True, verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def contenthash(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenthash(verbose=verbose)
-
-    # Now complex ones where have to create a class to handle conversion e.g. IPLDdirs
 
     @exposed
     def contenturl(self, namespace, *args, **kwargs):
@@ -149,17 +147,11 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenturl(verbose=verbose)
 
     @exposed
-    def iplddir(self, namespace, *args, **kwargs):
-        #TODO-IPLD This is not complete yet
-        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
-        i = IPLDdir(obj)
-        return i.content()
-
-    @exposed
     def void(self, namespace, *args, **kwargs):
         self.namespaceclasses[namespace].new(namespace, *args, **kwargs)
         return self._voidreturn
 
+    ##### A group for handling webtorrent ########
     @exposed
     def torrent(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
@@ -171,6 +163,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).magnetlink(verbose=verbose, headers=True)
 
+    ###### A group for handling Key Value Stores #########
     @exposed
     def set(self, namespace, *args, verbose=False, **kwargs):
         verbose = kwargs.get("verbose")
@@ -198,9 +191,18 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         verbose = kwargs.get("verbose") # Also passed on to get in kwargs
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).getall(headers=True, verbose=verbose, **kwargs)
 
+    #### A group for IPLD assuming we were sharding on server for IPFS - we arent since we use the local IPFS server so this is not complete #####
+    @exposed
+    def iplddir(self, namespace, *args, **kwargs):
+        #TODO-IPLD This is not complete yet
+        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
+        i = IPLDdir(obj)
+        return i.content()
+
     def storeipld(self, namespace, *args, **kwargs):
         """
         Post a IPLD and store for a multihash
+        XXXX THIS IS NOT USED, PROBABLY NEVER COMPLETED
 
         :param namespace:   Where to store this - must be "contenthash" currently
         :param args:
@@ -218,6 +220,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def storeipldhash(self, namespace, *args, **kwargs):
         """
         Post a IPLD and store for a multihash
+        XXXX THIS IS NOT USED, PROBABLY NEVER COMPLETED
 
         :param namespace:   Where to store this - must be "contenthash" currently
         :param args:

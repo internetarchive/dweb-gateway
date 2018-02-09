@@ -113,17 +113,17 @@ class DOI(NameResolverDir):
         # Currently Nothing done here other than superclass adding to list.
         super(DOI, self).push(doifile)
 
-    def metadata(self, verbose=False):
-        return {'Content-type': 'application/json',
-                'data': {
-                    "doi": self.doi,
-                    'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
-                    'doi_org_metadata': self.doi_org_metadata(verbose),  # Metadata as supplied by DOI.org
-                    "files": [
-                        doifile._metadata for doifile in self.files()
-                    ]
-                }
-                }
+    def metadata(self, headers=True, verbose=False):
+        data = {
+            "doi": self.doi,
+            'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
+            'doi_org_metadata': self.doi_org_metadata(verbose),  # Metadata as supplied by DOI.org
+            "files": [
+                doifile._metadata for doifile in self.files()
+            ]
+        }
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": data} if headers else data
 
     @classmethod
     def canonical(cls, publisher, *identifier):
@@ -274,18 +274,17 @@ class DOIfile(NameResolverFile):    # Note plural
         """
         return httpget(self.url)    #TODO-STREAM handle streams from URl
 
-    def metadata(self, verbose=False):
-        return {'Content-type': 'application/json',
-                'data': {
-                    "doi": self.doi,
-                    'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
-                    'doi_org_metadata': self.doi_org_metadata(verbose),  # Metadata as supplied by DOI.org
-                    "files": [
-                        self._metadata  # Just one, but in array to keep HTML consistent with DOI, note same as metadata above
-                    ]
-                }
-                }
-
+    def metadata(self, headers=True, verbose=False):
+        data = {
+            "doi": self.doi,
+            'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
+            'doi_org_metadata': self.doi_org_metadata(verbose),  # Metadata as supplied by DOI.org
+            "files": [
+                self._metadata  # Just one, but in array to keep HTML consistent with DOI, note same as metadata above
+            ]
+        }
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": data} if headers else data
 
     def doi_org_metadata(self, verbose=False):
         """
@@ -310,8 +309,10 @@ class DOIsearchItem(NameResolverSearchItem):
                 result['authors'] = [result['authors'], ]
         self._metadata = result
 
-    def metadata(self):
-        return self._metadata   # Will match elastic_schema.json  which is doi, title, author, journal, date, publisher, topic, media
+    def metadata(self, headers=True, verbose=False):
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
+        # Will match elastic_schema.json  which is doi, title, author, journal, date, publisher, topic, media
 
 class DOIsearch(NameResolverSearch):
     # NOTE THESE ARE STUBS UNTESTED AND DONT WORK YET
@@ -364,21 +365,20 @@ class DOIsearch(NameResolverSearch):
         self.count_returned = len(self._list)
         self.highlight = do_highlight
 
-    def metadata(self):
+    def metadata(self, headers=True, verbose=False):
         """
         Return metadata in a useful form for the HTML query
 
         :return:
         """
-        return {'Content-type': 'application/json',
-                'data': {
+        data =  {
                     "count_found": self.count_found,
                     "count_returned": self.count_returned,
                     "highlight": self.highlight,
-                    "results": [ result.metadata() for result in self._list ]
+                    "results": [ result.metadata(headers=False) for result in self._list ]
                 }
-                }
-
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": data} if headers else data
 
 if __name__ == '__main__':
     import sys

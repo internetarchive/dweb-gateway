@@ -62,6 +62,7 @@ class TransportIPFS(Transport):
         :param returns: Comma separated string if want result as a dict, support "url","contenthash"
         :return: url of data e.g. ipfs:/ipfs/Qm123abc
         """
+        console.assert (not returns), 'Not supporting "returns" parameter to TransportIPFS.store at this point'
         ipfsurl = config["ipfs"]["url_add_data"]
         if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
         res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
@@ -69,7 +70,7 @@ class TransportIPFS(Transport):
         ipldhash = res['Hash']
         return "ipfs:/ipfs/{}".format(ipldhash)
 
-    def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, **options):
+    def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, returns=None, **options):
         """
         Higher level store semantics
 
@@ -80,14 +81,16 @@ class TransportIPFS(Transport):
         :param options:
         :return:
         """
-        if (urlfrom):
-            ipfsurl = config["ipfs"]["url_urlstore"]
-            res = requests.get(ipfsurl, params={'arg': urlfrom}).json() #TODO-URLSTORE ask kyle what this is
-            ipldhash = res['Key']
-        else:   # Inline data
-            ipfsurl = config["ipfs"]["url_add_data"]
-            res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
-            ipldhash = res['Hash']
-        if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
-        logging.debug("IPFS result={}".format(res))
-        return "ipfs:/ipfs/{}".format(ipldhash)
+        console.assert (not returns), 'Not supporting "returns" parameter to TransportIPFS.store at this point'
+        if urlfrom and config["ipfs"].get("url_urlstore"):              # On a machine with urlstore and passed a url
+                ipfsurl = config["ipfs"]["url_urlstore"]
+                res = requests.get(ipfsurl, params={'arg': urlfrom}).json() #TODO-URLSTORE ask kyle what this is
+                ipldhash = res['Key']
+                return "ipfs:/ipfs/{}".format(ipldhash)
+        else:   # Need to store via "add"
+            if not data or not mimetype:
+                (data, mimetype) = httpget(urlfrom, wantmime=True)
+            if not isinstance(data, str):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
+                data = dumps(data)
+            return this.rawstore(data=data, verbose=verbose, returns=returns, mimetype, **options)
+

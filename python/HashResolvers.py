@@ -128,7 +128,7 @@ class HashResolver(NameResolverFile):
             'data': data,
             }
 
-    def metadata(self, verbose=False):
+    def metadata(self, headers=True, verbose=False):
         """
         :param verbose:
         :return:
@@ -136,8 +136,10 @@ class HashResolver(NameResolverFile):
         if not self._metadata:
             if not self._doifile:
                 self._doifile = DOIfile(multihash=self.multihash, verbose=verbose)    # If not found, dont set url/metadata etc
-            self._metadata = self._metadata or (self._doifile and self._doifile.metadata(verbose=verbose))
-        return self._metadata
+            self._metadata = self._metadata or (self._doifile and self._doifile.metadata(headers=False, verbose=verbose))
+        mimetype = 'application/json';
+        return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
+
     # def canonical - not needed as already in a canonical form
 
 class Sha1Hex(HashResolver):
