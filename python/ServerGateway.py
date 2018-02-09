@@ -12,7 +12,6 @@ from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolver
 from .Archive import AdvancedSearch, ArchiveItem
 from .Btih import BtihResolver
 from .LocalResolver import KeyValueTable
-from .Arc import Arc
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -76,7 +75,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "rawadd": LocalResolverAdd,
         "btih": BtihResolver,
         "table": KeyValueTable,
-        "arc":  Arc,    # The Arc Namespace
     }
 
     _voidreturn = {'Content-type': 'application/octet-stream', 'data': None }

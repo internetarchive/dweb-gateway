@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from ._utils import _processurl
 from python.miscutils import dumps, loads
+from python.Archive import ArchiveItemNotFound
 
 logging.basicConfig(level=logging.DEBUG)    # Log to stderr
 
@@ -20,7 +21,6 @@ def test_archiveid():
     if verbose: logging.debug("test_archiveid magnetlink returned {0}".format(res))
     assert res["data"] == magnetlink
 
-
 def test_name():
     verbose=True
     if verbose: logging.debug("Starting test_name")
@@ -29,3 +29,14 @@ def test_name():
     nameurl="name/archiveid".format(item)
     res = _processurl(nameurl, verbose=verbose, key=item)  # Simulate what the server would do with the URL
     if verbose: logging.debug("{} returned {}".format(nameurl, res))
+
+def test_archiveerrs():
+    verbose=True
+    if verbose: logging.debug("Starting test_archiveid")
+    itemid = "nosuchitematall"
+    try:
+        res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+    except ArchiveItemNotFound as e:
+        pass
+    if verbose: logging.debug("test_archiveid metadata returned {0}".format(res))
+    logging.debug("Result - should be error",res)
