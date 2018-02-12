@@ -4,13 +4,16 @@ from magneturi import bencode
 import base64
 import hashlib
 import urllib.parse
-import datetime
+from datetime import datetime
 from .NameResolver import NameResolverDir, NameResolverFile
 from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
 from .Errors import CodingException, MyBaseException
 from .HashStore import MagnetLinkService
+from .TransportHTTP import TransportHTTP
+from .TransportIPFS import TransportIPFS
+from .LocalResolver import KeyValueTable
 
 class ArchiveItemNotFound(MyBaseException):
     httperror = 404
@@ -196,34 +199,47 @@ class ArchiveItem(NameResolverDir):
         return {"Content-type": mimetype, "data": data} if headers else data
 
     def name(self, headers=True, verbose=False):
+        """
+        Resolve names to a pointer to a metadata record
+
+        :param headers:
+        :param verbose:
+        :return:
+        """
         # TODO-DOMAIN - push metadata to IPFS, save IPFS hash
-        # TODO-DOMAIN - create Domain record from IPFS hash & contenthash
-        # TODO-DOMAIN - store Domain record on local nameservice (set)
-        # TODO-DOMAIN - return Domain record to caller
-        meta = self.metadata(headers=False, verbose=verbose)
+        # TODO-DOMAIN - create Name record from IPFS hash & contenthash
+        # TODO-DOMAIN - store Name record on local nameservice (set)
+        # TODO-DOMAIN - return Name record to caller
+        metadata = self.metadata(headers=False, verbose=verbose)
         # Store in IPFS, note cant use urlstore on IPFS as metadata is mutable
         ipfsurl = TransportIPFS().store(data=metadata, verbose=verbose, mimetype="application/json")
         # TODO-DOMAIN probably encapsulate construction of name once all tested
-        pkeyMetadataDomain = 'NACL%20VERIFY%3Ah9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0%3D'
+        pkeymetadatadomain = config["domains"]["metadata"]
         server = "http://gateway.dweb.me"
         server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         name = {
             # expires:   # Not needed, a later dated version is sufficient.
-            fullname: "/arc/archive.org/metadata/{}".format(this.itemid),
-            signatures: [],
-            table: "name",
-            urls: [ipfsurl, "{}/metadata/archiveid/{}".format(server, this.itemid)]  # Where to get the content
+            "fullname": "/arc/archive.org/metadata/{}".format(self.itemid),
+            "signatures": [],
+            "table": "name",
+            "urls": [ipfsurl, "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
-        signable = dumps({"date": datenow, signed: {k: name[k] for k in ["urls", "fullname", "expires"]});  #TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
+        signable = dumps({"date": datenow, "signed": {k: name.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
         keypair = None  # TODO-DOMAIN need keypair, which might mean porting the old library.
         signature = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature and sign "signable"
         pubkeyexport = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature
-        name.signatures.append({"date": datenow, "signature": signature, "signedby": pubkeyexport})
+        name["signatures"].append({"date": datenow, "signature": signature, "signedby": pubkeyexport})
         # TODO-DOMAIN now have encapsulated name
         # Store the domain in the http domain server, its also always going to be retrievable from this gateway, we cant write to YJS, but a client can copy it TODO-DOMAIN
-        tableurl = "{}/get/table/{}/domains".format(server, pkeyMetadataDomain)
-        TransportHTTP().p_set(tableurl, this.itemid, dumps(name), verbose);  # TODO-DOMAIN need to write TransportHTTP
+        # Next two lines would be if adding to HTTP on different machine, instead assuming this machine *is* the KeyValueTable we can go direct.
+        # tableurl = "{}/get/table/{}/domains".format(server, pkeymetadatadomain)
+        # TransportHTTP().set(tableurl, self.itemid, dumps(name), verbose)  # TODO-DOMAIN need to write TransportHTTP
+        res = KeyValueTable.new("table", pkeymetadatadomain, "domain", verbose=verbose)\
+            .set(headers=False, verbose=verbose, data=[{"key": self.itemid, "value":dumps(name) }])
+        mimetype = 'application/json'
+        data = { self.itemid: dumps(name)}
+        return {"Content-type": mimetype, "data": data} if headers else data
 
 
 # noinspection PyProtectedMember
@@ -249,11 +265,12 @@ class ArchiveFile(NameResolverFile):
             obj.multihash = None
             logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
         # Currently remaining args an kwargs ignored
-        cached = obj.cache_content(obj.archive_url, transport, verbose)  # Setup for IPFS and contenthash {ipldhash}
+        if not obj.filename.endswith("_files.xml"): # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
+            cached = obj.cache_content(obj.archive_url, transport, verbose)  # Setup for IPFS and contenthash {ipldhash}
+            if cached.get("ipldhash") is not None:
+                obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
         if obj.parent._metadata["metadata"].get("magnetlink"):
             obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
-        if cached.get("ipldhash") is not None:
-            obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
         if obj.multihash:  # For the _files.xml there is no SHA1 and if didn't fetch to cache for IPFS then we cant set it
             obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
         # Comment out next line unless checking integrity

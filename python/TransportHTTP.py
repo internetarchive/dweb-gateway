@@ -1,5 +1,6 @@
 # encoding: utf-8
 import logging
+from .Transport import Transport
 
 class TransportHTTP(Transport):
     """
@@ -28,4 +29,5 @@ class TransportHTTP(Transport):
     def supports(self, url, func):
         return (func in supportfunctions) and (url.startswith('https:') or url.startswith('http'))       # Local can handle any kind of URL, since cached.
 
-    def set(self, url, keyvalues, value, verbose)
+    def set(self, url, keyvalues, value, verbose):
+        pass # TODO-DOMAIN complete

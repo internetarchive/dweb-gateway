@@ -13,6 +13,9 @@ config = {
     "gateway": {
         "url_download": "https://gateway.dweb.me/download/archiveid/",
         "url_torrent": "https://gateway.dweb.me/torrent/archiveid/",
+    },
+    "domains": {
+        "metadata": 'NACL%20VERIFY%3Ah9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0%3D',
     }
 }
 

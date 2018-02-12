@@ -3,6 +3,7 @@ from datetime import datetime
 from ._utils import _processurl
 from python.miscutils import dumps, loads
 from python.Archive import ArchiveItemNotFound
+from python.config import config
 
 logging.basicConfig(level=logging.DEBUG)    # Log to stderr
 
@@ -26,8 +27,11 @@ def test_name():
     if verbose: logging.debug("Starting test_name")
     # Test it can respond to name requests
     item = "commute"
-    nameurl="name/archiveid".format(item)
+    nameurl="name/archiveid"
     res = _processurl(nameurl, verbose=verbose, key=item)  # Simulate what the server would do with the URL
+    if verbose: logging.debug("{} returned {}".format(nameurl, res))
+    nameurl="get/table/{}/domain".format(config["domains"]["metadata"])
+    res = _processurl(nameurl, verbose=verbose, key=item) # Should get value cached above
     if verbose: logging.debug("{} returned {}".format(nameurl, res))
 
 def test_archiveerrs():
@@ -37,6 +41,4 @@ def test_archiveerrs():
     try:
         res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
     except ArchiveItemNotFound as e:
-        pass
-    if verbose: logging.debug("test_archiveid metadata returned {0}".format(res))
-    logging.debug("Result - should be error",res)
+        pass    # Expecting an error

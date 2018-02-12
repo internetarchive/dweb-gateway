@@ -90,10 +90,6 @@ class HashStore(object):
         """
         return cls.hash_get(multihash, cls.redisfield, verbose)
 
-    @classmethod
-    def reset(cls, verbose=False):
-        return cls.hash_keys()
-
 class LocationService(HashStore):
     """
     OLD NOTES
@@ -137,8 +133,8 @@ class MagnetLinkService(HashStore):
         return cls.set("btih:"+btihhash, value)
 
     @classmethod
-    def archiveidset(cls, btihhash, value, verbose=False):
-        return cls.set("btih:" + btihhash, value)
+    def archiveidset(cls, archiveid, value, verbose=False):
+        return cls.set("archiveid:" + archiveid, value)
 
 
 def resetipfs():
