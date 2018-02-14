@@ -156,7 +156,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def torrent(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, transport="WEBTORRENT", **kwargs).torrent(verbose=verbose, headers=True)
+        return self.namespaceclasses[namespace].new(namespace, *args, transport="WEBTORRENT", wanttorrent=True, **kwargs).torrent(verbose=verbose, headers=True)
 
     @exposed
     def magnetlink(self, namespace, *args, **kwargs):

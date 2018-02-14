@@ -24,7 +24,7 @@ config = {
 
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
-elif socket.gethostname() in ["mitraglass-9984.local"]:
+elif socket.gethostname().startswith('mitraglass'):
     config["directories"]["bootloader"] = "/Users/mitra/git/_github_internetarchive/dweb-transport/examples/bootloader.html"
 else:
     print("Needs configuring for {}".format(socket.gethostname()))

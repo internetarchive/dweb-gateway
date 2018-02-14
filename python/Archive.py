@@ -93,7 +93,7 @@ class ArchiveItem(NameResolverDir):
         :param namespace:   "archiveid"
         :param itemid:      Archive item id
         :param args:       *optional - Name of file - case sensitive or none for the item
-        :param kwargs:
+        :param kwargs:      {wanttorrent}
         :return:            ArchiveItem or ArchiveFile instance.
         :raises:        ArchiteItemNotFound if itemid invalid
         """
@@ -111,7 +111,7 @@ class ArchiveItem(NameResolverDir):
         obj._metadata = loads(res)
         if not obj._metadata:  # metadata retrieval failed, itemid probably false
             raise ArchiveItemNotFound(itemid=itemid)
-        obj.setmagnetlink(True, verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
+        obj.setmagnetlink(wantmodified=True, wanttorrent=kwargs.get("wanttorrent", False), verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
@@ -135,7 +135,7 @@ class ArchiveItem(NameResolverDir):
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
     # noinspection PyUnresolvedReferences
-    def setmagnetlink(self, wantmodified, verbose=False):
+    def setmagnetlink(self, wantmodified=True, wanttorrent=False, verbose=False):
         """
         Set magnet link (note could easily be modified to return torrentdata or torrentfile if wanted)
         - assume that metadata already fetched but that _metadata.files not converted to _list yet (as that process  will use this data.
@@ -144,9 +144,9 @@ class ArchiveItem(NameResolverDir):
         if not self._metadata:
             raise CodingException(message="Must have fetched metadata before read torrentdata")
         magnetlink = self._metadata["metadata"].get("magnetlink")  # First check the metadata
-        if not magnetlink:  # Skip if its already set.
+        if not magnetlink or wanttorrent:  # Skip if its already set.
             magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for cached version
-            if not magnetlink:  # If not cached then build new one
+            if not magnetlink or wanttorrent:  # If not cached then build new one
                 ff = [f for f in self._metadata["files"] if f.get("format") == "Archive BitTorrent"]  # Should be one or none
                 if len(ff):
                     if len(ff) > 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
@@ -195,7 +195,7 @@ class ArchiveItem(NameResolverDir):
         :return:
         """
         mimetype = "application/x-bittorrent"
-        data = bencode.bencode(self.torrentdata)
+        data = bencode.bencode(self.torrentdata)   # Set in ArchiveItem.new > setmagnetlink
         return {"Content-type": mimetype, "data": data} if headers else data
 
     def name(self, headers=True, verbose=False):
