@@ -16,8 +16,16 @@ config = {
     },
     "domains": {
         "metadata": 'NACL%20VERIFY%3Ah9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0%3D',
+    },
+    "directories": {
+        "bootloader": "/usr/local/dweb-transport/examples/bootloader.html",
     }
 }
 
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
+elif socket.gethostname() in ["mitraglass-9984.local"]:
+    config["directories"]["bootloader"] = "/Users/mitra/git/_github_internetarchive/dweb-transport/examples/bootloader.html"
+else:
+    print("Needs configuring for {}".format(socket.gethostname()))
+

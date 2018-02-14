@@ -1,11 +1,12 @@
 # encoding: utf-8
 #from sys import version as python_version
 import logging
+from .config import config
 from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
 from .IPLD import IPLDdir, IPLDfile
-from .Errors import ToBeImplementedException, NoContentException
+from .Errors import ToBeImplementedException, NoContentException, TransportFileNotFound
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
@@ -202,6 +203,20 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         args = list(args)
         if key: args.append(key)              # Push key into place normally held by itemid in URL of archiveid/xyz
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).name(headers=True, verbose=verbose, **kwargs)
+
+    #### A group that breaks the naming convention####
+    # urls of form https://gateway.dweb.me/archive.org/details/foo, conceptually to be moved to dweb.archive.org/details/foo
+    @exposed
+    def archive_org(self, *args, **kwargs):
+        filename = config["directories"]["bootloader"]
+        try:
+            #if verbose: logging.debug("Opening {0}".format(filename))
+            with open(filename, 'rb') as file:
+                content = file.read()
+            #if verbose: logging.debug("Opened")
+        except IOError as e:
+            raise TransportFileNotFound(file=filename)
+        return  {'Content-type': 'text/html', 'data': content }
 
     #### A group for IPLD assuming we were sharding on server for IPFS - we arent since we use the local IPFS server so this is not complete #####
     @exposed
