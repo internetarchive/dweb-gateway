@@ -216,7 +216,7 @@ class ArchiveItem(NameResolverDir):
         # TODO-DOMAIN probably encapsulate construction of name once all tested
         pkeymetadatadomain = config["domains"]["metadata"]
         server = "http://gateway.dweb.me"
-        server = "http://localhost:4244"  # TODO-DOMAIN just for testing
+        //server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         name = {
             # expires:   # Not needed, a later dated version is sufficient.
             "fullname": "/arc/archive.org/metadata/{}".format(self.itemid),
