@@ -203,11 +203,14 @@ class NameResolverFile(NameResolver):
                     ipldhash = urlparse(url).path.split('/')[2]
                     IPLDHashService.set(self.multihash.multihash58, ipldhash)
                     if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
-                    #This next line is to get around bug in IPFS propogation
-                    #See https://github.com/ipfs/js-ipfs/issues/1156
-                    ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
-                    res = requests.head(ipfsgatewayurl); # Going to ignore the result
-                    logging.debug("XXX@202 - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
+                    """ 
+                    Moved to TransportIPFS
+                        #This next line is to get around bug in IPFS propogation
+                        #See https://github.com/ipfs/js-ipfs/issues/1156
+                        ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
+                        res = requests.head(ipfsgatewayurl); # Going to ignore the result
+                        logging.debug("XXX@202 - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
+                    """
         if self.multihash:
             LocationService.set(self.multihash.multihash58, url, verbose=verbose)
         return {"ipldhash": ipldhash}

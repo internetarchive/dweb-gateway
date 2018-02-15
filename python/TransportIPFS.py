@@ -66,6 +66,12 @@ class TransportIPFS(Transport):
         res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
         logging.debug("IPFS result={}".format(res))
         ipldhash = res['Hash']
+        # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
+        # This next line is to get around bug in IPFS propogation
+        # See https://github.com/ipfs/js-ipfs/issues/1156
+        ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
+        res = requests.head(ipfsgatewayurl);  # Going to ignore the result
+        logging.debug("XXX@transportipfs.rawstore - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
         return "ipfs:/ipfs/{}".format(ipldhash)
 
     def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, returns=None, **options):
@@ -82,13 +88,21 @@ class TransportIPFS(Transport):
         assert (not returns), 'Not supporting "returns" parameter to TransportIPFS.store at this point'
         if urlfrom and config["ipfs"].get("url_urlstore"):              # On a machine with urlstore and passed a url
                 ipfsurl = config["ipfs"]["url_urlstore"]
-                res = requests.get(ipfsurl, params={'arg': urlfrom}).json() #TODO-URLSTORE ask kyle what this is
+                res = requests.get(ipfsurl, params={'arg': urlfrom}).json()
                 ipldhash = res['Key']
-                return "ipfs:/ipfs/{}".format(ipldhash)
+                # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
+                # This next line is to get around bug in IPFS propogation
+                # See https://github.com/ipfs/js-ipfs/issues/1156
+                ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
+                res = requests.head(ipfsgatewayurl);  # Going to ignore the result
+                logging.debug("XXX@transportipfs.store - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
+                url = "ipfs:/ipfs/{}".format(ipldhash)
         else:   # Need to store via "add"
             if not data or not mimetype:
                 (data, mimetype) = httpget(urlfrom, wantmime=True)
             if not isinstance(data, str):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
                 data = dumps(data)
-            return self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, **options)
+            url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, **options)
+        return url
+
 
