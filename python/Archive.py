@@ -10,20 +10,22 @@ from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
 from .Errors import CodingException, MyBaseException
-from .HashStore import MagnetLinkService
-from .TransportHTTP import TransportHTTP
+from .HashStore import MagnetLinkService, ThumbnailIPFSfromItemIdService
 from .TransportIPFS import TransportIPFS
 from .LocalResolver import KeyValueTable
+
 
 class ArchiveItemNotFound(MyBaseException):
     httperror = 404
     msg = "Archive item {itemid} not found"
+
 
 class AdvancedSearch(NameResolverDir):
     """
     Subclass of NameResolverDir to do an Archive advanced search.
 
     Note this might get broken up into appropriate class hierarchy as other IA interfaces build
+    Urls like /metadata/advancedsearch?x=y,a=b
 
     Attributes:
 
@@ -55,6 +57,8 @@ class AdvancedSearch(NameResolverDir):
         if verbose: logging.debug("AdvancedSearch url={0}".format(obj.query))
         res = httpget(obj.query)
         obj.res = loads(res)  # TODO unsure if there are any possible errors, and if so how to handle them.
+        for doc in obj.res["response"]["docs"]:
+            doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["identifier"], verbose)
         obj._list = obj.res["response"]["docs"]  # TODO probably wrong, as prob needs to be NameResolver instances
         if verbose: logging.debug("AdvancedSearch found {0} items".format(len(obj._list)))
         return obj
@@ -78,6 +82,7 @@ class ArchiveItem(NameResolverDir):
 
     Attributes:
         itemid = itemid
+        _thumbnail = list of urls of thumbnail (access via thumbnail())
 
     Supports: metadata
     """
@@ -112,6 +117,7 @@ class ArchiveItem(NameResolverDir):
         if not obj._metadata:  # metadata retrieval failed, itemid probably false
             raise ArchiveItemNotFound(itemid=itemid)
         obj.setmagnetlink(wantmodified=True, wanttorrent=kwargs.get("wanttorrent", False), verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
+        obj.thumbnail()  # Set the thumbnail field
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
@@ -128,7 +134,7 @@ class ArchiveItem(NameResolverDir):
 
     def metadata(self, headers=True, verbose=False):
         """
-        Pass metadata (i.e. what retrieved in AdancedSearcch) directly back to client
+        Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
         mimetype = 'application/json'
@@ -216,7 +222,7 @@ class ArchiveItem(NameResolverDir):
         # TODO-DOMAIN probably encapsulate construction of name once all tested
         pkeymetadatadomain = config["domains"]["metadata"]
         server = "http://gateway.dweb.me"
-        //server = "http://localhost:4244"  # TODO-DOMAIN just for testing
+        #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         name = {
             # expires:   # Not needed, a later dated version is sufficient.
             "fullname": "/arc/archive.org/metadata/{}".format(self.itemid),
@@ -235,11 +241,37 @@ class ArchiveItem(NameResolverDir):
         # Next two lines would be if adding to HTTP on different machine, instead assuming this machine *is* the KeyValueTable we can go direct.
         # tableurl = "{}/get/table/{}/domains".format(server, pkeymetadatadomain)
         # TransportHTTP().set(tableurl, self.itemid, dumps(name), verbose)  # TODO-DOMAIN need to write TransportHTTP
-        res = KeyValueTable.new("table", pkeymetadatadomain, "domain", verbose=verbose)\
-            .set(headers=False, verbose=verbose, data=[{"key": self.itemid, "value":dumps(name) }])
+        KeyValueTable.new("table", pkeymetadatadomain, "domain", verbose=verbose)\
+            .set(headers=False, verbose=verbose, data=[{"key": self.itemid, "value": dumps(name)}])
         mimetype = 'application/json'
-        data = { self.itemid: dumps(name)}
+        data = {self.itemid: dumps(name)}
         return {"Content-type": mimetype, "data": data} if headers else data
+
+    @classmethod
+    def item2thumbnail(cls, itemid, verbose=False):
+        """
+        Set the thumbnail field if not set and return list of urls
+        :return:
+        """
+        archive_servicesimgurl = "{}/{}".format(config["archive"]["url_servicesimg"],
+                                                itemid)  # Note similar code in torrentdata
+        thumbnailipfsurl = ThumbnailIPFSfromItemIdService.get(itemid)
+        if not thumbnailipfsurl:  # Dont have IPFS URL
+            if verbose: logging.debug("Retrieving thumbnail for {}".format(itemid))
+            # Store to IPFS and if still reqd then ping the ipfs.io gateway
+            thumbnailipfsurl = TransportIPFS().store(urlfrom=archive_servicesimgurl, verbose=verbose,
+                                                     mimetype="image/PNG")
+            ThumbnailIPFSfromItemIdService.set(itemid, thumbnailipfsurl)
+        return [thumbnailipfsurl, archive_servicesimgurl]
+
+    def thumbnail(self, verbose=False):
+        """
+        Set the thumbnail field if not set and return list of urls
+        :return:
+        """
+        if not self._metadata["metadata"].get("thumbnaillinks"):  # Its quick if already set
+            self._metadata["metadata"]["thumbnaillinks"] = self.item2thumbnail(self.itemid, verbose)
+        return self._metadata["metadata"].get("thumbnaillinks")
 
 
 # noinspection PyProtectedMember
@@ -265,7 +297,7 @@ class ArchiveFile(NameResolverFile):
             obj.multihash = None
             logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
         # Currently remaining args an kwargs ignored
-        if not obj.filename.endswith("_files.xml"): # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
+        if not obj.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
             cached = obj.cache_content(obj.archive_url, transport, verbose)  # Setup for IPFS and contenthash {ipldhash}
             if cached.get("ipldhash") is not None:
                 obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned

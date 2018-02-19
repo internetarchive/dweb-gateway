@@ -117,6 +117,9 @@ class IPLDService(HashStore):
 class IPLDHashService(HashStore):
     redisfield = "ipldhash"
 
+class ThumbnailIPFSfromItemIdService(HashStore):
+    redisfield = "thumbnailipfs"
+
 class MagnetLinkService(HashStore):
     redisfield = "magnetlink"
 

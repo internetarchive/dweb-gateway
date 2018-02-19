@@ -8,7 +8,7 @@ from python.config import config
 logging.basicConfig(level=logging.DEBUG)    # Log to stderr
 
 def test_archiveid():
-    verbose=True
+    verbose=False
     if verbose: logging.debug("Starting test_archiveid")
     itemid = "commute"
     btih='XCMYARDAKNWYBERJHUSQR5RJG63JX46B'
@@ -17,13 +17,15 @@ def test_archiveid():
     if verbose: logging.debug("test_archiveid metadata returned {0}".format(res))
     assert res["data"]["metadata"]["identifier"] == itemid
     assert res["data"]["metadata"]["magnetlink"] == magnetlink
+    assert "ipfs:/ipfs" in res["data"]["metadata"]["thumbnaillinks"][0]
+    assert itemid in res["data"]["metadata"]["thumbnaillinks"][1]
     if verbose: logging.debug("test_archiveid complete")
     res = _processurl("magnetlink/btih/{}".format(btih), verbose)
     if verbose: logging.debug("test_archiveid magnetlink returned {0}".format(res))
     assert res["data"] == magnetlink
 
 def test_name():
-    verbose=True
+    verbose=False
     if verbose: logging.debug("Starting test_name")
     # Test it can respond to name requests
     item = "commute"
@@ -42,3 +44,23 @@ def test_archiveerrs():
         res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
     except ArchiveItemNotFound as e:
         pass    # Expecting an error
+
+def test_search():
+    verbose=True
+    kwargs1={    # Taken from example home page
+        'output': "json",
+        'q': "mediatype:collection AND NOT noindex:true AND NOT collection:web AND NOT identifier:fav-* AND NOT identifier:what_cd AND NOT identifier:cd AND NOT identifier:vinyl AND NOT identifier:librarygenesis AND NOT identifier:bibalex AND NOT identifier:movies AND NOT identifier:audio AND NOT identifier:texts AND NOT identifier:software AND NOT identifier:image AND NOT identifier:data AND NOT identifier:web AND NOT identifier:additional_collections AND NOT identifier:animationandcartoons AND NOT identifier:artsandmusicvideos AND NOT identifier:audio_bookspoetry AND NOT identifier:audio_foreign AND NOT identifier:audio_music AND NOT identifier:audio_news AND NOT identifier:audio_podcast AND NOT identifier:audio_religion AND NOT identifier:audio_tech AND NOT identifier:computersandtechvideos AND NOT identifier:coverartarchive AND NOT identifier:culturalandacademicfilms AND NOT identifier:ephemera AND NOT identifier:gamevideos AND NOT identifier:inlibrary AND NOT identifier:moviesandfilms AND NOT identifier:newsandpublicaffairs AND NOT identifier:ourmedia AND NOT identifier:radioprograms AND NOT identifier:samples_only AND NOT identifier:spiritualityandreligion AND NOT identifier:stream_only AND NOT identifier:television AND NOT identifier:test_collection AND NOT identifier:usgovfilms AND NOT identifier:vlogs AND NOT identifier:youth_media",
+        'rows': "75",
+        'sort[]': "-downloads",
+        'and[]':  ""
+    }
+    kwargs2={   # Take from example search
+        'output': "json",
+        'q': "prelinger",
+        'rows': "75",
+        'sort[]': "",
+        'and[]': ""
+    }
+    res = _processurl("metadata/advancedsearch", verbose, **kwargs2)  # Simulate what the server would do with the URL
+    logging.debug("XXX@65")
+    logging.debug(res)
