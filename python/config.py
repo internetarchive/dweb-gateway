@@ -14,6 +14,7 @@ config = {
     },
     "gateway": {
         "url_download": "https://gateway.dweb.me/download/archiveid/",
+        "url_servicesimg": "https://gateway.dweb.me/thumbnail/archiveid/",
         "url_torrent": "https://gateway.dweb.me/torrent/archiveid/",
     },
     "domains": {

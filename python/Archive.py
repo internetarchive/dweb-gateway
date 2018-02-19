@@ -254,8 +254,8 @@ class ArchiveItem(NameResolverDir):
         Set the thumbnail field if not set and return list of urls
         :return:
         """
-        archive_servicesimgurl = "{}{}".format(config["archive"]["url_servicesimg"],
-                                                itemid)  # Note similar code in torrentdata
+        archive_servicesimgurl = "{}{}".format(config["archive"]["url_servicesimg"], itemid)  # Note similar code in torrentdata
+        archive_servicesimgurl_cors = "{}{}".format(config["gateway"]["url_servicesimg"], itemid)  # Note similar code in torrentdata
         thumbnailipfsurl = ThumbnailIPFSfromItemIdService.get(itemid)
         if not thumbnailipfsurl:  # Dont have IPFS URL
             if verbose: logging.debug("Retrieving thumbnail for {}".format(itemid))
@@ -263,7 +263,7 @@ class ArchiveItem(NameResolverDir):
             thumbnailipfsurl = TransportIPFS().store(urlfrom=archive_servicesimgurl, verbose=verbose,
                                                      mimetype="image/PNG")
             ThumbnailIPFSfromItemIdService.set(itemid, thumbnailipfsurl)
-        return [thumbnailipfsurl, archive_servicesimgurl]
+        return [thumbnailipfsurl, archive_servicesimgurl_cors]
 
     def thumbnail(self, headers=True, verbose=False):
         (data, mimetype) = httpget("{}{}".format(config["archive"]["url_servicesimg"], self.itemid), wantmime=True)
