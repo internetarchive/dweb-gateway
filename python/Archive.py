@@ -221,11 +221,7 @@ class ArchiveItem(NameResolverDir):
         ipfsurl = TransportIPFS().store(data=metadata, verbose=verbose, mimetype="application/json")
         # TODO-DOMAIN probably encapsulate construction of name once all tested
         pkeymetadatadomain = config["domains"]["metadata"]
-<<<<<<< HEAD
         server = "https://gateway.dweb.me"
-=======
-        server = "http://gateway.dweb.me"
->>>>>>> origin/deployable
         #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         name = {
             # expires:   # Not needed, a later dated version is sufficient.
