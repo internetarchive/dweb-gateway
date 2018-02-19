@@ -100,7 +100,7 @@ class TransportIPFS(Transport):
         else:   # Need to store via "add"
             if not data or not mimetype:
                 (data, mimetype) = httpget(urlfrom, wantmime=True)
-            if not isinstance(data, str):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
+            if not isinstance(data, (str,bytes)):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
                 data = dumps(data)
             url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, **options)
         return url

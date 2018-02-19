@@ -3,6 +3,7 @@ import socket
 config = {
     "archive": {
         "url_download": "https://archive.org/download/",
+        "url_servicesimg": "https://archive.org/services/img",
     },
     "ipfs": {
         "url_add_data": "http://localhost:5001/api/v0/add", # FOr use on gateway or if run "ipfs daemon" on test machine
