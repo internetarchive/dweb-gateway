@@ -20,6 +20,10 @@ config = {
     },
     "directories": {
         "bootloader": "/usr/local/dweb-transport/examples/bootloader.html",
+    },
+    "logging": {
+        "filename": '/Users/mitra/temp/dweb_gateway.log',
+        "level": logging.DEBUG
     }
 }
 
@@ -27,6 +31,7 @@ if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
 elif socket.gethostname().startswith('mitraglass'):
     config["directories"]["bootloader"] = "/Users/mitra/git/_github_internetarchive/dweb-transport/examples/bootloader.html"
+    config["logging"] = { "level": logging.DEBUG }  #Not to file
 else:
     print("Needs configuring for {}".format(socket.gethostname()))
 
