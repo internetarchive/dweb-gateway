@@ -164,6 +164,12 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         verbose = kwargs.get("verbose")
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).magnetlink(verbose=verbose, headers=True)
 
+    @exposed
+    def thumbnail(self, namespace, *args, **kwargs):
+        # Get a thumbnail image - required because https://archive.org/service/img/<itemid> has CORS issues
+        verbose = kwargs.get("verbose")
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).thumbnail(verbose=verbose, headers=True)
+
     ###### A group for handling Key Value Stores #########
     @exposed
     def set(self, namespace, *args, verbose=False, **kwargs):

@@ -117,7 +117,8 @@ class ArchiveItem(NameResolverDir):
         if not obj._metadata:  # metadata retrieval failed, itemid probably false
             raise ArchiveItemNotFound(itemid=itemid)
         obj.setmagnetlink(wantmodified=True, wanttorrent=kwargs.get("wanttorrent", False), verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
-        obj.thumbnail()  # Set the thumbnail field
+        if not obj._metadata["metadata"].get("thumbnaillinks"):  # Set thumbnaillinks if not done already - can be slow as loads to IPFS
+            obj._metadata["metadata"]["thumbnaillinks"] = obj.item2thumbnail(obj.itemid, verbose)
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
@@ -253,7 +254,7 @@ class ArchiveItem(NameResolverDir):
         Set the thumbnail field if not set and return list of urls
         :return:
         """
-        archive_servicesimgurl = "{}/{}".format(config["archive"]["url_servicesimg"],
+        archive_servicesimgurl = "{}{}".format(config["archive"]["url_servicesimg"],
                                                 itemid)  # Note similar code in torrentdata
         thumbnailipfsurl = ThumbnailIPFSfromItemIdService.get(itemid)
         if not thumbnailipfsurl:  # Dont have IPFS URL
@@ -264,15 +265,9 @@ class ArchiveItem(NameResolverDir):
             ThumbnailIPFSfromItemIdService.set(itemid, thumbnailipfsurl)
         return [thumbnailipfsurl, archive_servicesimgurl]
 
-    def thumbnail(self, verbose=False):
-        """
-        Set the thumbnail field if not set and return list of urls
-        :return:
-        """
-        if not self._metadata["metadata"].get("thumbnaillinks"):  # Its quick if already set
-            self._metadata["metadata"]["thumbnaillinks"] = self.item2thumbnail(self.itemid, verbose)
-        return self._metadata["metadata"].get("thumbnaillinks")
-
+    def thumbnail(self, headers=True, verbose=False):
+        (data, mimetype) = httpget("{}{}".format(config["archive"]["url_servicesimg"], self.itemid), wantmime=True)
+        return {"Content-type": mimetype, "data": data} if headers else data
 
 # noinspection PyProtectedMember
 class ArchiveFile(NameResolverFile):

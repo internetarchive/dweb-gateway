@@ -113,7 +113,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 kwargs.update(postvars)
 
                 cmds = [self.command + "_" + cmd, cmd, self.command + "_" + cmd.replace(".","_"), cmd.replace(".","_")]
-                func = next(getattr(self, c, None) for c in cmds if getattr(self, c, None))
+                try:
+                    func = next(getattr(self, c, None) for c in cmds if getattr(self, c, None))
+                except StopIteration:
+                    func = None
                 #func = getattr(self, self.command + "_" + cmd, None) or getattr(self, cmd, None) # self.POST_foo or self.foo (should be a method)
                 if not func or (self.onlyexposed and not func.exposed):
                     raise HTTPdispatcherException(req=cmd)  # Will be caught in except
