@@ -301,10 +301,10 @@ class ArchiveFile(NameResolverFile):
 
     def cache_content(self):
         # Currently remaining args an kwargs ignored
-        if not obj.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
-            cached = super(ArchiveFile, self).cache_content(obj.archive_url, transport, verbose)  # Setup for IPFS and contenthash returns {ipldhash}
+        if not self.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
+            cached = super(ArchiveFile, self).cache_content(self.archive_url, transport, verbose)  # Setup for IPFS and contenthash returns {ipldhash}
             if cached.get("ipldhash") is not None:
-                obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
+                self._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
 
     def check(self, verbose):
         (data, mimetype) = httpget(self.archive_url, wantmime=True)
