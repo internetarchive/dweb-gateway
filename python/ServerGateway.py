@@ -135,7 +135,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def metadata(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(headers=True, verbose=verbose)   # { Content-Type: xxx; data: "bytes" }
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(headers=True, **kwargs)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def contenthash(self, namespace, *args, **kwargs):

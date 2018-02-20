@@ -279,7 +279,6 @@ class ArchiveFile(NameResolverFile):
     @classmethod
     def new(cls, namespace, itemid, filename, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        transport = kwargs.get("transport")  # None or list of transports
         if verbose: logging.debug("ArchiveFile: {}/{}".format(itemid, filename))
         obj = super(ArchiveFile, cls).new(namespace, itemid, filename, *args, **kwargs)
         obj.itemid = itemid
@@ -299,7 +298,7 @@ class ArchiveFile(NameResolverFile):
         # obj.check(verbose)
         return obj
 
-    def cache_content(self):
+    def cache_content(self, transport, verbose):
         # Currently remaining args an kwargs ignored
         if not self.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
             cached = super(ArchiveFile, self).cache_content(self.archive_url, transport, verbose)  # Setup for IPFS and contenthash returns {ipldhash}
@@ -311,14 +310,15 @@ class ArchiveFile(NameResolverFile):
         assert self.mimetype == mimetype, "mimetype mismatch on {}/{}".format(self.itemid, self.filename)
         self.multihash.check(data)
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         """
         Return metadata for file - note in most cases for a ArchiveFile its metadata is returned from its parent ArchiveItem
         :param verbose:
         :param headers: true if should return encapsulated in suitable headers for returning to http
         :return:
         """
-        self.cache_content();               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
+        transport = kwargs.get("transport")  # None or list of transports
+        self.cache_content(transport, verbose);               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
