@@ -3,6 +3,7 @@ import logging
 from magneturi import bencode
 import base64
 import hashlib
+import requests
 import urllib.parse
 from datetime import datetime
 from .NameResolver import NameResolverDir, NameResolverFile
@@ -159,9 +160,13 @@ class ArchiveItem(NameResolverDir):
                     if len(ff) > 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
                     torrentfilemeta = ff[0]
                     torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
-                    torrentcontents = httpget(torrentfileurl, wantmime=False)
                     try:
-                        # noinspection PyAttributeOutsideInit
+                        torrentcontents = httpget(torrentfileurl, wantmime=False)
+                    except requests.exceptions.HTTPError as e:
+                        logging.warning("Inaccessible torrent at {}, {}".format(torrentfileurl, e))
+                        return  # Its ok if cant get a torrent
+                    try:
+                    # noinspection PyAttributeOutsideInit
                         self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
                     except bencode.DecodingException as e:
                         # Probably a magneturi.bencode.DecodingException - there are lots of bad torrents, mostly skipped cos files too big (according to Aaron Ximm)
