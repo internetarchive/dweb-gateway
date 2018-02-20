@@ -337,7 +337,8 @@ class ArchiveFile(NameResolverFile):
         return data
 
     def content(self, _headers=None, verbose=False, **kwargs):   # Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
-        return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers, verbose=verbose)}
+        (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range"))
+        return {"Content-type": self.mimetype, "data": data}
 
 
 class ArchiveFilePadding(ArchiveFile):
