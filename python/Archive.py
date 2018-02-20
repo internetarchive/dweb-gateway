@@ -291,11 +291,6 @@ class ArchiveFile(NameResolverFile):
         else:
             obj.multihash = None
             logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
-        # Currently remaining args an kwargs ignored
-        if not obj.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
-            cached = obj.cache_content(obj.archive_url, transport, verbose)  # Setup for IPFS and contenthash {ipldhash}
-            if cached.get("ipldhash") is not None:
-                obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
         if obj.parent._metadata["metadata"].get("magnetlink"):
             obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
         if obj.multihash:  # For the _files.xml there is no SHA1 and if didn't fetch to cache for IPFS then we cant set it
@@ -303,6 +298,13 @@ class ArchiveFile(NameResolverFile):
         # Comment out next line unless checking integrity
         # obj.check(verbose)
         return obj
+
+    def cache_content(self):
+        # Currently remaining args an kwargs ignored
+        if not obj.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
+            cached = super(ArchiveFile, self).cache_content(obj.archive_url, transport, verbose)  # Setup for IPFS and contenthash returns {ipldhash}
+            if cached.get("ipldhash") is not None:
+                obj._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
 
     def check(self, verbose):
         (data, mimetype) = httpget(self.archive_url, wantmime=True)
@@ -316,6 +318,7 @@ class ArchiveFile(NameResolverFile):
         :param headers: true if should return encapsulated in suitable headers for returning to http
         :return:
         """
+        self.cache_content();               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
