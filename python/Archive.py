@@ -160,8 +160,13 @@ class ArchiveItem(NameResolverDir):
                     torrentfilemeta = ff[0]
                     torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
                     torrentcontents = httpget(torrentfileurl, wantmime=False)
-                    # noinspection PyAttributeOutsideInit
-                    self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
+                    try:
+                        # noinspection PyAttributeOutsideInit
+                        self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
+                    except bencode.DecodingException as e:
+                        # Probably a magneturi.bencode.DecodingException - there are lots of bad torrents, mostly skipped cos files too big (according to Aaron Ximm)
+                        logging.warning("Bad Torrent file at: {}".format(torrentfileurl))
+                        return  # Dont need to throw an error - we'll just skip it
                     assert (bencode.bencode(self.torrentdata) == torrentcontents)
                     hash_contents = bencode.bencode(self.torrentdata['info'])
                     digest = hashlib.sha1(hash_contents).digest()
@@ -194,7 +199,7 @@ class ArchiveItem(NameResolverDir):
                     MagnetLinkService.btihset(b32hashascii, magnetlink, verbose)  # Cache mapping from torrenthash to magnetlink
             if magnetlink:
                 self._metadata["metadata"]["magnetlink"] = magnetlink  # Store on metadata if have one
-        if verbose: logging.info("XXX@170: {}, {}".format(self.itemid, magnetlink))
+        if verbose: logging.info("Magnetlink for {} = {}".format(self.itemid, magnetlink))
 
     def torrent(self, headers=True, verbose=False):
         """
