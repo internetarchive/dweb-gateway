@@ -113,7 +113,7 @@ class DOI(NameResolverDir):
         # Currently Nothing done here other than superclass adding to list.
         super(DOI, self).push(doifile)
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         data = {
             "doi": self.doi,
             'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
@@ -274,7 +274,7 @@ class DOIfile(NameResolverFile):    # Note plural
         """
         return httpget(self.url)    #TODO-STREAM handle streams from URl
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         data = {
             "doi": self.doi,
             'metadata': self._metadata,  # Archive generated metadata - there isnt any, its all at files level for DOI
@@ -309,7 +309,7 @@ class DOIsearchItem(NameResolverSearchItem):
                 result['authors'] = [result['authors'], ]
         self._metadata = result
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         mimetype = 'application/json';
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
         # Will match elastic_schema.json  which is doi, title, author, journal, date, publisher, topic, media
@@ -365,7 +365,7 @@ class DOIsearch(NameResolverSearch):
         self.count_returned = len(self._list)
         self.highlight = do_highlight
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         """
         Return metadata in a useful form for the HTML query
 

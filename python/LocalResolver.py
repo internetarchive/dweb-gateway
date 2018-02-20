@@ -92,7 +92,7 @@ class LocalResolverList(LocalResolver):
         obj._contenthash = Multihash(multihash58=hash)
         return obj
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         data = self.transport(verbose=verbose).rawlist(self._contenthash.multihash58, verbose=verbose)
         mimetype = 'application/json';
         return {"Content-type": mimetype, "data": data} if headers else data

@@ -72,7 +72,7 @@ class NameResolver(object):
         """
         return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers)}
 
-    def metadata(self, verbose=False):
+    def metadata(self, verbose=False, **kwargs):
         """
 
         :return:

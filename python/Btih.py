@@ -71,7 +71,7 @@ class BtihResolver(NameResolverDir):
             'data': data,
             }
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         """
         :param verbose:
         :return:

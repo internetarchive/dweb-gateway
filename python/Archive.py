@@ -63,7 +63,7 @@ class AdvancedSearch(NameResolverDir):
         if verbose: logging.debug("AdvancedSearch found {0} items".format(len(obj._list)))
         return obj
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         """
         Pass metadata (i.e. what retrieved in AdancedSearcch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
@@ -133,7 +133,7 @@ class ArchiveItem(NameResolverDir):
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
-    def metadata(self, headers=True, verbose=False):
+    def metadata(self, headers=True, verbose=False, **kwargs):
         """
         Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
