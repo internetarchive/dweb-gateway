@@ -146,12 +146,14 @@ def resetipfs(removeipfs=False, reseedipfs=False):
     reseeded = 0
     removed = 0
     total = 0
+    withipfs = 0
     for i in r.scan_iter():
         total = total+1
         for k in [ "ipldhash", "thumbnailipfs" ]:
             ipfs = r.hget(i, k)
             #print(i, ipfs)
             if ipfs:
+                withipfs = withipfs + 1
                 ipfs = ipfs.replace("ipfs:/ipfs/", "")
                 if removeipfs:
                     r.hdel(i, "ipldhash")
@@ -160,4 +162,4 @@ def resetipfs(removeipfs=False, reseedipfs=False):
                     print("Reseeding", i, ipfs)
                     TransportIPFS().pinggateway(ipfs)
                     reseeded = reseeded + 1
-    print ("Scanned {}, deleted {}, reseeded {}".format(total, removed, reseeded))
+    print ("Scanned {}, withipfs {}, deleted {}, reseeded {}".format(total, withipfs, removed, reseeded))
