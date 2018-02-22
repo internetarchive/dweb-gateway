@@ -201,14 +201,14 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     #### A group for handling naming #####
 
     @exposed
-    def name(self, namespace, *args, verbose=False, key=None, **kwargs):
+    def leaf(self, namespace, *args, verbose=False, key=None, **kwargs):
         """
         This needs to catch the special case of /name/archiveid?key=xyz
         """
         verbose = kwargs.get("verbose")
         args = list(args)
         if key: args.append(key)              # Push key into place normally held by itemid in URL of archiveid/xyz
-        return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).name(headers=True, verbose=verbose, **kwargs)
+        return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).leaf(headers=True, verbose=verbose, **kwargs)
 
     #### A group that breaks the naming convention####
     # urls of form https://gateway.dweb.me/archive.org/details/foo, conceptually to be moved to dweb.archive.org/details/foo

@@ -215,9 +215,9 @@ class ArchiveItem(NameResolverDir):
         data = bencode.bencode(self.torrentdata)   # Set in ArchiveItem.new > setmagnetlink
         return {"Content-type": mimetype, "data": data} if headers else data
 
-    def name(self, headers=True, verbose=False):
+    def leaf(self, headers=True, verbose=False):
         """
-        Resolve names to a pointer to a metadata record
+        Resolve names to a Lead (a pointer to a metadata record)
 
         :param headers:
         :param verbose:
@@ -234,7 +234,7 @@ class ArchiveItem(NameResolverDir):
         pkeymetadatadomain = config["domains"]["metadata"]
         server = "https://gateway.dweb.me"
         #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
-        name = {
+        leaf = {
             # expires:   # Not needed, a later dated version is sufficient.
             "fullname": "/arc/archive.org/metadata/{}".format(self.itemid),
             "signatures": [],
@@ -242,20 +242,20 @@ class ArchiveItem(NameResolverDir):
             "urls": [ipfsurl, "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
-        signable = dumps({"date": datenow, "signed": {k: name.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
+        signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
         keypair = None  # TODO-DOMAIN need keypair, which might mean porting the old library.
         signature = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature and sign "signable"
         pubkeyexport = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature
-        name["signatures"].append({"date": datenow, "signature": signature, "signedby": pubkeyexport})
-        # TODO-DOMAIN now have encapsulated name
+        leaf["signatures"].append({"date": datenow, "signature": signature, "signedby": pubkeyexport})
+        # TODO-DOMAIN now have encapsulated leaf
         # Store the domain in the http domain server, its also always going to be retrievable from this gateway, we cant write to YJS, but a client can copy it TODO-DOMAIN
         # Next two lines would be if adding to HTTP on different machine, instead assuming this machine *is* the KeyValueTable we can go direct.
         # tableurl = "{}/get/table/{}/domains".format(server, pkeymetadatadomain)
-        # TransportHTTP().set(tableurl, self.itemid, dumps(name), verbose)  # TODO-DOMAIN need to write TransportHTTP
+        # TransportHTTP().set(tableurl, self.itemid, dumps(leaf), verbose)  # TODO-DOMAIN need to write TransportHTTP
         KeyValueTable.new("table", pkeymetadatadomain, "domain", verbose=verbose)\
-            .set(headers=False, verbose=verbose, data=[{"key": self.itemid, "value": dumps(name)}])
+            .set(headers=False, verbose=verbose, data=[{"key": self.itemid, "value": dumps(leaf)}])
         mimetype = 'application/json'
-        data = {self.itemid: dumps(name)}
+        data = {self.itemid: dumps(leaf)}
         return {"Content-type": mimetype, "data": data} if headers else data
 
     @classmethod
