@@ -4,7 +4,7 @@ Hash Store set of classes for storage and retrieval
 import redis
 import logging
 from .Errors import CodingException
-
+from .TransportIPFS import TransportIPFS
 
 class HashStore(object):
     """
@@ -140,11 +140,24 @@ class MagnetLinkService(HashStore):
         return cls.set("archiveid:" + archiveid, value)
 
 
-def resetipfs():
+def resetipfs(removeipfs=False, reseedipfs=False):
+    #logging.basicConfig(level=logging.DEBUG)
     r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
+    reseeded = 0
+    removed = 0
+    total = 0
     for i in r.scan_iter():
-        ipfs = r.hget(i, "ipldhash")
-        print(i, ipfs)
-        if ipfs:
-            r.hdel(i, "ipldhash")
-            j = j + 1
+        total = total+1
+        for k in [ "ipldhash", "thumbnailipfs" ]:
+            ipfs = r.hget(i, k)
+            #print(i, ipfs)
+            if ipfs:
+                ipfs = ipfs.replace("ipfs:/ipfs/", "")
+                if removeipfs:
+                    r.hdel(i, "ipldhash")
+                    removed = removed + 1
+                if reseedipfs:
+                    print("Reseeding", i, ipfs)
+                    TransportIPFS().pinggateway(ipfs)
+                    reseeded = reseeded + 1
+    print ("Scanned {}, deleted {}, reseeded {}".format(total, removed, reseeded))

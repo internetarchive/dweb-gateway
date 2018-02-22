@@ -51,6 +51,21 @@ class TransportIPFS(Transport):
         """
         raise ToBeImplementedException(name="TransportIPFS.rawfetch")
 
+    def pinggateway(self, ipldhash):
+        """
+        Pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
+        This next line is to get around bug in IPFS propogation
+        See https://github.com/ipfs/js-ipfs/issues/1156
+        Feb2018: Note this is waiting on a workaround by IPFS (David > Kyle > Lars )
+        : param ipldhash    Hash of form z... or Q....  or array of ipldhash
+        """
+        if isinstance(ipldhash, (list,tuple,set)):
+            for i in ipldhash:
+                self.pinggateway(i)
+        ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
+        res = requests.head(ipfsgatewayurl);  # Going to ignore the result
+        logging.debug("Transportipfs.pinggateway workaround for JS-IPFS issue #1156 - pin gateway for {}".format(ipfsgatewayurl))
+
     def rawstore(self, data=None, verbose=False, returns=None, mimetype=None, **options):
         """
         Store the data on IPFS
@@ -66,12 +81,7 @@ class TransportIPFS(Transport):
         res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
         logging.debug("IPFS result={}".format(res))
         ipldhash = res['Hash']
-        # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
-        # This next line is to get around bug in IPFS propogation
-        # See https://github.com/ipfs/js-ipfs/issues/1156
-        ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
-        res = requests.head(ipfsgatewayurl);  # Going to ignore the result
-        logging.debug("XXX@transportipfs.rawstore - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
+        self.pinggateway(ipldhash)
         return "ipfs:/ipfs/{}".format(ipldhash)
 
     def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, returns=None, **options):
