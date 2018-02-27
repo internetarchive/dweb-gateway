@@ -65,8 +65,9 @@ class AdvancedSearch(NameResolverDir):
         obj.res = loads(res)  # TODO unsure if there are any possible errors, and if so how to handle them.
         for doc in obj.res["response"]["docs"]:
             doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["identifier"], verbose)
-            doc["collection0title"] = cls.collectionTitle(doc["collection"][0], verbose)
-            doc["collection0thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["collection"][0], verbose)
+            collection0id = doc["collection"][0] if isinstance(doc["collection"], (list, tuple, set)) else doc["collection"]
+            doc["collection0title"] = cls.collectionTitle(collection0id, verbose)
+            doc["collection0thumbnaillinks"] = ArchiveItem.item2thumbnail(collection0id, verbose)
         obj._list = obj.res["response"]["docs"]  # TODO probably wrong, as prob needs to be NameResolver instances
         if verbose: logging.debug("AdvancedSearch found {0} items".format(len(obj._list)))
         return obj
@@ -144,7 +145,6 @@ class ArchiveItem(NameResolverDir):
         obj.setmagnetlink(wantmodified=True, wanttorrent=kwargs.get("wanttorrent", False), verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
         if not obj._metadata["metadata"].get("thumbnaillinks"):  # Set thumbnaillinks if not done already - can be slow as loads to IPFS
             obj._metadata["metadata"]["thumbnaillinks"] = obj.item2thumbnail(obj.itemid, verbose)
-        obj._metadata["collection_titles"] = { k: AdvancedSearch.collectionTitle(k,verbose) for k in obj._metadata["metadata"]["collection"] }
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
@@ -164,6 +164,10 @@ class ArchiveItem(NameResolverDir):
         Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
+        obj._metadata["collection_titles"] = {k: AdvancedSearch.collectionTitle(k, verbose) for k in
+                                              (obj._metadata["metadata"]["collection"]
+                                               if isinstance(obj._metadata["metadata"]["collection"], (list, tuple, set))
+                                               else [ obj._metadata["metadata"]["collection"]])}
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
