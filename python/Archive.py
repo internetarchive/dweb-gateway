@@ -10,11 +10,16 @@ from .NameResolver import NameResolverDir, NameResolverFile
 from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
-from .Errors import CodingException, MyBaseException
-from .HashStore import MagnetLinkService, ThumbnailIPFSfromItemIdService
+from .Errors import CodingException, MyBaseException, IPFSException
+from .HashStore import MagnetLinkService, ThumbnailIPFSfromItemIdService, TitleService
 from .TransportIPFS import TransportIPFS
 from .LocalResolver import KeyValueTable
 
+archiveconfig = {
+    "staticnames": {    # Build static collection names here for fake collections that dont respond to search below
+        # "additional-collections": "Additional Collections", # Looks like typo for additional_collections
+    },
+}
 
 class ArchiveItemNotFound(MyBaseException):
     httperror = 404
@@ -60,6 +65,8 @@ class AdvancedSearch(NameResolverDir):
         obj.res = loads(res)  # TODO unsure if there are any possible errors, and if so how to handle them.
         for doc in obj.res["response"]["docs"]:
             doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["identifier"], verbose)
+            doc["collection0title"] = cls.collectionTitle(doc["collection"][0], verbose)
+            doc["collection0thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["collection"][0], verbose)
         obj._list = obj.res["response"]["docs"]  # TODO probably wrong, as prob needs to be NameResolver instances
         if verbose: logging.debug("AdvancedSearch found {0} items".format(len(obj._list)))
         return obj
@@ -73,6 +80,23 @@ class AdvancedSearch(NameResolverDir):
         # noinspection PyUnresolvedReferences
         return {"Content-type": mimetype, "data": self.res} if headers else self.res
 
+    @classmethod
+    def collectionTitle(cls, itemid, verbose=False):
+        if itemid.startswith('fav-'):
+            return itemid[4:] + " favorites"
+        if itemid in archiveconfig["staticnames"]:
+            return archiveconfig["staticnames"][itemid]
+        cached = TitleService.archiveidget(itemid, verbose)
+        if cached:
+            return cached
+        query = "https://archive.org/advancedsearch.php?" + '&'.join([k + "=" + v for (k, v) in {'q': 'identifier:'+itemid, 'fl': 'title', 'output': 'json'}.items()])
+        try:
+            title = loads(httpget(query))["response"]["docs"][0]["title"]
+            TitleService.archiveidset(itemid, title, verbose)
+        except Exception as e:
+            logging.error("Couldnt find collection title for {}, err={}".format(itemid, e))
+            title = ""
+        return title
 
 # noinspection PyUnresolvedReferences
 class ArchiveItem(NameResolverDir):
@@ -120,6 +144,7 @@ class ArchiveItem(NameResolverDir):
         obj.setmagnetlink(wantmodified=True, wanttorrent=kwargs.get("wanttorrent", False), verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
         if not obj._metadata["metadata"].get("thumbnaillinks"):  # Set thumbnaillinks if not done already - can be slow as loads to IPFS
             obj._metadata["metadata"]["thumbnaillinks"] = obj.item2thumbnail(obj.itemid, verbose)
+        obj._metadata["collection_titles"] = { k: AdvancedSearch.collectionTitle(k,verbose) for k in obj._metadata["metadata"]["collection"] }
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
@@ -221,6 +246,7 @@ class ArchiveItem(NameResolverDir):
 
         :param headers:
         :param verbose:
+        :raises: IPFSException if cant reach IPFS
         :return:
         """
         # TODO-DOMAIN - push metadata to IPFS, save IPFS hash
@@ -229,7 +255,10 @@ class ArchiveItem(NameResolverDir):
         # TODO-DOMAIN - return Name record to caller
         metadata = self.metadata(headers=False, verbose=verbose)
         # Store in IPFS, note cant use urlstore on IPFS as metadata is mutable
-        ipfsurl = TransportIPFS().store(data=metadata, verbose=verbose, mimetype="application/json")
+        try:
+            ipfsurl = TransportIPFS().store(data=metadata, verbose=verbose, mimetype="application/json")
+        except Exception as e:
+            raise IPFSException(message=e)
         # TODO-DOMAIN probably encapsulate construction of name once all tested
         pkeymetadatadomain = config["domains"]["metadata"]
         server = "https://gateway.dweb.me"
@@ -262,7 +291,7 @@ class ArchiveItem(NameResolverDir):
     def item2thumbnail(cls, itemid, verbose=False):
         """
         Set the thumbnail field if not set and return list of urls
-        :return:
+        :return:    Array of links to thumbnail - usually IPFS, then HTTP via gateway
         """
         archive_servicesimgurl = "{}{}".format(config["archive"]["url_servicesimg"], itemid)  # Note similar code in torrentdata
         archive_servicesimgurl_cors = "{}{}".format(config["gateway"]["url_servicesimg"], itemid)  # Note similar code in torrentdata

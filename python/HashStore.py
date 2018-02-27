@@ -90,6 +90,15 @@ class HashStore(object):
         """
         return cls.hash_get(multihash, cls.redisfield, verbose)
 
+    @classmethod
+    def archiveidget(cls, itemid, verbose=False):
+        return cls.get("archiveid:"+itemid)
+
+    @classmethod
+    def archiveidset(cls, itemid, value, verbose=False):
+        return cls.set("archiveid:" + itemid, value)
+
+
 class LocationService(HashStore):
     """
     OLD NOTES
@@ -121,6 +130,7 @@ class ThumbnailIPFSfromItemIdService(HashStore):
     redisfield = "thumbnailipfs"
 
 class MagnetLinkService(HashStore):
+    # uses archiveidset/get
     redisfield = "magnetlink"
 
     @classmethod
@@ -128,16 +138,14 @@ class MagnetLinkService(HashStore):
         return cls.get("btih:"+btihhash)
 
     @classmethod
-    def archiveidget(cls, btihhash, verbose=False):
-        return cls.get("archiveid:"+btihhash)
-
-    @classmethod
     def btihset(cls, btihhash, value, verbose=False):
         return cls.set("btih:"+btihhash, value)
 
-    @classmethod
-    def archiveidset(cls, archiveid, value, verbose=False):
-        return cls.set("archiveid:" + archiveid, value)
+class TitleService(HashStore):
+    # Cache collection names, they dont change often enough to worry
+    # uses archiveidset/get
+    # TODO-REDIS note this is caching for ever, which is generally a bad idea ! Should figure out how to make Redis expire this cache every few days
+    redisfield = "title"
 
 
 def resetipfs(removeipfs=False, reseedipfs=False):

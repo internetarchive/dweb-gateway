@@ -24,17 +24,17 @@ def test_archiveid():
     if verbose: logging.debug("test_archiveid magnetlink returned {0}".format(res))
     assert res["data"] == magnetlink
 
-def test_name():
+def test_leaf():
     verbose=False
-    if verbose: logging.debug("Starting test_name")
-    # Test it can respond to name requests
+    if verbose: logging.debug("Starting test_leaf")
+    # Test it can respond to leaf requests
     item = "commute"
-    nameurl="name/archiveid"
-    res = _processurl(nameurl, verbose=verbose, key=item)  # Simulate what the server would do with the URL
-    if verbose: logging.debug("{} returned {}".format(nameurl, res))
-    nameurl="get/table/{}/domain".format(config["domains"]["metadata"])
-    res = _processurl(nameurl, verbose=verbose, key=item) # Should get value cached above
-    if verbose: logging.debug("{} returned {}".format(nameurl, res))
+    leafurl="leaf/archiveid"
+    res = _processurl(leafurl, verbose=verbose, key=item)  # Simulate what the server would do with the URL
+    if verbose: logging.debug("{} returned {}".format(leafurl, res))
+    leafurl="get/table/{}/domain".format(config["domains"]["metadata"])
+    res = _processurl(leafurl, verbose=verbose, key=item) # Should get value cached above
+    if verbose: logging.debug("{} returned {}".format(leafurl, res))
 
 def test_archiveerrs():
     verbose=True

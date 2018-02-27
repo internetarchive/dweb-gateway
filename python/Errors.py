@@ -31,6 +31,10 @@ class ToBeImplementedException(MyBaseException):
 
 # Note TransportError is in Transport.py
 
+class IPFSException(MyBaseException):
+    httperror = 500
+    msg = "IPFS Error: {message}"
+
 class CodingException(MyBaseException):
     httperror = 501
     msg = "Coding Error: {message}"
