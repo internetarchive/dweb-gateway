@@ -24,6 +24,12 @@ def test_archiveid():
     if verbose: logging.debug("test_archiveid magnetlink returned {0}".format(res))
     assert res["data"] == magnetlink
 
+def test_collectionsortorder():
+    verbose=True
+    itemid="prelinger"
+    res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+    assert res["data"]["collection_sort_order"] == "downloads"
+
 def test_leaf():
     verbose=False
     if verbose: logging.debug("Starting test_leaf")

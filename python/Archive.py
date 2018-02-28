@@ -19,6 +19,23 @@ archiveconfig = {
     "staticnames": {    # Build static collection names here for fake collections that dont respond to search below
         # "additional-collections": "Additional Collections", # Looks like typo for additional_collections
     },
+    # tv* from petabox/TV.inc/is_tv_collection()
+    # rest from petabox/collection.php
+    'sortorder': {   # This defines a collections sort order based on its id.
+        'lastupdate': [],
+        'publicdate': ['tvnews'],
+        'reviewdate': ['librivoxaudio', 'library_of_congress'],
+        'date': ['peterboroughcitydirectories', 'democracy_now', 'democracy_now_vid', 'ianewsletter',
+                 'eastridgechurchofchrist', 'lighthousebaptistchurch' ],
+        'titleSorter': ['densho']
+    },
+    'parentsortorder': {    # This defines a collections sort order if the collection appears in another specific collection
+        'publicdate': ['tvnews', 'tvarchive', ],
+        'date': ['podcasts', 'audio_podcast', 'community_media'],
+        'titleSorter': ['densho'],
+    },
+    'excludefromparentsortoder': [ 'TVNewsKitchen']
+
 }
 
 class ArchiveItemNotFound(MyBaseException):
@@ -159,6 +176,22 @@ class ArchiveItem(NameResolverDir):
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
+
+
+    def _collectionsortorder(self, id, collections):
+        # TVNewsKitchen comes from petabox/TV.inc/is_tv_collection()
+        if id.startswith('fav-'): # is_list would be true
+            return 'updatedate'
+        for k,v in archiveconfig["sortorder"].items():
+            if self._metadata["metadata"]["identifier"] in v:
+                return k
+        if id not in archiveconfig["excludefromparentsortoder"]: # In one of these collections, but sort order wrong
+            for k,v in archiveconfig["parentsortorder"].items():
+                for c in collections:
+                    if c in v:
+                        return k
+        return 'downloads' # Default
+
     def metadata(self, headers=True, verbose=False, **kwargs):
         """
         Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
@@ -168,6 +201,10 @@ class ArchiveItem(NameResolverDir):
                                               (self._metadata["metadata"]["collection"]
                                                if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
                                                else [ self._metadata["metadata"]["collection"]])}
+        if self._metadata["is_collection"]:
+            collections = self._metadata["metadata"]["collection"]
+            if not isinstance(collections, (tuple, list, set)): collections = [ collections ]
+            self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections )
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
