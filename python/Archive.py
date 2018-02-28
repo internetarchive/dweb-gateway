@@ -164,10 +164,10 @@ class ArchiveItem(NameResolverDir):
         Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
-        obj._metadata["collection_titles"] = {k: AdvancedSearch.collectionTitle(k, verbose) for k in
-                                              (obj._metadata["metadata"]["collection"]
-                                               if isinstance(obj._metadata["metadata"]["collection"], (list, tuple, set))
-                                               else [ obj._metadata["metadata"]["collection"]])}
+        self._metadata["collection_titles"] = {k: AdvancedSearch.collectionTitle(k, verbose) for k in
+                                              (self._metadata["metadata"]["collection"]
+                                               if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
+                                               else [ self._metadata["metadata"]["collection"]])}
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
