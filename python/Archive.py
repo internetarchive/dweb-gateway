@@ -181,7 +181,7 @@ class ArchiveItem(NameResolverDir):
     def _collectionsortorder(self, id, collections):
         # TVNewsKitchen comes from petabox/TV.inc/is_tv_collection()
         if id.startswith('fav-'): # is_list would be true
-            return 'updatedate'
+            return '-updatedate'
         for k,v in archiveconfig["sortorder"].items():
             if self._metadata["metadata"]["identifier"] in v:
                 return k
@@ -190,7 +190,7 @@ class ArchiveItem(NameResolverDir):
                 for c in collections:
                     if c in v:
                         return k
-        return 'downloads' # Default
+        return '-downloads' # Default
 
     def metadata(self, headers=True, verbose=False, **kwargs):
         """
