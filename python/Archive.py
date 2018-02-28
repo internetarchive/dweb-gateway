@@ -22,16 +22,16 @@ archiveconfig = {
     # tv* from petabox/TV.inc/is_tv_collection()
     # rest from petabox/collection.php
     'sortorder': {   # This defines a collections sort order based on its id.
-        'lastupdate': [],
-        'publicdate': ['tvnews'],
-        'reviewdate': ['librivoxaudio', 'library_of_congress'],
-        'date': ['peterboroughcitydirectories', 'democracy_now', 'democracy_now_vid', 'ianewsletter',
+        '-lastupdate': [],
+        '-publicdate': ['tvnews'],
+        '-reviewdate': ['librivoxaudio', 'library_of_congress'],
+        '-date': ['peterboroughcitydirectories', 'democracy_now', 'democracy_now_vid', 'ianewsletter',
                  'eastridgechurchofchrist', 'lighthousebaptistchurch' ],
         'titleSorter': ['densho']
     },
     'parentsortorder': {    # This defines a collections sort order if the collection appears in another specific collection
-        'publicdate': ['tvnews', 'tvarchive', ],
-        'date': ['podcasts', 'audio_podcast', 'community_media'],
+        '-publicdate': ['tvnews', 'tvarchive', ],
+        '-date': ['podcasts', 'audio_podcast', 'community_media'],
         'titleSorter': ['densho'],
     },
     'excludefromparentsortoder': [ 'TVNewsKitchen']
