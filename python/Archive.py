@@ -201,7 +201,7 @@ class ArchiveItem(NameResolverDir):
                                               (self._metadata["metadata"]["collection"]
                                                if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
                                                else [ self._metadata["metadata"]["collection"]])}
-        if self._metadata["is_collection"]:
+        if self._metadata.get("is_collection"):
             collections = self._metadata["metadata"]["collection"]
             if not isinstance(collections, (tuple, list, set)): collections = [ collections ]
             self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections )
