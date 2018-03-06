@@ -26,7 +26,7 @@ archiveconfig = {
         '-publicdate': ['tvnews'],
         '-reviewdate': ['librivoxaudio', 'library_of_congress'],
         '-date': ['peterboroughcitydirectories', 'democracy_now', 'democracy_now_vid', 'ianewsletter',
-                 'eastridgechurchofchrist', 'lighthousebaptistchurch' ],
+                  'eastridgechurchofchrist', 'lighthousebaptistchurch'],
         'titleSorter': ['densho']
     },
     'parentsortorder': {    # This defines a collections sort order if the collection appears in another specific collection
@@ -34,9 +34,10 @@ archiveconfig = {
         '-date': ['podcasts', 'audio_podcast', 'community_media'],
         'titleSorter': ['densho'],
     },
-    'excludefromparentsortoder': [ 'TVNewsKitchen']
+    'excludefromparentsortoder': ['TVNewsKitchen']
 
 }
+
 
 class ArchiveItemNotFound(MyBaseException):
     httperror = 404
@@ -83,7 +84,7 @@ class AdvancedSearch(NameResolverDir):
         for doc in obj.res["response"]["docs"]:
             doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["identifier"], verbose)
             collection0id = doc["collection"][0] if isinstance(doc["collection"], (list, tuple, set)) else doc["collection"]
-            doc["collection0title"] = cls.collectionTitle(collection0id, verbose)
+            doc["collection0title"] = cls.collectiontitle(collection0id, verbose)
             doc["collection0thumbnaillinks"] = ArchiveItem.item2thumbnail(collection0id, verbose)
         obj._list = obj.res["response"]["docs"]  # TODO probably wrong, as prob needs to be NameResolver instances
         if verbose: logging.debug("AdvancedSearch found {0} items".format(len(obj._list)))
@@ -99,7 +100,7 @@ class AdvancedSearch(NameResolverDir):
         return {"Content-type": mimetype, "data": self.res} if headers else self.res
 
     @classmethod
-    def collectionTitle(cls, itemid, verbose=False):
+    def collectiontitle(cls, itemid, verbose=False):
         if itemid.startswith('fav-'):
             return itemid[4:] + " favorites"
         if itemid in archiveconfig["staticnames"]:
@@ -115,6 +116,7 @@ class AdvancedSearch(NameResolverDir):
             logging.error("Couldnt find collection title for {}, err={}".format(itemid, e))
             title = ""
         return title
+
 
 # noinspection PyUnresolvedReferences
 class ArchiveItem(NameResolverDir):
@@ -176,35 +178,33 @@ class ArchiveItem(NameResolverDir):
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
-
-
     def _collectionsortorder(self, id, collections):
         # TVNewsKitchen comes from petabox/TV.inc/is_tv_collection()
-        if id.startswith('fav-'): # is_list would be true
+        if id.startswith('fav-'):  # is_list would be true
             return '-updatedate'
-        for k,v in archiveconfig["sortorder"].items():
+        for k, v in archiveconfig["sortorder"].items():
             if self._metadata["metadata"]["identifier"] in v:
                 return k
-        if id not in archiveconfig["excludefromparentsortoder"]: # In one of these collections, but sort order wrong
-            for k,v in archiveconfig["parentsortorder"].items():
+        if id not in archiveconfig["excludefromparentsortoder"]:  # In one of these collections, but sort order wrong
+            for k, v in archiveconfig["parentsortorder"].items():
                 for c in collections:
                     if c in v:
                         return k
-        return '-downloads' # Default
+        return '-downloads'  # Default
 
     def metadata(self, headers=True, verbose=False, **kwargs):
         """
         Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
-        self._metadata["collection_titles"] = {k: AdvancedSearch.collectionTitle(k, verbose) for k in
-                                              (self._metadata["metadata"]["collection"]
-                                               if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
-                                               else [ self._metadata["metadata"]["collection"]])}
+        self._metadata["collection_titles"] = {k: AdvancedSearch.collectiontitle(k, verbose) for k in
+                                                (self._metadata["metadata"]["collection"]
+                                                if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
+                                                else [self._metadata["metadata"]["collection"]])}
         if self._metadata.get("is_collection"):
             collections = self._metadata["metadata"]["collection"]
-            if not isinstance(collections, (tuple, list, set)): collections = [ collections ]
-            self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections )
+            if not isinstance(collections, (tuple, list, set)): collections = [collections]
+            self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections)
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
@@ -221,18 +221,22 @@ class ArchiveItem(NameResolverDir):
         if not magnetlink or wanttorrent:  # Skip if its already set.
             magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for cached version
             if not magnetlink or wanttorrent:  # If not cached then build new one
-                ff = [f for f in self._metadata["files"] if f.get("format") == "Archive BitTorrent"]  # Should be one or none
-                if len(ff):
-                    if len(ff) > 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
-                    torrentfilemeta = ff[0]
-                    torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
+                # Old way, deprecated as in http://archive.org/metadata/artsandmusicvideos/files there are two _archive.torrent files
+                #ff = [f for f in self._metadata["files"] if f.get("format") == "Archive BitTorrent"]  # Should be one or none
+                #if len(ff):
+                #    if len(ff) > 1: raise CodingException(message='Should be exactly one "Archive BitTorrent" file')
+                #    torrentfilename = ff[0]["name"]
+                # NEW way - assume its named <itemid>_archive.torrent
+                torrentfilename = self.itemid + "_archive.torrent"
+                if len([f for f in self._metadata["files"] if f.get("name") == torrentfilename]):  # Its in the files list
+                    torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilename)
                     try:
                         torrentcontents = httpget(torrentfileurl, wantmime=False)
                     except requests.exceptions.HTTPError as e:
                         logging.warning("Inaccessible torrent at {}, {}".format(torrentfileurl, e))
                         return  # Its ok if cant get a torrent
                     try:
-                    # noinspection PyAttributeOutsideInit
+                        # noinspection PyAttributeOutsideInit
                         self.torrentdata = bencode.bdecode(torrentcontents)  # Convert to a object
                     except bencode.DecodingException as e:
                         # Probably a magneturi.bencode.DecodingException - there are lots of bad torrents, mostly skipped cos files too big (according to Aaron Ximm)
@@ -256,7 +260,7 @@ class ArchiveItem(NameResolverDir):
                         self.torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash
                         externaltorrenturl = "{}{}".format(config["gateway"]["url_torrent"], self.itemid)  # Intentionally no file name, we are modifying it
                     else:
-                        externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilemeta["name"])
+                        externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], self.itemid, torrentfilename)
                     magnetlink = ''.join([
                         'magnet:?xt=urn:btih:', b32hashascii,
                         ''.join(['&tr=' + urllib.parse.quote_plus(t[0]) for t in self.torrentdata['announce-list']]),
@@ -340,14 +344,18 @@ class ArchiveItem(NameResolverDir):
         if not thumbnailipfsurl:  # Dont have IPFS URL
             if verbose: logging.debug("Retrieving thumbnail for {}".format(itemid))
             # Store to IPFS and if still reqd then ping the ipfs.io gateway
-            thumbnailipfsurl = TransportIPFS().store(urlfrom=archive_servicesimgurl, verbose=verbose,
-                                                     mimetype="image/PNG")
+            try:
+                thumbnailipfsurl = TransportIPFS().store(urlfrom=archive_servicesimgurl, verbose=verbose, mimetype="image/PNG")
+            except IPFSException as e:
+                logging.error(e)
+                return [archive_servicesimgurl_cors]    # Just return the http URL, dont store in REDIS so will try again next time
             ThumbnailIPFSfromItemIdService.set(itemid, thumbnailipfsurl)
         return [thumbnailipfsurl, archive_servicesimgurl_cors]
 
     def thumbnail(self, headers=True, verbose=False):
         (data, mimetype) = httpget("{}{}".format(config["archive"]["url_servicesimg"], self.itemid), wantmime=True)
         return {"Content-type": mimetype, "data": data} if headers else data
+
 
 # noinspection PyProtectedMember
 class ArchiveFile(NameResolverFile):
@@ -398,7 +406,7 @@ class ArchiveFile(NameResolverFile):
         :return:
         """
         transport = kwargs.get("transport")  # None or list of transports
-        self.cache_content(transport, verbose);               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
+        self.cache_content(transport, verbose)               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 

@@ -5,6 +5,7 @@ from .Transport import Transport
 from .config import config
 import requests # HTTP requests
 from .miscutils import httpget
+from .Errors import IPFSException
 
 
 class TransportIPFS(Transport):
@@ -73,12 +74,18 @@ class TransportIPFS(Transport):
 
         :param data: opaque data to store (currently must be bytes, not str)
         :param returns: Comma separated string if want result as a dict, support "url","contenthash"
+        :raises: IPFSException if cant reach server
         :return: url of data e.g. ipfs:/ipfs/Qm123abc
         """
         assert (not returns), 'Not supporting "returns" parameter to TransportIPFS.store at this point'
         ipfsurl = config["ipfs"]["url_add_data"]
         if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
-        res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
+        try:
+            res = requests.post(ipfsurl, files={'file': ('', data, mimetype)}).json()
+        #except ConnectionError as e:  # TODO - for some reason this never catches even though it reports "ConnectionError" as the class
+        except requests.exceptions.ConnectionError as e:  # Alternative - too broad a catch but not expecting other errors
+            pass
+            raise IPFSException(message="Unable to post to local IPFS at {} it is probably not running or wedged".format(ipfsurl))
         logging.debug("IPFS result={}".format(res))
         ipldhash = res['Hash']
         self.pinggateway(ipldhash)
@@ -93,6 +100,7 @@ class TransportIPFS(Transport):
         :param verbose:
         :param mimetype:
         :param options:
+        :raises: IPFSException if cant reach server
         :return:
         """
         assert (not returns), 'Not supporting "returns" parameter to TransportIPFS.store at this point'
@@ -109,10 +117,10 @@ class TransportIPFS(Transport):
                 url = "ipfs:/ipfs/{}".format(ipldhash)
         else:   # Need to store via "add"
             if not data or not mimetype:
-                (data, mimetype) = httpget(urlfrom, wantmime=True)
+                (data, mimetype) = httpget(urlfrom, wantmime=True) # This is a fetch from somewhere else before putting to gateway
             if not isinstance(data, (str,bytes)):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
                 data = dumps(data)
-            url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, **options)
+            url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, **options) # IPFSException if down
         return url
 
 
