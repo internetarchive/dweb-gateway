@@ -7,6 +7,7 @@ from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile
 from .Archive import ArchiveItem
+from .config import config
 
 
 class HashResolver(NameResolverFile):
@@ -65,7 +66,7 @@ class HashResolver(NameResolverFile):
         verbose = kwargs.get("verbose")
         ch = super(HashResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
         if not ch.url:
-            if verbose: logging.debug("No URL, looking for DOI file for {0}.{1}".format(namespace, hash))
+            if verbose: logging.debug("No URL, looking on archive for {0}.{1}".format(namespace, hash))
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
             # ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
             return ch.searcharchivefor(verbose=verbose)  # Will now be a ArchiveFile
@@ -140,7 +141,10 @@ class HashResolver(NameResolverFile):
             if not self._doifile:
                 self._doifile = DOIfile(multihash=self.multihash, verbose=verbose)    # If not found, dont set url/metadata etc
             self._metadata = self._metadata or (self._doifile and self._doifile.metadata(headers=False, verbose=verbose))
-        mimetype = 'application/json'
+        if not self._metadata and self.url and self.url.startswith(config["archive"]["url_download"]):
+            u = self.url[len(config["archive"]["url_download"]):].split('/')   # [ itemid, filename ]
+            self._metadata = ArchiveFile.new("archiveid", *u).metadata()
+        mimetype = 'application/json'   # Note this is the mimetype of the response, not the mimetype of the file
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
     # def canonical - not needed as already in a canonical form
