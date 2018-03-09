@@ -137,10 +137,12 @@ class HashResolver(NameResolverFile):
         :param headers: true if caller wants HTTP response headers
         :return:
         """
+        logging.info("XXX@HR.metadata m={}, u={}".format(self._metadata, self.url))
         if not self._metadata:
             if not self._doifile:
                 self._doifile = DOIfile(multihash=self.multihash, verbose=verbose)    # If not found, dont set url/metadata etc
             self._metadata = self._metadata or (self._doifile and self._doifile.metadata(headers=False, verbose=verbose))
+        logging.info("XXX@HR.metadata m={}, u={}".format(self._metadata, self.url))
         if not self._metadata and self.url and self.url.startswith(config["archive"]["url_download"]):
             u = self.url[len(config["archive"]["url_download"]):].split('/')   # [ itemid, filename ]
             self._metadata = ArchiveFile.new("archiveid", *u).metadata()
