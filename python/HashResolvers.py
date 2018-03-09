@@ -138,9 +138,13 @@ class HashResolver(NameResolverFile):
         :return:
         """
         if not self._metadata:
-            if not self._doifile:
-                self._doifile = DOIfile(multihash=self.multihash, verbose=verbose)    # If not found, dont set url/metadata etc
-            self._metadata = self._metadata or (self._doifile and self._doifile.metadata(headers=False, verbose=verbose))
+            try:
+                if not self._doifile:
+                    self._doifile = DOIfile(multihash=self.multihash, verbose=verbose)    # If not found, dont set url/metadata etc raises NoContentException
+                self._metadata = self._metadata or (
+                            self._doifile and self._doifile.metadata(headers=False, verbose=verbose))
+            except NoContentException as e:
+                pass    # Ignore absence of DOI file, try next
         if not self._metadata and self.url and self.url.startswith(config["archive"]["url_download"]):
             u = self.url[len(config["archive"]["url_download"]):].split('/')   # [ itemid, filename ]
             self._metadata = ArchiveFile.new("archiveid", *u).metadata()
