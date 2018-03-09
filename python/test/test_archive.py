@@ -28,7 +28,7 @@ def test_collectionsortorder():
     verbose=True
     itemid="prelinger"
     res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
-    assert res["data"]["collection_sort_order"] == "downloads"
+    assert res["data"]["collection_sort_order"] == "-downloads"
 
 def test_leaf():
     verbose=False

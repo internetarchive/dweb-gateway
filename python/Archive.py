@@ -83,9 +83,11 @@ class AdvancedSearch(NameResolverDir):
         obj.res = loads(res)  # TODO unsure if there are any possible errors, and if so how to handle them.
         for doc in obj.res["response"]["docs"]:
             doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["identifier"], verbose)
-            collection0id = doc["collection"][0] if isinstance(doc["collection"], (list, tuple, set)) else doc["collection"]
-            doc["collection0title"] = cls.collectiontitle(collection0id, verbose)
-            doc["collection0thumbnaillinks"] = ArchiveItem.item2thumbnail(collection0id, verbose)
+            c = doc.get("collection")
+            if c:
+                collection0id = c[0] if isinstance(c, (list, tuple, set)) else c
+                doc["collection0title"] = cls.collectiontitle(collection0id, verbose)
+                doc["collection0thumbnaillinks"] = ArchiveItem.item2thumbnail(collection0id, verbose)
         obj._list = obj.res["response"]["docs"]  # TODO probably wrong, as prob needs to be NameResolver instances
         if verbose: logging.debug("AdvancedSearch found {0} items".format(len(obj._list)))
         return obj

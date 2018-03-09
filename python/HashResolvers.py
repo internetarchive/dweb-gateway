@@ -1,12 +1,13 @@
 import logging
 from .NameResolver import NameResolverFile
 from .miscutils import loads, dumps, httpget
-from .Errors import CodingException, NoContentException
+from .Errors import CodingException, NoContentException, ForbiddenException
 from .HashStore import LocationService, MimetypeService
 from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile
 from .Archive import ArchiveItem
+
 
 class HashResolver(NameResolverFile):
     """
@@ -20,8 +21,8 @@ class HashResolver(NameResolverFile):
     Future Work
     * Build way to preload the hashstore with the hashes and URLs from various parts of the Archive
     """
-    namespace=None      # Defined in subclasses
-    multihashfield=None # Defined in subclasses
+    namespace = None       # Defined in subclasses
+    multihashfield = None  # Defined in subclasses
 
     def __init__(self, namespace, hash, **kwargs):
         """
@@ -35,19 +36,19 @@ class HashResolver(NameResolverFile):
         Pseudo-code
         Looks up the multihash in Location Service to find where can be retrieved from, does not retrieve it. 
         """
-        verbose=kwargs.get("verbose")
+        verbose = kwargs.get("verbose")
         if verbose:
             logging.debug("{0}.__init__({1}, {2}, {3})".format(self.__class__.__name__, namespace, hash, kwargs))
-        if namespace != self.namespace: # Defined in subclasses
+        if namespace != self.namespace:  # Defined in subclasses
             raise CodingException(message="namespace != "+self.namespace)
-        super(HashResolver, self).__init__(self, namespace, hash, **kwargs) # Note ignores the name
+        super(HashResolver, self).__init__(self, namespace, hash, **kwargs)  # Note ignores the name
         self.multihash = Multihash(**{self.multihashfield: hash})
-        self.url = LocationService.get(self.multihash.multihash58, verbose) #TODO-FUTURE recognize different types of location, currently assumes URL
+        self.url = LocationService.get(self.multihash.multihash58, verbose)  #TODO-FUTURE recognize different types of location, currently assumes URL
         self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose)    # Should be after DOIfile resolution, which will set mimetype in MimetypeService
         self._metadata = None   # Not resolved yet
         self._doifile = None   # Not resolved yet
 
-
+    # noinspection PyMethodOverriding
     @classmethod
     def new(cls, namespace, hash, *args, **kwargs):
         """
@@ -55,18 +56,19 @@ class HashResolver(NameResolverFile):
         Called by ServerGateway to handle a URL - passed the parts of the remainder of the URL after the requested format,
 
         :param namespace:
-        :param args:
+        :param hash:            hash or next part of name within namespace
+        :param args:            rest of path
         :param kwargs:
         :return:
         :raise NoContentException: if cant find content directly or via other classes (like DOIfile)
         """
-        verbose=kwargs.get("verbose")
+        verbose = kwargs.get("verbose")
         ch = super(HashResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
         if not ch.url:
-            if verbose: logging.debug("No URL, looking for DOI file for {0}.{1}".format(namespace,hash))   
+            if verbose: logging.debug("No URL, looking for DOI file for {0}.{1}".format(namespace, hash))
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
             # ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
-            return ch.searcharchivefor(verbose=verbose) # Will now be a ArchiveFile
+            return ch.searcharchivefor(verbose=verbose)  # Will now be a ArchiveFile
         if ch.url.startswith("local:"):
             ch = LocalResolverFetch.new("rawfetch", hash, **kwargs)
         if not (ch and ch.url):
@@ -116,7 +118,7 @@ class HashResolver(NameResolverFile):
         # {"key": "sha1", "val": "88...2", "hits": {"total": 1, "matches": [{"identifier": ["<ITEMID>"],"name": ["<FILENAME>"]}]}}
         firstmatch = res["hits"]["matches"][0]
         logging.info("ArchiveFile.new({},{},{}".format("archiveid", firstmatch["identifier"][0], firstmatch["name"][0]))
-        return ArchiveItem.new("archiveid", firstmatch["identifier"][0], firstmatch["name"][0], verbose=True) # Note uses ArchiveItem because need to retrieve item level metadata as well
+        return ArchiveItem.new("archiveid", firstmatch["identifier"][0], firstmatch["name"][0], verbose=True)  # Note uses ArchiveItem because need to retrieve item level metadata as well
 
     def content(self, verbose=False, **kwargs):
         """
@@ -124,34 +126,37 @@ class HashResolver(NameResolverFile):
         """
         data = self.retrieve()
         if verbose: logging.debug("Retrieved doc size={}".format(len(data)))
-        return {'Content-type': self.mimetype,
-            'data': data,
-            }
+        return  {'Content-type': self.mimetype,
+                 'data': data,
+                }
 
     def metadata(self, headers=True, verbose=False, **kwargs):
         """
         :param verbose:
+        :param headers: true if caller wants HTTP response headers
         :return:
         """
         if not self._metadata:
             if not self._doifile:
                 self._doifile = DOIfile(multihash=self.multihash, verbose=verbose)    # If not found, dont set url/metadata etc
             self._metadata = self._metadata or (self._doifile and self._doifile.metadata(headers=False, verbose=verbose))
-        mimetype = 'application/json';
+        mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
     # def canonical - not needed as already in a canonical form
+
 
 class Sha1Hex(HashResolver):
     """
     URL: `/xxx/sha1hex/Q...` (forwarded here by ServerGateway methods)
     """
-    namespace="sha1hex"
-    multihashfield="sha1hex"    # Field to Multihash.init
+    namespace = "sha1hex"
+    multihashfield = "sha1hex"    # Field to Multihash.init
+
 
 class ContentHash(HashResolver):
     """
     URL: `/xxx/contenthash/Q...` (forwarded here by ServerGateway methods)
     """
-    namespace="contenthash"
-    multihashfield="multihash58"    # Field to Multihash.init
+    namespace = "contenthash"
+    multihashfield = "multihash58"    # Field to Multihash.init
