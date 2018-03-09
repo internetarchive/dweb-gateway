@@ -24,6 +24,7 @@ class HashResolver(NameResolverFile):
     """
     namespace = None       # Defined in subclasses
     multihashfield = None  # Defined in subclasses
+    archivefilemetadatafield = None # Defined in subclasses
 
     def __init__(self, namespace, hash, **kwargs):
         """
@@ -64,6 +65,8 @@ class HashResolver(NameResolverFile):
         :raise NoContentException: if cant find content directly or via other classes (like DOIfile)
         """
         verbose = kwargs.get("verbose")
+        if hash == HashFileEmpty.emptymeta[cls.archivefilemetadatafield]:
+            return HashFileEmpty(verbose)   # Empty file
         ch = super(HashResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
         if not ch.url:
             if verbose: logging.debug("No URL, looking on archive for {0}.{1}".format(namespace, hash))
@@ -160,6 +163,7 @@ class Sha1Hex(HashResolver):
     """
     namespace = "sha1hex"
     multihashfield = "sha1hex"    # Field to Multihash.init
+    archivefilemetadatafield = "sha1"
 
 
 class ContentHash(HashResolver):
@@ -168,3 +172,28 @@ class ContentHash(HashResolver):
     """
     namespace = "contenthash"
     multihashfield = "multihash58"    # Field to Multihash.init
+
+class HashFileEmpty(HashResolver):
+    # Catch special case of an empty file and deliver an empty file
+    emptymeta = {  # Example from archive.org/metadata/AboutBan1935/AboutBan1935.asr.srt
+        "name": "emptyfile.txt",
+        "source": "original",
+        "format": "Unknown",
+        "size": "0",
+        "md5": "d41d8cd98f00b204e9800998ecf8427e",
+        "crc32": "00000000",
+        "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    }
+
+    # noinspection PyMissingConstructor
+    def __init__(self, verbose=False):
+        # Intentionally not calling superclass's init.
+        self.mimetype = "application/octet-stream"
+
+    def retrieve(self, _headers=None, verbose=False, **kwargs):
+        # Return a empty file
+        return ''
+
+    def metadata(self, headers=None, verbose=False, **kwargs):
+        mimetype = 'application/json'   # Note this is the mimetype of the response, not the mimetype of the file
+        return {"Content-type": mimetype, "data": self.emptymeta } if headers else self.emptymeta
