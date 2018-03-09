@@ -6,7 +6,7 @@ from .HashStore import LocationService, MimetypeService
 from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile
-from .Archive import ArchiveItem
+from .Archive import ArchiveItem, ArchiveFile
 from .config import config
 
 
@@ -140,6 +140,7 @@ class HashResolver(NameResolverFile):
         :param headers: true if caller wants HTTP response headers
         :return:
         """
+        logging.info("XXX@HR.metadata m={}, u={}".format(self._metadata, self.url))
         if not self._metadata:
             try:
                 if not self._doifile:
