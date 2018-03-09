@@ -374,7 +374,7 @@ class ArchiveFile(NameResolverFile):
         obj.itemid = itemid
         obj.filename = filename
         obj._metadata = kwargs.get("metadata")   # This is the metadata included in files portion of parent's metadata query - note its likely to be a pointer into the parent's datastructure
-        obj.parent = kwargs.get("item")
+        obj.parent = kwargs.get("item") or ArchiveItem.new("archiveid", itemid, verbose=verbose)
         if obj._metadata and obj._metadata.get("sha1"):
             obj.multihash = Multihash(sha1hex=obj._metadata["sha1"])
         else:

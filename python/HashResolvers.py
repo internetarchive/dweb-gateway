@@ -6,7 +6,7 @@ from .HashStore import LocationService, MimetypeService
 from .LocalResolver import LocalResolverFetch
 from .Multihash import Multihash
 from .DOI import DOIfile
-from .Archive import ArchiveItem
+from .Archive import ArchiveItem, ArchiveFile
 from .config import config
 
 
