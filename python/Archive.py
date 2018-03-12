@@ -349,7 +349,8 @@ class ArchiveItem(NameResolverDir):
             if verbose: logging.debug("Retrieving thumbnail for {}".format(itemid))
             # Store to IPFS and if still reqd then ping the ipfs.io gateway
             try:
-                thumbnailipfsurl = TransportIPFS().store(urlfrom=archive_servicesimgurl, verbose=verbose, mimetype="image/PNG")
+                # Store on IPFS - dont ping gateway (which is slow) allow first browser to ping on timeout by adding ipfs.io URL to return
+                thumbnailipfsurl = TransportIPFS().store(urlfrom=archive_servicesimgurl, verbose=verbose, pinggateway=False, mimetype="image/PNG")
             except IPFSException as e:
                 logging.error(e)
                 return [archive_servicesimgurl_cors]    # Just return the http URL, dont store in REDIS so will try again next time

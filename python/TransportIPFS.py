@@ -91,13 +91,14 @@ class TransportIPFS(Transport):
         self.pinggateway(ipldhash)
         return "ipfs:/ipfs/{}".format(ipldhash)
 
-    def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, returns=None, **options):
+    def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, primegateway=True, returns=None, **options):
         """
         Higher level store semantics
 
         :param data:
         :param urlfrom:     URL to fetch from for storage, allows optimisation (e.g. pass it a stream) or mapping in transport
         :param verbose:
+        :param primegateway:    True (default) to ping ipfs.io so that it knows where to find, (alternative is to also return https://ipfs.io/... url so browser pings)
         :param mimetype:
         :param options:
         :raises: IPFSException if cant reach server
@@ -111,9 +112,10 @@ class TransportIPFS(Transport):
                 # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
                 # This next line is to get around bug in IPFS propogation
                 # See https://github.com/ipfs/js-ipfs/issues/1156
-                ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
-                res = requests.head(ipfsgatewayurl);  # Going to ignore the result
-                logging.debug("XXX@transportipfs.store - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
+                if primegateway:
+                    ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
+                    res = requests.head(ipfsgatewayurl);  # Going to ignore the result
+                    logging.debug("XXX@transportipfs.store - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
                 url = "ipfs:/ipfs/{}".format(ipldhash)
         else:   # Need to store via "add"
             if not data or not mimetype:
