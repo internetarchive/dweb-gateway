@@ -181,6 +181,7 @@ class ArchiveItem(NameResolverDir):
             return obj
 
     def _collectionsortorder(self, id, collections):
+        # Return the collection sort order the second collections parameter is because the sort order of a collection may be defaulted by it being for example a sub-collection of some other collection.
         # TVNewsKitchen comes from petabox/TV.inc/is_tv_collection()
         if id.startswith('fav-'):  # is_list would be true
             return '-updatedate'
@@ -199,12 +200,13 @@ class ArchiveItem(NameResolverDir):
         Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
-        self._metadata["collection_titles"] = {k: AdvancedSearch.collectiontitle(k, verbose) for k in
+        if self._metadata["metadata"].get("collection"):
+            self._metadata["collection_titles"] = {k: AdvancedSearch.collectiontitle(k, verbose) for k in
                                                 (self._metadata["metadata"]["collection"]
                                                 if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
                                                 else [self._metadata["metadata"]["collection"]])}
-        if self._metadata.get("is_collection"):
-            collections = self._metadata["metadata"]["collection"]
+        if self._metadata.get("is_collection"): # We are looking up what collections this collection is in as that is used to override the default sort order.
+            collections = self._metadata["metadata"].get("collection") or []    # Empty collection if non specified
             if not isinstance(collections, (tuple, list, set)): collections = [collections]
             self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections)
         mimetype = 'application/json'
