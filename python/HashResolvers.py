@@ -151,7 +151,7 @@ class HashResolver(NameResolverFile):
                 pass    # Ignore absence of DOI file, try next
         if not self._metadata and self.url and self.url.startswith(config["archive"]["url_download"]):
             u = self.url[len(config["archive"]["url_download"]):].split('/')   # [ itemid, filename ]
-            self._metadata = ArchiveItem.new("archiveid", *u).metadata()  # Not will retun an ArchiveFile since passing the filename
+            self._metadata = ArchiveItem.new("archiveid", *u).metadata(headers=False)  # Note will retun an ArchiveFile since passing the filename
         mimetype = 'application/json'   # Note this is the mimetype of the response, not the mimetype of the file
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
