@@ -352,7 +352,7 @@ class ArchiveItem(NameResolverDir):
                 logging.error(e)
                 return [archive_servicesimgurl_cors]    # Just return the http URL, dont store in REDIS so will try again next time
             ThumbnailIPFSfromItemIdService.set(itemid, thumbnailipfsurl)
-        return [thumbnailipfsurl, archive_servicesimgurl_cors]
+        return [thumbnailipfsurl, thumbnailipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), archive_servicesimgurl_cors]
 
     def thumbnail(self, headers=True, verbose=False):
         (data, mimetype) = httpget("{}{}".format(config["archive"]["url_servicesimg"], self.itemid), wantmime=True)
