@@ -291,7 +291,7 @@ class ArchiveItem(NameResolverDir):
 
     def leaf(self, headers=True, verbose=False):
         """
-        Resolve names to a Lead (a pointer to a metadata record)
+        Resolve names to a Leaf (a pointer to a metadata record)
 
         :param headers:
         :param verbose:
@@ -305,7 +305,8 @@ class ArchiveItem(NameResolverDir):
         metadata = self.metadata(headers=False, verbose=verbose)
         # Store in IPFS, note cant use urlstore on IPFS as metadata is mutable
         try:
-            ipfsurl = TransportIPFS().store(data=metadata, verbose=verbose, mimetype="application/json")
+            # Store on IPFS, dont ping gateway as will return a gateway url in the result so client can
+            ipfsurl = TransportIPFS().store(data=metadata, verbose=verbose, mimetype="application/json", pinggateway=False)
         except Exception as e:
             raise IPFSException(message=e)
         # TODO-DOMAIN probably encapsulate construction of name once all tested
@@ -317,7 +318,7 @@ class ArchiveItem(NameResolverDir):
             "fullname": "/arc/archive.org/metadata/{}".format(self.itemid),
             "signatures": [],
             "table": "leaf",
-            "urls": [ipfsurl, "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
+            "urls": [ipfsurl, thumbnailipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
