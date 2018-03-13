@@ -18,7 +18,7 @@ def test_archiveid():
     assert res["data"]["metadata"]["identifier"] == itemid
     assert res["data"]["metadata"]["magnetlink"] == magnetlink
     assert "ipfs:/ipfs" in res["data"]["metadata"]["thumbnaillinks"][0]
-    assert itemid in res["data"]["metadata"]["thumbnaillinks"][1]
+    assert itemid in res["data"]["metadata"]["thumbnaillinks"][2]
     if verbose: logging.debug("test_archiveid complete")
     res = _processurl("magnetlink/btih/{}".format(btih), verbose)
     if verbose: logging.debug("test_archiveid magnetlink returned {0}".format(res))

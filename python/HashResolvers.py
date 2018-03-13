@@ -173,6 +173,7 @@ class ContentHash(HashResolver):
     """
     namespace = "contenthash"
     multihashfield = "multihash58"    # Field to Multihash.init
+    archivefilemetadatafield = "multihash58"    # Not quite true, really combined into URL in "contenthash" but this is for detecting emptyhash
 
 class HashFileEmpty(HashResolver):
     # Catch special case of an empty file and deliver an empty file
@@ -183,7 +184,9 @@ class HashFileEmpty(HashResolver):
         "size": "0",
         "md5": "d41d8cd98f00b204e9800998ecf8427e",
         "crc32": "00000000",
-        "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+        "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "contenthash": "contenthash:/contenthash/5dtpkBuw5TeS42SJSTt33HCE3ht4rC",
+        "multihash58": "5dtpkBuw5TeS42SJSTt33HCE3ht4rC",
     }
 
     # noinspection PyMissingConstructor
