@@ -318,7 +318,7 @@ class ArchiveItem(NameResolverDir):
             "fullname": "/arc/archive.org/metadata/{}".format(self.itemid),
             "signatures": [],
             "table": "leaf",
-            "urls": [ipfsurl, thumbnailipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
+            "urls": [ipfsurl, ipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
