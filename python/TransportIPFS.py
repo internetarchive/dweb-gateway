@@ -67,7 +67,7 @@ class TransportIPFS(Transport):
         res = requests.head(ipfsgatewayurl);  # Going to ignore the result
         logging.debug("Transportipfs.pinggateway workaround for JS-IPFS issue #1156 - pin gateway for {}".format(ipfsgatewayurl))
 
-    def rawstore(self, data=None, verbose=False, returns=None, mimetype=None, **options):
+    def rawstore(self, data=None, verbose=False, returns=None, pinggateway=True, mimetype=None, **options):
         """
         Store the data on IPFS
         Exception: TransportFileNotFound if file doesnt exist
@@ -88,10 +88,11 @@ class TransportIPFS(Transport):
             raise IPFSException(message="Unable to post to local IPFS at {} it is probably not running or wedged".format(ipfsurl))
         logging.debug("IPFS result={}".format(res))
         ipldhash = res['Hash']
-        self.pinggateway(ipldhash)
+        if pinggateway:
+            self.pinggateway(ipldhash)
         return "ipfs:/ipfs/{}".format(ipldhash)
 
-    def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, primegateway=True, returns=None, **options):
+    def store(self, data=None, urlfrom=None, verbose=False, mimetype=None, pinggateway=True, returns=None, **options):
         """
         Higher level store semantics
 
@@ -112,17 +113,15 @@ class TransportIPFS(Transport):
                 # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
                 # This next line is to get around bug in IPFS propogation
                 # See https://github.com/ipfs/js-ipfs/issues/1156
-                if primegateway:
-                    ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
-                    res = requests.head(ipfsgatewayurl);  # Going to ignore the result
-                    logging.debug("XXX@transportipfs.store - ran priming process on ipfs.io to work around JS-IPFS issue #1156")
+                if pinggateway:
+                    self.pinggateway(ipldhash)
                 url = "ipfs:/ipfs/{}".format(ipldhash)
         else:   # Need to store via "add"
             if not data or not mimetype:
                 (data, mimetype) = httpget(urlfrom, wantmime=True) # This is a fetch from somewhere else before putting to gateway
             if not isinstance(data, (str,bytes)):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
                 data = dumps(data)
-            url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, **options) # IPFSException if down
+            url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, pinggateway=pinggateway, **options) # IPFSException if down
         return url
 
 
