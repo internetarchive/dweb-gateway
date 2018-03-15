@@ -260,6 +260,7 @@ class TransportLocal(Transport):
     def getall(self, url=None, database=None, table=None, verbose=False):
         # Add keyvalues to a table, note it doesnt delete existing keys and values, just writes to end
         filename = self._tablefilename(database, table, createdatabase=True)
+        logging.debug("XXX@getal {}".format(filename))
         resarr = self._rawlistreverse(filename=filename, verbose=False) # [ {key:k1, value:v1} {key:k2, value:v2}, {key:k1, value:v3}]
         #TODO-KEYVALUE check sig which has to be on each keyvalue, not on entire set
         resdict = { kv["key"]: kv.get("value") for kv in resarr }               # {k1:v3, k2:v2} - replaces earlier with later values for same key

@@ -18,7 +18,7 @@ config = {
         "url_torrent": "https://gateway.dweb.me/torrent/archiveid/",
     },
     "domains": {
-        "metadata": 'NACL%20VERIFY%3Ah9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0%3D',
+        "metadata": 'NACL VERIFY:h9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0=',
     },
     "directories": {
         "bootloader": "/usr/local/dweb-transport/examples/bootloader.html",
