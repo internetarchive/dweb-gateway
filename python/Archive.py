@@ -315,7 +315,7 @@ class ArchiveItem(NameResolverDir):
         #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         leaf = {
             # expires:   # Not needed, a later dated version is sufficient.
-            "fullname": "/arc/archive.org/metadata/{}".format(self.itemid),
+            "name": self.itemid,
             "signatures": [],
             "table": "leaf",
             "urls": [ipfsurl, ipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
