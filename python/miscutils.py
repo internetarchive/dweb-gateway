@@ -74,7 +74,7 @@ def httpget(url, wantmime=False, range=None):
     r = None  # So that if exception in get, r is still defined and can be tested for None
     try:
         logging.debug("GET {} {}".format(url, range if range else ""))
-        headers = {}
+        headers = { "Connection": "keep-alive"}
         if range: headers["range"] = range
         r = requests.get(url, headers=headers)
         r.raise_for_status()
