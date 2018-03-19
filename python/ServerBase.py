@@ -35,7 +35,7 @@ class HTTPdispatcherException(MyBaseException):
     msg = "HTTP request {req} not recognized"
 
 class HTTPargrequiredException(MyBaseException):
-    httperror = 400     # Unimplemented
+    httperror = 400     # UnimplementedAccess
     msg = "HTTP request {req} requires {arg}"
 
 class DWEBMalformedURLException(MyBaseException):
@@ -129,7 +129,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', contenttype)
                 if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
                     self.send_header('Access-Control-Allow-Origin', '*')
-                    #self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
+                    # self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
                 data = res.get("data","")
                 if data or isinstance(data, (list, tuple, dict)): # Allow empty arrays toreturn as [] or empty dict as {}
                     if isinstance(data, (dict, list, tuple)):    # Turn it into JSON
@@ -166,7 +166,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             else:
                 logging.info("Sending Error {0}:{1}".format(httperror, str(e)))
             if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
-                self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
+                self.send_header('Access-Control-Allow-Origin', '*')  # '*' didnt work
+                # self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
             self.send_error(httperror, str(e))    # Send an error response
 
 
@@ -182,7 +183,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header('content-length','0')
         self.send_header('Content-Type','text/plain')
         if self.headers.get('Origin'):
-            self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])    # '*' didnt work
+            self.send_header('Access-Control-Allow-Origin', '*')    # '*' didnt work
+            # self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])    # '*' didnt work
         self.end_headers()
 
     def do_POST(self):
