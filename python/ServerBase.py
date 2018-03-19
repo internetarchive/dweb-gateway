@@ -128,7 +128,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 contenttype = res.get("Content-type","application/octet-stream")
                 self.send_header('Content-type', contenttype)
                 if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
-                    logging.debug('XXX@_dispaych orgin={}'.format(self.headers.get('Origin')))
                     self.send_header('Access-Control-Allow-Origin', '*')
                     #self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
                 data = res.get("data","")
