@@ -100,7 +100,7 @@ class TransportIPFS(Transport):
         :param data:
         :param urlfrom:     URL to fetch from for storage, allows optimisation (e.g. pass it a stream) or mapping in transport
         :param verbose:
-        :param primegateway:    True (default) to ping ipfs.io so that it knows where to find, (alternative is to also return https://ipfs.io/... url so browser pings)
+        :param pinggateway:    True (default) to ping ipfs.io so that it knows where to find, (alternative is to also return https://ipfs.io/... url so browser pings)
         :param mimetype:
         :param options:
         :raises: IPFSException if cant reach server
