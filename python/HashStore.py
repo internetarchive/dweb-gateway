@@ -148,13 +148,14 @@ class TitleService(HashStore):
     redisfield = "title"
 
 
-def resetipfs(removeipfs=False, reseedipfs=False):
+def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False):
     #logging.basicConfig(level=logging.DEBUG)
     r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
     reseeded = 0
     removed = 0
     total = 0
     withipfs = 0
+    announceddht = 0
     for i in r.scan_iter():
         total = total+1
         for k in [ "ipldhash", "thumbnailipfs" ]:
@@ -170,4 +171,8 @@ def resetipfs(removeipfs=False, reseedipfs=False):
                     print("Reseeding", i, ipfs)
                     TransportIPFS().pinggateway(ipfs)
                     reseeded = reseeded + 1
-    print ("Scanned {}, withipfs {}, deleted {}, reseeded {}".format(total, withipfs, removed, reseeded))
+                if announcedht:
+                    print("Announcing", i, ipfs)
+                    TransportIPFS().announcedht(ipfs)
+                    announceddht = announceddht + 1
+    print ("Scanned {}, withipfs {}, deleted {}, reseeded {}, announced {}".format(total, withipfs, removed, reseeded, announceddht))

@@ -67,6 +67,20 @@ class TransportIPFS(Transport):
         res = requests.head(ipfsgatewayurl);  # Going to ignore the result
         logging.debug("Transportipfs.pinggateway workaround for JS-IPFS issue #1156 - pin gateway for {}".format(ipfsgatewayurl))
 
+    def announcedht(self, ipldhash):
+        """
+        Periodically tell URLstore to announce blocks or JS clients wont see it
+        This next line is to get around bug in IPFS propogation
+        : param ipldhash    Hash of form z... or Q....  or array of ipldhash
+        """
+        if isinstance(ipldhash, (list,tuple,set)):
+            for i in ipldhash:
+                self.announcedht(i)
+        ipfsurl = config["ipfs"]["url_dht_provide"]
+        res = requests.get(ipfsurl, headers=headers, params={'arg': ipldhash}).json()
+        res = requests.head(ipfsurl);  # Going to ignore the result
+        logging.debug("Transportipfs.announcedht for {}".format(ipfsurl))
+
     def rawstore(self, data=None, verbose=False, returns=None, pinggateway=True, mimetype=None, **options):
         """
         Store the data on IPFS

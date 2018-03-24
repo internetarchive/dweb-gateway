@@ -31,6 +31,7 @@ config = {
 
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
+    config["ipfs"]["url_dht_provide"] = "http://localhost:5001/api/v0/dht/provide"
 elif socket.gethostname().startswith('mitraglass'):
     config["directories"]["bootloader"] = "/Users/mitra/git/_github_internetarchive/dweb-transport/examples/bootloader.html"
     config["logging"] = { "level": logging.DEBUG }  #Not to file
