@@ -63,8 +63,9 @@ class TransportIPFS(Transport):
         if isinstance(ipldhash, (list,tuple,set)):
             for i in ipldhash:
                 self.pinggateway(i)
+        headers = { "Connection": "keep-alive"}
         ipfsgatewayurl = "https://ipfs.io/ipfs/{}".format(ipldhash)
-        res = requests.head(ipfsgatewayurl);  # Going to ignore the result
+        res = requests.head(ipfsgatewayurl, headers=headers);  # Going to ignore the result
         logging.debug("Transportipfs.pinggateway workaround for JS-IPFS issue #1156 - pin gateway for {}".format(ipfsgatewayurl))
 
     def announcedht(self, ipldhash):
@@ -76,9 +77,9 @@ class TransportIPFS(Transport):
         if isinstance(ipldhash, (list,tuple,set)):
             for i in ipldhash:
                 self.announcedht(i)
+        headers = { "Connection": "keep-alive"}
         ipfsurl = config["ipfs"]["url_dht_provide"]
-        res = requests.get(ipfsurl, headers=headers, params={'arg': ipldhash}).json()
-        res = requests.head(ipfsurl);  # Going to ignore the result
+        res = requests.get(ipfsurl, headers=headers, params={'arg': ipldhash})  # Ignoring result
         logging.debug("Transportipfs.announcedht for {}".format(ipfsurl))
 
     def rawstore(self, data=None, verbose=False, returns=None, pinggateway=True, mimetype=None, **options):
