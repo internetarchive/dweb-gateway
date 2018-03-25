@@ -80,7 +80,7 @@ class TransportIPFS(Transport):
         headers = { "Connection": "keep-alive"}
         ipfsurl = config["ipfs"]["url_dht_provide"]
         res = requests.get(ipfsurl, headers=headers, params={'arg': ipldhash})  # Ignoring result
-        logging.debug("Transportipfs.announcedht for {}".format(ipfsurl))   # Log whether verbose or not
+        logging.debug("Transportipfs.announcedht for {}?arg={}".format(ipfsurl, ipldhash))   # Log whether verbose or not
 
     def rawstore(self, data=None, verbose=False, returns=None, pinggateway=True, mimetype=None, **options):
         """
