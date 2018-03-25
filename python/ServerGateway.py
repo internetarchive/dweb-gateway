@@ -269,6 +269,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         return {} # Empty return, just success
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='dweb_gateway.log', level=logging.DEBUG)
+    logging.basicConfig(**config["logging"])
     DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}, verbose=True) # Run local gateway
 
