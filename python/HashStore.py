@@ -5,6 +5,7 @@ import redis
 import logging
 from .Errors import CodingException
 from .TransportIPFS import TransportIPFS
+from .miscutils import loads, dumps
 
 class HashStore(object):
     """
@@ -90,6 +91,7 @@ class HashStore(object):
         """
         return cls.hash_get(multihash, cls.redisfield, verbose)
 
+
     @classmethod
     def archiveidget(cls, itemid, verbose=False):
         return cls.get("archiveid:"+itemid)
@@ -98,6 +100,25 @@ class HashStore(object):
     def archiveidset(cls, itemid, value, verbose=False):
         return cls.set("archiveid:" + itemid, value)
 
+class StateService(HashStore):
+
+    @classmethod
+    def set(cls, field, value, verbose=False):
+        """
+        Store to global state
+        field:  Name of field to store
+        value:  Content to store
+        """
+        return cls.hash_set("__STATE__", field, dumps(value), verbose)
+
+    @classmethod
+    def get(cls, field, verbose=False):
+        """
+        Store to global state saving
+        :param field:
+        :return: string stored in Redis
+        """
+        return loads(cls.hash_get("__STATE__", field, verbose))
 
 class LocationService(HashStore):
     """
@@ -146,33 +167,3 @@ class TitleService(HashStore):
     # uses archiveidset/get
     # TODO-REDIS note this is caching for ever, which is generally a bad idea ! Should figure out how to make Redis expire this cache every few days
     redisfield = "title"
-
-
-def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False):
-    #logging.basicConfig(level=logging.DEBUG)
-    r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
-    reseeded = 0
-    removed = 0
-    total = 0
-    withipfs = 0
-    announceddht = 0
-    for i in r.scan_iter():
-        total = total+1
-        for k in [ "ipldhash", "thumbnailipfs" ]:
-            ipfs = r.hget(i, k)
-            #print(i, ipfs)
-            if ipfs:
-                withipfs = withipfs + 1
-                ipfs = ipfs.replace("ipfs:/ipfs/", "")
-                if removeipfs:
-                    r.hdel(i, "ipldhash")
-                    removed = removed + 1
-                if reseedipfs:
-                    print("Reseeding", i, ipfs)
-                    TransportIPFS().pinggateway(ipfs)
-                    reseeded = reseeded + 1
-                if announcedht:
-                    print("Announcing", i, ipfs)
-                    TransportIPFS().announcedht(ipfs)
-                    announceddht = announceddht + 1
-    print ("Scanned {}, withipfs {}, deleted {}, reseeded {}, announced {}".format(total, withipfs, removed, reseeded, announceddht))
