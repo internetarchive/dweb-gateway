@@ -122,7 +122,7 @@ class StateService(HashStore):
         if res is None:
             return None
         else:
-            return loads(cls.hash_get("__STATE__", field, verbose))
+            return loads(res)
 
 class LocationService(HashStore):
     """

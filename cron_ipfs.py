@@ -4,6 +4,7 @@ from python.config import config
 import redis
 import base58
 from python.HashStore import StateService
+from python.TransportIPFS import TransportIPFS
 
 logging.basicConfig(**config["logging"])    # For server
 
