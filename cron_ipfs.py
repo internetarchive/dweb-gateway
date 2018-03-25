@@ -17,7 +17,7 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
     withipfs = 0
     announceddht = 0
     if announcedht:
-        dhtround = (int(((StateService.get("LastDHTround", verbose)) or 0)) + 1 % 58)
+        dhtround = ((int(((StateService.get("LastDHTround", verbose)) or 0)) + 1) % 58)
         StateService.set("LastDHTround", dhtround, verbose)
         dhtroundletter = base58.b58encode_int(dhtround)
         logging.debug("DHT round: {}".format(dhtroundletter))
