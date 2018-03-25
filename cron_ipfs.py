@@ -5,7 +5,6 @@ import redis
 import base58
 from python.HashStore import StateService
 
-#logging.basicConfig(level=logging.DEBUG)   # For local debugging
 logging.basicConfig(**config["logging"])    # For server
 
 def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=False):
@@ -20,7 +19,7 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
         dhtround = (int(((StateService.get("LastDHTround", verbose)) or 0)) + 1 % 58)
         StateService.set("LastDHTround", dhtround, verbose)
         dhtroundletter = base58.b58encode_int(dhtround)
-        print("DHT round:",dhtroundletter)
+        logging.debug("DHT round: {}".format(dhtroundletter))
     for i in r.scan_iter():
         total = total+1
         for k in [ "ipldhash", "thumbnailipfs" ]:
@@ -33,12 +32,12 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
                     r.hdel(i, "ipldhash")
                     removed = removed + 1
                 if reseedipfs:
-                    print("Reseeding", i, ipfs)
+                    #logging.debug("Reseeding {} {}".format(i, ipfs))  # Logged in TransportIPFS
                     TransportIPFS().pinggateway(ipfs)
                     reseeded = reseeded + 1
                 if announcedht:
                     if dhtroundletter == ipfs[5]:  # Compare far enough into string to be random
-                        print("Announcing", i, ipfs)
+                        # logging.debug("Announcing {} {}".format(i, ipfs))  # Logged in TransportIPFS
                         TransportIPFS().announcedht(ipfs)
                         announceddht = announceddht + 1
     print ("Scanned {}, withipfs {}, deleted {}, reseeded {}, announced {}".format(total, withipfs, removed, reseeded, announceddht))
