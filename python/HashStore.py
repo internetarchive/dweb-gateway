@@ -118,7 +118,11 @@ class StateService(HashStore):
         :param field:
         :return: string stored in Redis
         """
-        return loads(cls.hash_get("__STATE__", field, verbose))
+        res = cls.hash_get("__STATE__", field, verbose)
+        if res is None:
+            return None
+        else:
+            return loads(cls.hash_get("__STATE__", field, verbose))
 
 class LocationService(HashStore):
     """

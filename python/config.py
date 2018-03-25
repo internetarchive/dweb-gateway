@@ -23,7 +23,9 @@ config = {
     "directories": {
         "bootloader": "/usr/local/dweb-transport/examples/bootloader.html",
     },
-    config["logging"] = {"level": logging.DEBUG}  # By default Not to file - overridden below for dev machine
+    "logging": {
+        "level": logging.DEBUG
+    }  # By default Not to file - overridden below for dev machine
 }
 
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
