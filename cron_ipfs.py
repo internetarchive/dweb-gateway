@@ -37,7 +37,8 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
                     TransportIPFS().pinggateway(ipfs)
                     reseeded = reseeded + 1
                 if announcedht:
-                    if dhtroundletter == ipfs[5]:  # Compare far enough into string to be random
+                    print("Testing ipfs {} .. {} from {}".format(ipfs[6],dhtroundletter,ipfs))
+                    if dhtroundletter == ipfs[6]:  # Compare far enough into string to be random
                         # logging.debug("Announcing {} {}".format(i, ipfs))  # Logged in TransportIPFS
                         TransportIPFS().announcedht(ipfs)
                         announceddht = announceddht + 1
