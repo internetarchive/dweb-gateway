@@ -200,8 +200,8 @@ class NameResolverFile(NameResolver):
                     #TODO-IPFS this works as long as using the HTTP API
                     #url = TransportIPFS().rawstore(data, mimetype=self.mimetype)
                     # Note priming gateway as client now does this in ArchiveFile.p_urls()
-                    url = TransportIPFS().store(urlfrom=url, pinggateway=False)
-                    ipldhash = urlparse(url).path.split('/')[2]
+                    ipldurl = TransportIPFS().store(urlfrom=url, pinggateway=False)
+                    ipldhash = urlparse(ipldurl).path.split('/')[2]
                     IPLDHashService.set(self.multihash.multihash58, ipldhash)
                     if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
         if self.multihash:

@@ -8,7 +8,7 @@ from python.TransportIPFS import TransportIPFS
 
 logging.basicConfig(**config["logging"])    # For server
 
-def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=False):
+def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=False, fixbadurls=False):
 
     r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
     reseeded = 0
@@ -23,6 +23,11 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
         logging.debug("DHT round: {}".format(dhtroundletter))
     for i in r.scan_iter():
         total = total+1
+        if fixbadurls:
+            url = r.hget(i, "url")
+            if urls.startswith("ipfs:"):
+                logging.debug("Would delete {} .url= {}".format(i,url))
+                #r.hdel(i, "url")
         for k in [ "ipldhash", "thumbnailipfs" ]:
             ipfs = r.hget(i, k)
             #print(i, ipfs)
