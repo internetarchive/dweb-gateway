@@ -88,11 +88,11 @@ def httpget(url, wantmime=False, range=None):
             return data
         #TODO-STREAM support streams in future
 
-    except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+    except (requests.exceptions.RequestException, requests.exceptions.HTTPError, requests.exceptions.InvalidSchema) as e:
         if r is not None and (r.status_code == 404):
             raise TransportURLNotFound(url=url)
         else:
-            logging.error("HTTP request failed", exc_info=True)
+            logging.error("HTTP request failed err={}".format(e))
             raise e
     except requests.exceptions.MissingSchema as e:
             logging.error("HTTP request failed", exc_info=True)
