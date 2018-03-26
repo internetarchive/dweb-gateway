@@ -427,6 +427,7 @@ class ArchiveFile(NameResolverFile):
 
     # noinspection PyAttributeOutsideInit
     def retrieve(self, _headers=None, verbose=False, **kwargs):
+        _headers = _headers or {}
         (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range"))
         return data
 
