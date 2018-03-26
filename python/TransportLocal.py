@@ -113,7 +113,8 @@ class TransportLocal(Transport):
                 content = file.read()
             if verbose: logging.debug("Opened")
             return content
-        except IOError as e:
+        except (IOError, FileNotFoundError) as e:
+            logging.debug("TransportLocal.rawfetch err={}".format(e))
             raise TransportFileNotFound(file=filename)
 
     def _rawlistreverse(self, filename=None, verbose=False, **options):

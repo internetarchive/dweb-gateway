@@ -64,10 +64,12 @@ class LocalResolverFetch(LocalResolver):
         try:
             return self.transport(verbose=verbose).rawfetch(multihash=self._contenthash)
         except TransportFileNotFound as e1:  # Not found in block store, lets try contenthash
+            logging.debug("LocalResolverFetch.retrieve: err={}".format(e1))
             try:
                 from .HashResolvers import ContentHash  # Avoid a circular reference
-                logging.debug("Falling back to contenthash")
-                return ContentHash.new("contenthash", self._contenthash.multihash58, verbose=verbose).retrieve(verbose=verbose)
+                contenthash = self._contenthash.multihash58
+                logging.debug("LocalResolverFetch.retrieve falling back to contenthash: {}".format(contenthash))
+                return ContentHash.new("contenthash", contenthash, verbose=verbose).retrieve(verbose=verbose)
             except Exception as e:
                 logging.debug("Fallback failed, raising original error")
                 raise e1    # Raise the original error
