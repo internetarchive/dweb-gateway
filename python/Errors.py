@@ -74,7 +74,7 @@ class SecurityWarning(MyBaseException):
 
 class AssertionFail(MyBaseException): #TODO-BACKPORT - console.assert on JS should throw this
     """
-    Raised when something that should be true isn't - usually a coding failure or some change not propogated fully
+    Raised when something that should be True isn't - usually a coding failure or some change not propogated fully
     """
     httperror = 500
     msg = "{message}"

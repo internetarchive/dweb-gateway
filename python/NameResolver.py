@@ -169,14 +169,64 @@ class NameResolverFile(NameResolver):
         raise ToBeImplementedException(name="NameResolverFile.shards")
         pass
 
-    def cache_content(self, url, transport, verbose):
+    def cache_ipfs(self, url=None, data=None, forceurlstore=False, forceadd=False, printlog=False, announcedht=False, size=None, verbose=False ):
         """
-        Retrieve content from a URL, cache it in various places especially IPFS and set tables so can be retrieved by contenthash
+        Cache in IPFS, will automatically select no action, urlstore or add unless constrained by forcexxx
+        Before doing this, should have checked if IPLDHashService can return the hash already
+
+        :param url:         # If present is the url of the file
+        :param data:        # If present is the data for the file
+        :param forceurlstore:   # Override default and use urlstore
+        :param forceadd:        # Override default and use add
+        :return:                # IPLDhash
+
+        Logical combinations of arguments attempt to get the "right" result.
+        forceurlstore && url => urlstore
+        forceurlstore && !url => error
+        forceadd && data => add
+        forceadd && !data && url => fetch data then add
+        url && data && !forceurl && !forcedata => default to urlstore (ignore data)
+        """
+        if not config["ipfs"].get("url_urlstore"):  # If not running on machine with urlstore
+            forceadd = True
+        if url and forceadd:  # To "add" from an URL we need to retrieve and then urlstore
+            (data, self.mimetype) = httpget(url, wantmime=True)
+            if not self.multihash:  # Since we've got the data, we can compute SHA1 from it
+                if verbose: logging.debug("Computing SHA1 hash of url {}".format(url))
+                self.multihash = Multihash(data=data, code=Multihash.SHA1)
+            # Since we retrieved mimetype we can save it, since not set in metadata
+            MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
+        if (url and not forceadd):
+            did = "urlstore"
+            ipldurl = TransportIPFS().store(urlfrom=url, pinggateway=False, verbose=verbose)
+        elif data:  # Either provided or fetched from URL
+            did = "add"
+            ipldurl = TransportIPFS().store(data=data, pinggateway=False, mimetype=self.mimetype, verbose=verbose)
+        else:
+            raise errors.CodingException(message="Invalid options to cache_ipfs forceurlstore={} forceadd={} url={} data len={}"\
+                                         .format(forceurlstore, forceadd, url, len(data) if data else 0))
+        # Each of the successful routes through above leaves us with ipldurl
+        ipldhash = urlparse(ipldurl).path.split('/')[2]
+        if announcedht:
+            TransportIPFS().announcedht(ipldhash)  # Let DHT know - dont wait for up to 10 hours for next cycle
+            IPLDHashService.set(self.multihash.multihash58, ipldhash)
+        #("URL", "Add/Urlstore", "Hash", "Size", "Announced")
+        if size and (len(data) != size):
+            size = "{}!={}".format(size, len(data))
+        print('"{}","{}","{}","{}","{}"'.format(url, did, ipldhash, size, announcedht))
+        return ipldhash
+
+
+    def cache_content(self, url, wantipfs=False, verbose=False):
+        """
+        Retrieve content from a URL, cache it in various places especially IPFS, and set tables so can be retrieved by contenthash
 
         Requires multihash to be set prior to this, if required it could be set from the retrieved data
+        Call path is Archivefile.metadata > ArchiveFile.cache_content > NameResolverFile.cache_content
 
         :param url:         URL - typically inside archive.org of contents
-        :param transport:   Either None (for all) or a list of transports to cache for.
+        :param transport:   Either None (for all) or a list of transports to cache for
+                            In particular, transport needs to be None or contain IPFS to cache in IPFS
         :param verbose:
         :return:
         """
@@ -190,19 +240,13 @@ class NameResolverFile(NameResolver):
                 #TODO-URLSTORE delete old cache
                 #TODO-URLSTORE - check dont need mimetype
                 if not self.multihash:
-                    (data, self.mimetype) = httpget(url, wantmime=True)
+                    (data, self.mimetype) = httpget(url, wantmime=True) # SLOW - retrieval
                     if verbose: logging.debug("Computing SHA1 hash of url {}".format(url))
                     self.multihash = Multihash(data=data, code=Multihash.SHA1)
                     ipldhash = self.multihash and IPLDHashService.get(self.multihash.multihash58) # Try again now have hash
                     MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
                 if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
-                    #TODO-IPFS create TransportIPFS at startup via "Transports" backported from JS
-                    #TODO-IPFS this works as long as using the HTTP API
-                    #url = TransportIPFS().rawstore(data, mimetype=self.mimetype)
-                    # Note priming gateway as client now does this in ArchiveFile.p_urls()
-                    ipldurl = TransportIPFS().store(urlfrom=url, pinggateway=False)
-                    ipldhash = urlparse(ipldurl).path.split('/')[2]
-                    IPLDHashService.set(self.multihash.multihash58, ipldhash)
+                    ipldhash = self.cache_ipfs(url=url, verbose=verbose, announcedht=True)
                     if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
         if self.multihash:
             LocationService.set(self.multihash.multihash58, url, verbose=verbose)

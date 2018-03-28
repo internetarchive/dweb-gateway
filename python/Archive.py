@@ -130,6 +130,7 @@ class ArchiveItem(NameResolverDir):
     Attributes:
         itemid = itemid
         _thumbnail = list of urls of thumbnail (access via thumbnail())
+        _list = list of ArchiveFiles
 
     Supports: metadata
     """
@@ -138,14 +139,17 @@ class ArchiveItem(NameResolverDir):
     @classmethod
     def new(cls, namespace, itemid, *args, **kwargs):
         """
-        Create a AdvancedSearch object, just pass on kwargs to Archive's advancedsearch API
-        The existence of this is mostly because of the CORS issues with the archive.org/advancedsearch which (reasonably) blocks CORS but doesn't yet have a
+        Create a ArchiveItem
+        The existence of this is mostly because of the CORS issues with the archive.org/metadata which (reasonably) blocks CORS but doesn't yet have a
         mode to ignore cookies in a CORS case. (based on discussions between Mitra & Sam)
 
         :param namespace:   "archiveid"
         :param itemid:      Archive item id
         :param args:       *optional - Name of file - case sensitive or none for the item
-        :param kwargs:      {wanttorrent}
+                            Special case of ____padding_file to send back a file of all 0's
+        :param kwargs:      {
+            wanttorrent     If True, then load obj.torrentdata with the modified torrent file (called if we expect to return it via a .torrent call)
+        }
         :return:            ArchiveItem or ArchiveFile instance.
         :raises:        ArchiteItemNotFound if itemid invalid
         """
@@ -156,10 +160,10 @@ class ArchiveItem(NameResolverDir):
         obj = super(ArchiveItem, cls).new(namespace, itemid, *args, **kwargs)
         obj.itemid = itemid
         # kwargs is ignored, there are none to archive.org/metadata
-        obj.query = "https://archive.org/metadata/{}".format(itemid)
+        obj.query = "{}{}".format(config["archive"]["url_metadata"], itemid)    # Typically https://archive.org/metadata/foo
         # TODO-DETAILS may need to handle url escaping, i.e. some queries may be invalid till that is done
         if verbose: logging.debug("Archive Metadata url={0}".format(obj.query))
-        res = httpget(obj.query)
+        res = httpget(obj.query)        # SLOW - retrieves metadata
         obj._metadata = loads(res)
         if not obj._metadata:  # metadata retrieval failed, itemid probably false
             raise ArchiveItemNotFound(itemid=itemid)
@@ -183,7 +187,7 @@ class ArchiveItem(NameResolverDir):
     def _collectionsortorder(self, id, collections):
         # Return the collection sort order the second collections parameter is because the sort order of a collection may be defaulted by it being for example a sub-collection of some other collection.
         # TVNewsKitchen comes from petabox/TV.inc/is_tv_collection()
-        if id.startswith('fav-'):  # is_list would be true
+        if id.startswith('fav-'):  # is_list would be True
             return '-updatedate'
         for k, v in archiveconfig["sortorder"].items():
             if self._metadata["metadata"]["identifier"] in v:
@@ -362,6 +366,15 @@ class ArchiveItem(NameResolverDir):
         (data, mimetype) = httpget("{}{}".format(config["archive"]["url_servicesimg"], self.itemid), wantmime=True)
         return {"Content-type": mimetype, "data": data} if headers else data
 
+    def cache_ipfs(self, forceurlstore=False, forceadd=False, verbose=False, announcedht=False, printlog=False):
+        """
+        Loop over all files, pushing into IPFS
+
+        :param forceurlstore, forceadd, printlog, verbose:    See NameResolverFile.cache_ipfs for documentation
+        :return:                                    Doesnt return anything, but sets ipfs link on each file
+        """
+        for af in self._list:
+            af.cache_ipfs(url=af.archive_url, verbose=verbose, forceurlstore=forceurlstore, forceadd=forceadd, printlog=printlog, announcedht=announcedht, size=int(af._metadata["size"]))
 
 # noinspection PyProtectedMember
 class ArchiveFile(NameResolverFile):
@@ -392,12 +405,21 @@ class ArchiveFile(NameResolverFile):
         # obj.check(verbose)
         return obj
 
-    def cache_content(self, transport, verbose):
+    def cache_content(self, wantipfs=False, verbose=False):
+        """
+        Retrieve content from a URL, cache it in various places especially IPFS, and set tables so can be retrieved by contenthash
+        :param transport:
+        :param verbose:
+        :return:
+        """
         # Currently remaining args an kwargs ignored
+        # Call path is Archivefile.metadata > ArchiveFile.cache_content > NameResolverFile.cache_content
+        # In particular that call path means it is NOT called by default during ArchiveItem.metadata as can be slow over multiple files.
         if not self.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
-            cached = super(ArchiveFile, self).cache_content(self.archive_url, transport, verbose)  # Setup for IPFS and contenthash returns {ipldhash}
+            cached = super(ArchiveFile, self).cache_content(self.archive_url, wantipfs=wantipfs, verbose=verbose)  # Setup for IPFS and contenthash returns {ipldhash}
             if cached.get("ipldhash") is not None:
                 self._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
+
 
     def check(self, verbose):
         (data, mimetype) = httpget(self.archive_url, wantmime=True)
@@ -408,11 +430,11 @@ class ArchiveFile(NameResolverFile):
         """
         Return metadata for file - note in most cases for a ArchiveFile its metadata is returned from its parent ArchiveItem
         :param verbose:
-        :param headers: true if should return encapsulated in suitable headers for returning to http
+        :param headers: True if should return encapsulated in suitable headers for returning to http
         :return:
         """
         transport = kwargs.get("transport")  # None or list of transports
-        self.cache_content(transport, verbose)               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
+        self.cache_content(wantipfs = ("IPFS" in transport), verbose=verbose)               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 

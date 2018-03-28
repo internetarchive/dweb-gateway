@@ -134,7 +134,7 @@ class TransportIPFS(Transport):
                     self.pinggateway(ipldhash)
                 url = "ipfs:/ipfs/{}".format(ipldhash)
         else:   # Need to store via "add"
-            if not data or not mimetype:
+            if not data or not mimetype and urlfrom:
                 (data, mimetype) = httpget(urlfrom, wantmime=True) # This is a fetch from somewhere else before putting to gateway
             if not isinstance(data, (str,bytes)):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
                 data = dumps(data)

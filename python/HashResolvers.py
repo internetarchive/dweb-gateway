@@ -139,7 +139,7 @@ class HashResolver(NameResolverFile):
     def metadata(self, headers=True, verbose=False, **kwargs):
         """
         :param verbose:
-        :param headers: true if caller wants HTTP response headers
+        :param headers: True if caller wants HTTP response headers
         :return:
         """
         logging.info("XXX@HR.metadata m={}, u={}".format(self._metadata, self.url))

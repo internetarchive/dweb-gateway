@@ -58,7 +58,7 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
     :param obj: Anything json dumps can't serialize
     :return: string for extended types
     """
-    if isinstance(obj, datetime):    # Using isinstance rather than hasattr because __getattr__ always returns true
+    if isinstance(obj, datetime):    # Using isinstance rather than hasattr because __getattr__ always returns True
     #if hasattr(obj,"isoformat"):  # Especially for datetime
         return obj.isoformat()
     try:
