@@ -32,6 +32,6 @@ print('"URL","Add/Urlstore","Hash","Size","Announced"')
 if isinstance(obj, ArchiveFile):
     obj.cache_ipfs(url = obj.archive_url, forceadd=forceadd, forceurlstore=forceurlstore, verbose=False,  printlog=True, announcedht=announcedht, size=int(obj._metadata["size"]))
 else:
-    obj.cache_ipfs(forceurlstore=forceurlstore, verbose=False, announcedht=announcedht, printlog=True)  # Will Loop through all files in Item
+    obj.cache_ipfs(forceurlstore=forceurlstore, forceadd=forceadd, verbose=False, announcedht=announcedht, printlog=True)  # Will Loop through all files in Item
 
 #print("---FINISHED ---")
