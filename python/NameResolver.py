@@ -211,7 +211,11 @@ class NameResolverFile(NameResolver):
             TransportIPFS().announcedht(ipldhash)  # Let DHT know - dont wait for up to 10 hours for next cycle
             IPLDHashService.set(self.multihash.multihash58, ipldhash)
         #("URL", "Add/Urlstore", "Hash", "Size", "Announced")
+<<<<<<< HEAD
         if size and data and len(data) != size:
+=======
+        if size and data and (len(data) != size):
+>>>>>>> origin/deployable
             size = "{}!={}".format(size, len(data))
         print('"{}","{}","{}","{}","{}"'.format(url, did, ipldhash, size, announcedht))
         return ipldhash

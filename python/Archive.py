@@ -434,7 +434,7 @@ class ArchiveFile(NameResolverFile):
         :return:
         """
         transport = kwargs.get("transport")  # None or list of transports
-        self.cache_content(wantipfs = ("IPFS" in transport), verbose=verbose)               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
+        self.cache_content(wantipfs = (not transport) or ("IPFS" in transport), verbose=verbose)               # Done on ArchiveFile rather than on new() because its too slow to do unless we need it.
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
