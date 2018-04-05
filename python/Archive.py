@@ -374,7 +374,7 @@ class ArchiveItem(NameResolverDir):
         :return:                                    Doesnt return anything, but sets ipfs link on each file
         """
         for af in self._list:
-            af.cache_ipfs(url=af.archive_url, verbose=verbose, forceurlstore=forceurlstore, forceadd=forceadd, printlog=printlog, announcedht=announcedht, size=int(af._metadata["size"]))
+            af.cache_ipfs(url=af.archive_url, verbose=verbose, forceurlstore=forceurlstore, forceadd=forceadd, printlog=printlog, announcedht=announcedht, size=int(af._metadata.get("size","0")))
 
 # noinspection PyProtectedMember
 class ArchiveFile(NameResolverFile):
