@@ -39,7 +39,6 @@ class BtihResolver(NameResolverDir):
     @classmethod
     def new(cls, namespace, hash, *args, **kwargs):
         """
-        #TODO-SHA1HEX create a superclass once tested
         Called by ServerGateway to handle a URL - passed the parts of the remainder of the URL after the requested format,
 
         :param namespace:

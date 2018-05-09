@@ -46,7 +46,7 @@ class HashResolver(NameResolverFile):
         super(HashResolver, self).__init__(self, namespace, hash, **kwargs)  # Note ignores the name
         self.multihash = Multihash(**{self.multihashfield: hash})
         self.url = LocationService.get(self.multihash.multihash58, verbose)  #TODO-FUTURE recognize different types of location, currently assumes URL
-        logging.debug("XXX@HashResolver.__init__ setting {} .url = {}".format(self.multihash.multihash58, self.url))
+        #logging.debug("XXX@HashResolver.__init__ setting {} .url = {}".format(self.multihash.multihash58, self.url))
         self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose)    # Should be after DOIfile resolution, which will set mimetype in MimetypeService
         self._metadata = None   # Not resolved yet
         self._doifile = None   # Not resolved yet
@@ -55,7 +55,6 @@ class HashResolver(NameResolverFile):
     @classmethod
     def new(cls, namespace, hash, *args, **kwargs):
         """
-        #TODO-SHA1HEX create a superclass once tested
         Called by ServerGateway to handle a URL - passed the parts of the remainder of the URL after the requested format,
 
         :param namespace:
@@ -114,7 +113,7 @@ class HashResolver(NameResolverFile):
         # And will return a ArchiveFile
         searchurl = "http://archive.org/services/dwhf.php?key=sha1&val={}".format((multihash or self.multihash).sha1hex)
         res = loads(httpget(searchurl))
-        logging.info("XXX@searcharchivefor res={}".format(res))
+        #logging.info("XXX@searcharchivefor res={}".format(res))
         if res.get("error"):
             # {"error": "internal use only"}
             raise ForbiddenException(what="SHA1 search from machine unless its whitelisted by Aaron")
@@ -142,7 +141,7 @@ class HashResolver(NameResolverFile):
         :param headers: True if caller wants HTTP response headers
         :return:
         """
-        logging.info("XXX@HR.metadata m={}, u={}".format(self._metadata, self.url))
+        #logging.info("XXX@HR.metadata m={}, u={}".format(self._metadata, self.url))
         if not self._metadata:
             try:
                 if not self._doifile:

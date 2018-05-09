@@ -68,5 +68,5 @@ def test_search():
         'and[]': ""
     }
     res = _processurl("metadata/advancedsearch", verbose, **kwargs2)  # Simulate what the server would do with the URL
-    logging.debug("XXX@65")
+    #logging.debug("XXX@65")
     logging.debug(res)
