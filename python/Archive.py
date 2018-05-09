@@ -322,7 +322,8 @@ class ArchiveItem(NameResolverDir):
             "name": self.itemid,
             "signatures": [],
             "table": "leaf",
-            "urls": [ipfsurl, ipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
+            # "urls": [ipfsurl, ipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
+            "urls": [ipfsurl, "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
@@ -360,7 +361,8 @@ class ArchiveItem(NameResolverDir):
                 logging.error(e)
                 return [archive_servicesimgurl_cors]    # Just return the http URL, dont store in REDIS so will try again next time
             ThumbnailIPFSfromItemIdService.set(itemid, thumbnailipfsurl)
-        return [thumbnailipfsurl, thumbnailipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), archive_servicesimgurl_cors]
+        #return [thumbnailipfsurl, thumbnailipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), archive_servicesimgurl_cors]
+        return [thumbnailipfsurl, archive_servicesimgurl_cors]
 
     def thumbnail(self, headers=True, verbose=False):
         (data, mimetype) = httpget("{}{}".format(config["archive"]["url_servicesimg"], self.itemid), wantmime=True)
