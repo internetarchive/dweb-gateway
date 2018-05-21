@@ -12,26 +12,27 @@ SHA1BASESTRING="5drjPwBymU5TC4YNFK5aXXpwpFFbww" # Sha1 of above
 
 def test_local():
     verbose=True
-    res = _processurl("contenthash/rawstore", verbose, data=BASESTRING.encode('utf-8'))  # Simulate what the server would do with the URL
+    res = _processurl("contenthash/rawstore", verbose, data=BASESTRING.encode('utf-8'))  # Simulate what the server would do with the URL #TODO-ARC
     if verbose: logging.debug("test_local store returned {0}".format(res))
     contenthash = res["data"]
-    res = _processurl("content/rawfetch/{0}".format(contenthash), verbose)  # Simulate what the server would do with the URL
+    res = _processurl("content/rawfetch/{0}".format(contenthash), verbose)  # Simulate what the server would do with the URL #TODO-ARC
     if verbose: logging.debug("test_local content/rawfetch/{0} returned {1}".format(contenthash, res))
     assert res["data"].decode('utf-8') == BASESTRING
-    res = _processurl("content/contenthash/{0}".format(contenthash), verbose)  # Simulate what the server would do with the URL
+    #res = _processurl("content/contenthash/{0}".format(contenthash), verbose)  # OLD STYLE
+    res = _processurl("contenthash/{0}".format(contenthash), verbose)
     if verbose: logging.debug("test_local content/contenthash/{0} returned {1}".format(contenthash, res))
 
 def test_list():
     verbose = True
     date =  datetime.utcnow().isoformat()
     adddict = { "urls": [ CONTENTMULTIHASH ], "date": date, "signature": "XXYYYZZZ", "signedby": [ SHA1BASESTRING ], "verbose": verbose }
-    res = _processurl("void/rawadd/"+SHA1BASESTRING, verbose, data=dumps(adddict))
+    res = _processurl("void/rawadd/"+SHA1BASESTRING, verbose, data=dumps(adddict)) #TODO-ARC
     if verbose: logging.debug("test_list {0}".format(res))
-    res = _processurl("metadata/rawlist/{0}".format(SHA1BASESTRING), verbose, data=dumps(adddict))
+    res = _processurl("metadata/rawlist/{0}".format(SHA1BASESTRING), verbose, data=dumps(adddict)) #TODO-ARC
     if verbose: logging.debug("rawlist returned {0}".format(res))
     assert res["data"][-1]["date"] == date
 
-def test_keyvaluetable():
+def test_keyvaluetable():  #TODO-ARC
     verbose=True
     database = "Q123456789"
     table = "mytesttable"

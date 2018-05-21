@@ -13,13 +13,17 @@ def test_archiveid():
     itemid = "commute"
     btih='XCMYARDAKNWYBERJHUSQR5RJG63JX46B'
     magnetlink='magnet:?xt=urn:btih:XCMYARDAKNWYBERJHUSQR5RJG63JX46B&tr=http%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=http%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz&ws=https%3A%2F%2Fgateway.dweb.me%2Fdownload%2Farchiveid%2F&xs=https%3A%2F%2Fgateway.dweb.me%2Ftorrent%2Farchiveid%2Fcommute'
-    res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+    #res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+    #TODO-ARC this is new test format
+    res = _processurl("arc/archive.org/metadata/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+
     if verbose: logging.debug("test_archiveid metadata returned {0}".format(res))
     assert res["data"]["metadata"]["identifier"] == itemid
     assert res["data"]["metadata"]["magnetlink"] == magnetlink
     assert "ipfs:/ipfs" in res["data"]["metadata"]["thumbnaillinks"][0]
-    assert itemid in res["data"]["metadata"]["thumbnaillinks"][2]
+    assert itemid in res["data"]["metadata"]["thumbnaillinks"][1]
     if verbose: logging.debug("test_archiveid complete")
+    #TODO-ARC check if still using this for anything, and if so how
     res = _processurl("magnetlink/btih/{}".format(btih), verbose)
     if verbose: logging.debug("test_archiveid magnetlink returned {0}".format(res))
     assert res["data"] == magnetlink
@@ -27,7 +31,9 @@ def test_archiveid():
 def test_collectionsortorder():
     verbose=True
     itemid="prelinger"
-    res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+    #collectionurl = "metadata/archiveid/{}"   # OLD FORM
+    collectionurl = "arc/archive.org/metadata/{}"
+    res = _processurl(collectionurl.format(itemid), verbose) # Simulate what the server would do with the URL
     assert res["data"]["collection_sort_order"] == "-downloads"
 
 def test_leaf():
@@ -35,10 +41,11 @@ def test_leaf():
     if verbose: logging.debug("Starting test_leaf")
     # Test it can respond to leaf requests
     item = "commute"
-    leafurl="leaf/archiveid"
+    # leafurl="leaf/archiveid" OLD FORM
+    leafurl="arc/archive.org/leaf"
     res = _processurl(leafurl, verbose=verbose, key=item)  # Simulate what the server would do with the URL
     if verbose: logging.debug("{} returned {}".format(leafurl, res))
-    leafurl="get/table/{}/domain".format(config["domains"]["metadata"])
+    leafurl="get/table/{}/domain".format(config["domains"]["metadata"])  #TODO-ARC
     res = _processurl(leafurl, verbose=verbose, key=item) # Should get value cached above
     if verbose: logging.debug("{} returned {}".format(leafurl, res))
 
@@ -47,7 +54,8 @@ def test_archiveerrs():
     if verbose: logging.debug("Starting test_archiveid")
     itemid = "nosuchitematall"
     try:
-        res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+        #res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
+        res = _processurl("arc/archive.org/metadata/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
     except ArchiveItemNotFound as e:
         pass    # Expecting an error
 
@@ -67,6 +75,7 @@ def test_search():
         'sort[]': "",
         'and[]': ""
     }
-    res = _processurl("metadata/advancedsearch", verbose, **kwargs2)  # Simulate what the server would do with the URL
+    #res = _processurl("metadata/advancedsearch", verbose, **kwargs2)  # Simulate what the server would do with the URL
+    res = _processurl("arc/archive.org/advancedsearch", verbose, **kwargs2)  # Simulate what the server would do with the URL
     #logging.debug("XXX@65")
     logging.debug(res)

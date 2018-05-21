@@ -5,9 +5,11 @@ from ._utils import _processurl
 DOIURL = "metadata/doi/10.1001/jama.2009.1064"
 CONTENTMULTIHASH = "5dqpnTaoMSJPpsHna58ZJHcrcJeAjW"
 PDF_SHA1HEX="02efe2abec13a309916c6860de5ad8a8a096fe5d"
-CONTENTHASHURL = "content/contenthash/" + CONTENTMULTIHASH
-SHA1HEXMETADATAURL = "metadata/sha1hex/"+PDF_SHA1HEX
-SHA1HEXCONTENTURL = "content/sha1hex/"+PDF_SHA1HEX
+#CONTENTHASHURL = "content/contenthash/" + CONTENTMULTIHASH # OLD STYLE
+CONTENTHASHURL = "contenthash/" + CONTENTMULTIHASH
+#SHA1HEXMETADATAURL = "metadata/sha1hex/"+PDF_SHA1HEX # OLD STYLE
+#SHA1HEXCONTENTURL = "content/sha1hex/"+PDF_SHA1HEX # OLD STYLE
+SHA1HEXCONTENTURL = "sha1hex/" + PDF_SHA1HEX
 CONTENTSIZE = 262438
 QBF="The Quick Brown Fox"
 BASESTRING="A quick brown fox"
@@ -44,7 +46,7 @@ def test_sha1hexcontent_resolve():
 
 def test_sha1hexmetadata_resolve():
     verbose = False  # True to debug
-    res = _processurl(SHA1HEXMETADATAURL, verbose)  # Simulate what the server would do with the URL
+    res = _processurl("sha1hex/"+PDF_SHA1HEX, verbose, output="metadata")  # Simulate what the server would do with the URL
     if verbose: logging.debug("test_sha1hexmetadata_resolve {0}".format(res))
     assert res["Content-type"] == "application/json", "Check retrieved content of expected type"
     assert res["data"]["metadata"]["size_bytes"] == CONTENTSIZE
