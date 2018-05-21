@@ -75,7 +75,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "rawlist": LocalResolverList,
         "rawadd": LocalResolverAdd,
         "btih": BtihResolver,
-        "table": KeyValueTable,
+        "table": KeyValueTable,         # Probably still support under TODO-ARC or make it /table/xxx/...since could be keys or get
     }
 
     _voidreturn = {'Content-type': 'application/octet-stream', 'data': None }
@@ -117,30 +117,16 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                            "services": [ ]}     # A list of names of services supported below  (not currently consumed anywhere)
                }
 
-    # Create one of these for each output format, by default parse name and create object, then either
-    # call a method on it, or create an output class.
-    # Can throw Exception if "new" fails e.g. because file doesnt exist
-    @exposed
-    def content(self, namespace, *args, **kwargs):
-        verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
-
-    @exposed
-    def download(self, namespace, *args, **kwargs):
-        # Synonym for "content" to match Archive API
-        return self.content(namespace, *args, **kwargs)
-
-    # Create one of these for each output format, by default parse name and create object, then either
-    # call a method on it, or create an output class.
-    @exposed
-    def metadata(self, namespace, *args, **kwargs):
-        verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(headers=True, **kwargs)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def contenthash(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenthash(verbose=verbose)
+        namespaceclass = self.namespaceclasses.get(namespace)
+        if namespaceclass: # Old style e.g. contenthash/rawstore
+            return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenthash(verbose=verbose)
+        else: # New style e.g. contenthash/Q123 //TODO-ARC complete this and replace cases of above
+            # /contenthash/foo => content/contenthash
+            return ContentHash.new("contenthash", namespace, *args, **kwargs).content(verbose=verbose, _headers=self.headers)  # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def contenturl(self, namespace, *args, **kwargs):
@@ -197,18 +183,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def getall(self, namespace, *args, verbose=False, **kwargs):
         verbose = kwargs.get("verbose") # Also passed on to get in kwargs
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).getall(headers=True, verbose=verbose, **kwargs)
-
-    #### A group for handling naming #####
-
-    @exposed
-    def leaf(self, namespace, *args, verbose=False, key=None, **kwargs):
-        """
-        This needs to catch the special case of /name/archiveid?key=xyz
-        """
-        verbose = kwargs.get("verbose")
-        args = list(args)
-        if key: args.append(key)              # Push key into place normally held by itemid in URL of archiveid/xyz
-        return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).leaf(headers=True, verbose=verbose, **kwargs)
 
     #### A group that breaks the naming convention####
     # urls of form https://gateway.dweb.me/archive.org/details/foo, conceptually to be moved to dweb.archive.org/details/foo
@@ -267,6 +241,101 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)  # Construct our local object
         IPLDfile.storeFromHash(obj.multihash, data)   # Store IPLD and hash of IPLD
         return {} # Empty return, just success
+
+    @exposed
+    def arc(self, arg1, *args, **kwargs):
+        """
+        Handle a name of the form /arg/archive.org/aaa/bbb
+        See page 7 or Mitra's black notebook - not intended as a useful location for docs, but will be copied here !
+        /arc/archive.org
+        /arc/archive.org/serve => content/archiveid
+        /arc/archive.org/download => content/archiveid
+        /arc/archive.org/metadata => metadata/archiveid
+        /arc/archive.org/advancedsearch => metadata/advancedsearch
+        /arc/archive.org/details => html file, but this should be done by nginx
+
+        :param arg1: Must be "archive.org"
+        :param args: Remainder of path
+        :return:
+        """
+        verbose = kwargs.get("verbose")
+        if arg1 == "archive.org":
+            arg2 = args[0]
+            args = list(args[1:])
+            if (arg2 == "download") or (arg2 == "serve"):
+                return ArchiveItem.new("archiveid", *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
+            if arg2 == "metadata":
+                return ArchiveItem.new("archiveid", *args, **kwargs).metadata(headers=True, **kwargs)  # { Content-Type: xxx; data: "bytes" }
+            if arg2 == "advancedsearch":
+                return AdvancedSearch.new("advancedsearch", *args, **kwargs).metadata(headers=True, **kwargs)  # { Content-Type: xxx; data: "bytes" }
+            if arg2 == "leaf": #This needs to catch the special case of /arc/archive.org/leaf?key=xyz
+                args = list(args)
+                if kwargs.get("key"):
+                    args.append(kwargs["key"])  # Push key into place normally held by itemid in URL of archiveid/xyz
+                    del kwargs["key"]
+                return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True, verbose=verbose, **kwargs)
+            if arg2 == "details" or arg2 == "search":
+                raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, args.join('/')))
+        raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1,('/').join(args)))
+
+    def _namedclass(self, namespace, *args, **kwargs):
+        namespaceclass = self.namespaceclasses[namespace] # e.g. doi=>DOI, sha1hex => Sha1Hex
+        output = kwargs.get("output")
+        if output == "metadata":
+            return namespaceclass.new(namespace, *args, **kwargs).metadata(headers=True, **kwargs)
+        elif output:  # Not ported yet to new format
+            raise ToBeImplementedException(name="{}/{}?{}".format(namesace, "/".join(args), kwargs))
+        else: # Default to returning content
+            return namespaceclass.new(namespace, *args, **kwargs).content(verbose=kwargs.get("verbose"), _headers=self.headers)
+
+    @exposed
+    def doi(self, *args, **kwargs):
+        return self._namedclass(self, "doi", *args, **kwargs)
+
+    @exposed
+    def sha1hex(self,  *args, **kwargs):
+        return self._namedclass(self, "sha1hex", *args, **kwargs)
+
+    # Legacy support ############
+    @exposed
+    def leaf(self, namespace, *args, **kwargs):
+        assert namespace == "archiveid", "Legacy mode only recognizing /leaf/archiveid/foo"
+        return self.arc("archive.org", "leaf", *args, **kwargs)
+
+    # Create one of these for each output format, by default parse name and create object, then either
+    # call a method on it, or create an output class.
+    @exposed
+    def metadata(self, namespace, *args, **kwargs):
+        if namespace == "archiveid":
+            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            return self.arc(self, "archive.org", "metadata", *args, **kwargs)
+        if namespace == "advancedsearch":
+            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            return self.arc(self, "archive.org", "advancedsearch", *args, **kwargs)
+        if namespace not in ["sha1hex", "contenthash", "doi"]:
+            logging.debug("Accessing unsupported legacy URL - needs implementing metadata/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+        #TODO-ARC testing has metadata/doi but not sure really supporting that any more but allow for now
+        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(headers=True, **kwargs)   # { Content-Type: xxx; data: "bytes" }
+
+    @exposed
+    def content(self, namespace, *args, **kwargs):
+        if namespace == "archiveid":
+            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            return self.arc(self, "archive.org", "download", *args, **kwargs)
+        else:
+            logging.debug("Accessing unsupported legacy URL - needs implementing content/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            verbose = kwargs.get("verbose")
+            return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
+
+    @exposed
+    def download(self, namespace, *args, **kwargs):
+        # Synonym for "content" to match Archive API
+        return self.content(self, namespace, *args, **kwargs)   # Note extra "self" as argument is intentional - needed sicne content is @exposed
+
+
+
+
+    # End of Legacy ##########
 
 if __name__ == "__main__":
     logging.basicConfig(**config["logging"])
