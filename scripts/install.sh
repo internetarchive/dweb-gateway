@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-cd /usr/local/dweb_gateway
+cd /usr/local/dweb-gateway
 #pip install --disable-pip-version-check -U $PIPS
 pip3 -q install --disable-pip-version-check -U -r python/requirements.txt
 [ -d data ] || mkdir data
