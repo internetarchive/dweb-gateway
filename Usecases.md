@@ -1,4 +1,4 @@
-# dweb_gateway - Use Cases
+# dweb-gateway - Use Cases
 A decentralized web gateway for open academic papers on the Internet Archive
 
 An outline of Use Cases for the gateway

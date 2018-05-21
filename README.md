@@ -1,8 +1,5 @@
-| Python Tests  |
-| -------------- |
-| [![Build Status](https://travis-ci.org/ArchiveLabs/dweb_gateway.svg?branch=master)](https://travis-ci.org/ArchiveLabs/dweb_gateway) |
 
-# dweb_gateway
+# dweb-gateway
 A decentralized web gateway for open academic papers on the Internet Archive
 
 ## Important editing notes
@@ -86,8 +83,8 @@ Supervisor install details
 
 
 ```bash
-git clone http://github.com/ArchiveLabs/dweb_gateway.cid
-cd dweb_gateway
+git clone http://github.com/internetarchive/dweb-gateway.cid
+cd dweb-gateway
 scripts/install.sh # Should install, get data and run
 
 # Then try

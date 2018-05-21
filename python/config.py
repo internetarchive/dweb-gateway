@@ -20,7 +20,7 @@ config = {
         "url_torrent": "https://gateway.dweb.me/torrent/archiveid/",
     },
     "domains": {
-        # This is also name of directory in /usr/local/dweb_gateway/.cache/table, if change this then can safely rename that directory to new name to retain metadata saved
+        # This is also name of directory in /usr/local/dweb-gateway/.cache/table, if change this then can safely rename that directory to new name to retain metadata saved
         "metadata": 'NACL VERIFY:h9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0=',
     },
     "directories": {
@@ -33,7 +33,7 @@ config = {
 
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
-    config["logging"] = { "filename": 'dweb_gateway.log', "level": logging.DEBUG }  #Not to file
+    config["logging"] = { "filename": 'dweb-gateway.log', "level": logging.DEBUG }  #Not to file
 elif socket.gethostname().startswith('mitraglass'):
     config["directories"]["bootloader"] = "/Users/mitra/git/_github_internetarchive/dweb-transport/examples/bootloader.html"
 else:

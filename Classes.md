@@ -1,4 +1,4 @@
-# dweb_gateway - Classes
+# dweb-gateway - Classes
 A decentralized web gateway for open academic papers on the Internet Archive
 
 ## Important editing notes
@@ -88,7 +88,7 @@ object, or invoking a constructor for that format.)
 
 `GET '/outputformat/namespace/namespace_dependent_string?aaa=bbb,ccc=ddd'`
 
-details moved to [ServerGateway.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/ServerGateway.py)
+details moved to [ServerGateway.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/ServerGateway.py)
 
 ## Name Resolvers
 The NameResolver group of classes manage recognizing a name, and connecting it to resources 
@@ -102,14 +102,14 @@ and may have default code based on assumptions about the data structure of subcl
 
 Logically it can represent one or multiple files.
 
-details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
+details moved to [NameResolver.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/NameResolver.py)
 
 ###<a name="nameresolveritem"></a>NameResolverDir superclass
 
 * Superclass for items that represent multiple files,
 * e.g. a directory, or the files that contain a DOI
 * Its files() method iterates over them, returning NameResolverFile
-* details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
+* details moved to [NameResolver.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/NameResolver.py)
 
 ###<a name="nameresolveritem"></a>NameResolverFile superclass
 
@@ -118,13 +118,13 @@ details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/b
 * It contains enough information to allow for retrieval of the file e.g. HTTP URL, or server and path. Also can have byterange, 
 * And meta-data such as date, size
 * Its shards() method iterates over the shards stored. 
-* details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
+* details moved to [NameResolver.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/NameResolver.py)
 
 ###<a name="nameresolveritem"></a>NameResolverShard superclass
 
 * Superclass for references to Shards in a NameResolverItem
 * Returned by the shards() iterator in NameResovlerItem
-* details moved to [NameResolver.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/NameResolver.py)
+* details moved to [NameResolver.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/NameResolver.py)
 
 ###<a name="doiresolver"></a>DOI Resolver
 
@@ -133,17 +133,17 @@ Implements name resolution of the DOI namespace, via a sqlite database (provided
 * URL: `/xxx/doi/10.pub_id/pub_specific_id` (forwarded here by HTTPServer)
 Resolves a DOI specific name such as 10.nnn/zzzz, 
 
-* details moved to [DOI.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/DOI.py)
+* details moved to [DOI.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/DOI.py)
 * Future Project to preload the different stores from the sqlite.
 
 ###<a name="doiresolverfile"></a>DOIResolverFile 
 * Subclass of NameResolverFile that holds meta-data from the sqllite database
-* details moved to [DOI.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/DOI.py)
+* details moved to [DOI.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/DOI.py)
 
 ###ContentHash
 Subclass of NameResolverItem
 Looks up the multihash in Location Service to find where can be retrieved from.
-* details moved to [ContentHash.py](https://github.com/ArchiveLabs/dweb_gateway/blob/master/python/ContentHash.py)
+* details moved to [ContentHash.py](https://github.com/internetarchive/dweb-gateway/blob/master/python/ContentHash.py)
 
 ## Gateway Outputs
 The Gateway Output group of classes manage producing derived content for sending back to requesters.
