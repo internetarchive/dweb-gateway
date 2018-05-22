@@ -69,11 +69,7 @@ class LocalResolverFetch(LocalResolver):
                 from .HashResolvers import ContentHash  # Avoid a circular reference
                 contenthash = self._contenthash.multihash58
                 logging.debug("LocalResolverFetch.retrieve falling back to contenthash: {}".format(contenthash))
-<<<<<<< HEAD
                 return ContentHash.new("contenthash", contenthash, verbose=verbose, nolocal=True).retrieve(verbose=verbose)
-=======
-                return ContentHash.new("contenthash", contenthash, verbose=verbose, nolocal=true).retrieve(verbose=verbose)
->>>>>>> origin/deployable
             except Exception as e:
                 logging.debug("Fallback failed, raising original error")
                 raise e1
