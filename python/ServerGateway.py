@@ -290,11 +290,11 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     @exposed
     def doi(self, *args, **kwargs):
-        return self._namedclass(self, "doi", *args, **kwargs)
+        return self._namedclass("doi", *args, **kwargs)
 
     @exposed
     def sha1hex(self,  *args, **kwargs):
-        return self._namedclass(self, "sha1hex", *args, **kwargs)
+        return self._namedclass("sha1hex", *args, **kwargs)
 
     # Legacy support ############
     @exposed
@@ -308,10 +308,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def metadata(self, namespace, *args, **kwargs):
         if namespace == "archiveid":
             logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
-            return self.arc(self, "archive.org", "metadata", *args, **kwargs)
+            return self.arc("archive.org", "metadata", *args, **kwargs)
         if namespace == "advancedsearch":
             logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
-            return self.arc(self, "archive.org", "advancedsearch", *args, **kwargs)
+            return self.arc("archive.org", "advancedsearch", *args, **kwargs)
         if namespace not in ["sha1hex", "contenthash", "doi"]:
             logging.debug("Accessing unsupported legacy URL - needs implementing metadata/{}/{} {}".format(namespace, ('/').join(args), kwargs))
         #TODO-ARC testing has metadata/doi but not sure really supporting that any more but allow for now
@@ -321,7 +321,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def content(self, namespace, *args, **kwargs):
         if namespace == "archiveid":
             logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
-            return self.arc(self, "archive.org", "download", *args, **kwargs)
+            return self.arc("archive.org", "download", *args, **kwargs)
         else:
             logging.debug("Accessing unsupported legacy URL - needs implementing content/{}/{} {}".format(namespace, ('/').join(args), kwargs))
             verbose = kwargs.get("verbose")
@@ -330,7 +330,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def download(self, namespace, *args, **kwargs):
         # Synonym for "content" to match Archive API
-        return self.content(self, namespace, *args, **kwargs)   # Note extra "self" as argument is intentional - needed sicne content is @exposed
+        return self.content(namespace, *args, **kwargs)   # Note extra "self" as argument is intentional - needed sicne content is @exposed
 
 
 
