@@ -65,11 +65,9 @@ class HashResolver(NameResolverFile):
         :raise NoContentException: if cant find content directly or via other classes (like DOIfile)
         """
         verbose = kwargs.get("verbose")
-        logging.debug("XXX@HashResolver.new "+namespace+" "+hash)
         if hash == HashFileEmpty.emptymeta[cls.archivefilemetadatafield]:
             return HashFileEmpty(verbose)   # Empty file
         ch = super(HashResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
-        logging.debug("XXX@HashResolver.new url="+ch.url)
         if not ch.url:
             if verbose: logging.debug("No URL, looking on archive for {0}.{1}".format(namespace, hash))
             #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
@@ -108,7 +106,6 @@ class HashResolver(NameResolverFile):
                 raise CodingException(message="unsupported for local: {0}".format(self.url))
             """
         else:
-            logging.debug("XXX@HashResolvers.retrieve going to"+self.url)    
             return httpget(self.url)  # Err TransportFileNotFound
 
     def searcharchivefor(self, multihash=None, verbose=False, **kwargs):
