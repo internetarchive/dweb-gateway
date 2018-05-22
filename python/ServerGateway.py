@@ -308,7 +308,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def metadata(self, namespace, *args, **kwargs):
         if namespace == "archiveid":
             logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
-            return self.arc(self, "archive.org", "metadata", *args, **kwargs)
+            return self.arc("archive.org", "metadata", *args, **kwargs)
         if namespace == "advancedsearch":
             logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
             return self.arc(self, "archive.org", "advancedsearch", *args, **kwargs)
