@@ -235,7 +235,7 @@ class NameResolverFile(NameResolver):
             self.mimetype = MimetypeService.get(self.multihash.multihash58, verbose=verbose)
             ipldhash = IPLDHashService.get(self.multihash.multihash58, verbose=verbose)
         else:
-            if not transport or "IPFS" in transport:
+            if wantipfs:
                 #TODO could check sha1 here, but would be slow
                 #TODO-URLSTORE delete old cache
                 #TODO-URLSTORE - check dont need mimetype
