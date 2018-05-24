@@ -341,6 +341,14 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             return self.arc("archive.org", "thumbnail", *args, **kwargs)
         raise ToBeImplementedException(name="{}/{}/{}?{}".format("thumbnail", namespace, "/".join(args), kwargs))
 
+
+    @exposed
+    def torrent(self, namespace, *args, **kwargs):
+        # Get a thumbnail image - required because https://archive.org/service/img/<itemid> has CORS issues
+        if namespace == "archiveid":
+            return self.arc("archive.org", "torrent", *args, **kwargs)
+        raise ToBeImplementedException(name="{}/{}/{}?{}".format("torrent", namespace, "/".join(args), kwargs))
+
     # End of Legacy ##########
 
 if __name__ == "__main__":
