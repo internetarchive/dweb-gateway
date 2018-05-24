@@ -100,6 +100,14 @@ class HashStore(object):
     def archiveidset(cls, itemid, value, verbose=False):
         return cls.set("archiveid:" + itemid, value)
 
+    @classmethod
+    def btihget(cls, btihhash, verbose=False):
+        return cls.get("btih:"+btihhash)
+
+    @classmethod
+    def btihset(cls, btihhash, value, verbose=False):
+        return cls.set("btih:"+btihhash, value)
+
 class StateService(HashStore):
 
     @classmethod
@@ -158,16 +166,15 @@ class MagnetLinkService(HashStore):
     # uses archiveidset/get
     redisfield = "magnetlink"
 
-    @classmethod
-    def btihget(cls, btihhash, verbose=False):
-        return cls.get("btih:"+btihhash)
-
-    @classmethod
-    def btihset(cls, btihhash, value, verbose=False):
-        return cls.set("btih:"+btihhash, value)
-
 class TitleService(HashStore):
     # Cache collection names, they dont change often enough to worry
     # uses archiveidset/get
     # TODO-REDIS note this is caching for ever, which is generally a bad idea ! Should figure out how to make Redis expire this cache every few days
     redisfield = "title"
+
+class ArchiveidService(HashStore):
+    # Map something to an archiveid
+    # uses archiveidset/get
+    # TODO-REDIS note this is caching for ever, which is generally a bad idea ! Should figure out how to make Redis expire this cache every few days
+    redisfield = "archiveid"
+

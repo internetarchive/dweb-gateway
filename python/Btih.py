@@ -77,8 +77,7 @@ class BtihResolver(NameResolverDir):
         """
         raise ToBeImplementedException(name="btih.metadata()")
 
-    def magnetlink(self, verbose=False, headers=False):
+    def magnetlink(self, verbose=False, headers=False, **kwargs):
         magnetlink = MagnetLinkService.btihget(self.btih)
         data = magnetlink or "" # Current paths mean we should have it, but if not we'll return "" as we have no way of doing that lookup
         return {"Content-type": "text/plain", "data": data} if headers else data
-

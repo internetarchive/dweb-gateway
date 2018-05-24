@@ -168,6 +168,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     #### A group that breaks the naming convention####
     # urls of form https://gateway.dweb.me/archive.org/details/foo, conceptually to be moved to dweb.archive.org/details/foo
+    # Its unclear if we use this - normally mapping /arc/archive.org/details ->  bootloader via nginx on dweb.archive.org or dweb.me
     @exposed
     def archive_org(self, *args, **kwargs):
         filename = config["directories"]["bootloader"]
@@ -272,9 +273,11 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def _namedclass(self, namespace, *args, **kwargs):
         namespaceclass = self.namespaceclasses[namespace] # e.g. doi=>DOI, sha1hex => Sha1Hex
         output = kwargs.get("output")
-        if output and output in ["metadata","magnetlink"]:
+        if output and output in ["metadata", "magnetlink", "archiveid", "torrent"]:
             # Supports:
             # btih:zzzz?output=magnetlink - get a Webtorrent magnetlink only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
+            # btih:zzzz?output=archiveid - get the archiveid, only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
+            # btih:zzzz?output=torrent - get a torrentfile, only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
             obj =  namespaceclass.new(namespace, *args, **kwargs)
             func = getattr(obj, output, None)
             if func:
