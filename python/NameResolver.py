@@ -246,7 +246,7 @@ class NameResolverFile(NameResolver):
                     ipldhash = self.multihash and IPLDHashService.get(self.multihash.multihash58) # Try again now have hash
                     MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
                 if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
-                    ipldhash = self.cache_ipfs(url=url, verbose=verbose, announcedht=True)
+                    ipldhash = self.cache_ipfs(url=url, verbose=verbose, announcedht=False) # Not announcing to DHT here, its too slow (16+ seconds) better to let first client fail, try gateway, fail again, and subsequent work.
                     if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
         if self.multihash:
             LocationService.set(self.multihash.multihash58, url, verbose=verbose)
