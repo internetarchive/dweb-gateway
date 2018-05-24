@@ -14,7 +14,6 @@ def test_archiveid():
     btih='XCMYARDAKNWYBERJHUSQR5RJG63JX46B'
     magnetlink='magnet:?xt=urn:btih:XCMYARDAKNWYBERJHUSQR5RJG63JX46B&tr=http%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=http%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz&ws=https%3A%2F%2Fgateway.dweb.me%2Fdownload%2Farchiveid%2F&xs=https%3A%2F%2Fgateway.dweb.me%2Ftorrent%2Farchiveid%2Fcommute'
     #res = _processurl("metadata/archiveid/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
-    #TODO-ARC this is new test format
     res = _processurl("arc/archive.org/metadata/{}".format(itemid), verbose)  # Simulate what the server would do with the URL
 
     if verbose: logging.debug("test_archiveid metadata returned {0}".format(res))

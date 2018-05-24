@@ -138,18 +138,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         self.namespaceclasses[namespace].new(namespace, *args, **kwargs)
         return self._voidreturn
 
-    ##### A group for handling webtorrent ########
-    @exposed
-    def torrent(self, namespace, *args, **kwargs):
-        verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, transport="WEBTORRENT", wanttorrent=True, **kwargs).torrent(verbose=verbose, headers=True)
-
-    @exposed
-    def magnetlink(self, namespace, *args, **kwargs):
-        # Get a magnetlink - only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
-        verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).magnetlink(verbose=verbose, headers=True)
-
     @exposed
     def thumbnail(self, namespace, *args, **kwargs):
         # Get a thumbnail image - required because https://archive.org/service/img/<itemid> has CORS issues
@@ -264,8 +252,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             args = list(args[1:])
             if (arg2 == "download") or (arg2 == "serve"):
                 return ArchiveItem.new("archiveid", *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
-            if arg2 == "metadata":
-                return ArchiveItem.new("archiveid", *args, **kwargs).metadata(headers=True, **kwargs)  # { Content-Type: xxx; data: "bytes" }
             if arg2 == "advancedsearch":
                 return AdvancedSearch.new("advancedsearch", *args, **kwargs).metadata(headers=True, **kwargs)  # { Content-Type: xxx; data: "bytes" }
             if arg2 == "leaf": #This needs to catch the special case of /arc/archive.org/leaf?key=xyz
@@ -273,7 +259,15 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 if kwargs.get("key"):
                     args.append(kwargs["key"])  # Push key into place normally held by itemid in URL of archiveid/xyz
                     del kwargs["key"]
-                return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True, verbose=verbose, **kwargs)
+                return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True,**kwargs)
+            if arg2 in ["torrent", "metadata"]:
+                if arg2 == "torrent":
+                    # Need to pass these to new
+                    kwargs.transport = "WEBTORRENT"
+                    kwargs.wanttorrent = "true"
+                obj = ArchiveItem.new("archiveid", *args, **kwargs)
+                func = getattr(obj, arg2, None)
+                return func(headers=True, **kwargs)
             if arg2 == "details" or arg2 == "search":
                 raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, args.join('/')))
         raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1,('/').join(args)))
@@ -281,9 +275,16 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def _namedclass(self, namespace, *args, **kwargs):
         namespaceclass = self.namespaceclasses[namespace] # e.g. doi=>DOI, sha1hex => Sha1Hex
         output = kwargs.get("output")
-        if output == "metadata":
-            return namespaceclass.new(namespace, *args, **kwargs).metadata(headers=True, **kwargs)
-        elif output:  # Not ported yet to new format
+        if output and output in ["metadata","magnetlink"]:
+            # Supports:
+            # btih:zzzz?output=magnetlink - get a Webtorrent magnetlink only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
+            obj =  namespaceclass.new(namespace, *args, **kwargs)
+            func = getattr(obj, output, None)
+            if func:
+                return func(headers=True, **kwargs)
+            else:
+                raise ToBeImplementedException(name="{}/{}?{}".format(namesace, "/".join(args), kwargs))
+        elif output:
             raise ToBeImplementedException(name="{}/{}?{}".format(namesace, "/".join(args), kwargs))
         else: # Default to returning content
             return namespaceclass.new(namespace, *args, **kwargs).content(verbose=kwargs.get("verbose"), _headers=self.headers)
@@ -295,6 +296,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def sha1hex(self,  *args, **kwargs):
         return self._namedclass("sha1hex", *args, **kwargs)
+
+    @exposed
+    def btih(self, *args, **kwargs):   # /btih/xxxxx or /btih/xxxxx?output=magnetlink
+        return self._namedclass("btih", *args, **kwargs)
 
     # Legacy support ############
     @exposed
@@ -314,7 +319,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             return self.arc("archive.org", "advancedsearch", *args, **kwargs)
         if namespace not in ["sha1hex", "contenthash", "doi"]:
             logging.debug("Accessing unsupported legacy URL - needs implementing metadata/{}/{} {}".format(namespace, ('/').join(args), kwargs))
-        #TODO-ARC testing has metadata/doi but not sure really supporting that any more but allow for now
+        #legacy supporting metadata/xxx
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(headers=True, **kwargs)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
@@ -331,9 +336,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def download(self, namespace, *args, **kwargs):
         # Synonym for "content" to match Archive API
         return self.content(namespace, *args, **kwargs)   # Note extra "self" as argument is intentional - needed sicne content is @exposed
-
-
-
 
     # End of Legacy ##########
 
