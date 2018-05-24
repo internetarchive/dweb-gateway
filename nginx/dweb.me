@@ -13,11 +13,17 @@
 # SUMMARY
 # http://dweb.me/ -> https://dweb.me/
 # http://gateway.dweb.me/ proxypass localhost:4244 (gateway python)
+# https://{gateway.dweb.me, dweb.me}/ -> https://dweb.archive.org  - exact URL only
+# https://{gateway.dweb.me, dweb.me}/ proxypass localhost:4244 (gateway python)
 # https://{gateway.dweb.me, dweb.me}/examples -> file
 # https://{gateway.dweb.me, dweb.me}/arc/archive.org/details -> bootloader
-# https://{gateway.dweb.me, dweb.me}/ proxypass localhost:4244 (gateway python)
 # https://{dweb.me, gateway.dweb.me}/{ws,wss} proxypass localhost:4002 (websockets for IPFS) - not yet working
 ##
+
+####
+#### THE SITES gateway.dweb.me & dweb.me ARE ALMOST IDENTICAL, ITS HIGHLY LIKEY ANY CHANGES HERE NEED TO BE MADE ON THE OTHER SITE
+####
+
 server {
     listen 0.0.0.0:80;
     server_name dweb.me;
@@ -107,6 +113,11 @@ server {
 #       proxy_pass              http://localhost:8080/;
 #       proxy_read_timeout      600;
 #	}
+
+    # Exact root URL - Forward root URL to dweb.archive.org, shouldnt be hitting it here - probably a crawler
+    location ~ ^/$ {
+        return 301 https://dweb.archive.org/;
+    }
 
     # Forward everything else to the gateway on port 4244
 	location / {
