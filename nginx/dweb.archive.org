@@ -44,9 +44,6 @@ server {
 	index index.html index.htm index.nginx-debian.html;
 
         server_name dweb.archive.org;
-	ssl on;
-	ssl_certificate /etc/letsencrypt/live/dweb.me/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/dweb.me/privkey.pem;
 
         location / {
                 add_header Access-Control-Allow-Origin *;
