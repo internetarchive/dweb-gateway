@@ -138,12 +138,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         self.namespaceclasses[namespace].new(namespace, *args, **kwargs)
         return self._voidreturn
 
-    @exposed
-    def thumbnail(self, namespace, *args, **kwargs):
-        # Get a thumbnail image - required because https://archive.org/service/img/<itemid> has CORS issues
-        verbose = kwargs.get("verbose")
-        return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).thumbnail(verbose=verbose, headers=True)
-
     ###### A group for handling Key Value Stores #########
     @exposed
     def set(self, namespace, *args, verbose=False, **kwargs):
@@ -260,11 +254,14 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                     args.append(kwargs["key"])  # Push key into place normally held by itemid in URL of archiveid/xyz
                     del kwargs["key"]
                 return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True,**kwargs)
-            if arg2 in ["torrent", "metadata"]:
+            if arg2 == "service" and args[0] == "img":
+                args.pop(0)
+                arg2 = "thumbnail"
+            if arg2 in ["torrent", "metadata", "thumbnail"]:
                 if arg2 == "torrent":
                     # Need to pass these to new
-                    kwargs.transport = "WEBTORRENT"
-                    kwargs.wanttorrent = "true"
+                    kwargs["transport"] = "WEBTORRENT"
+                    kwargs["wanttorrent"] = True
                 obj = ArchiveItem.new("archiveid", *args, **kwargs)
                 func = getattr(obj, arg2, None)
                 return func(headers=True, **kwargs)
@@ -336,6 +333,13 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def download(self, namespace, *args, **kwargs):
         # Synonym for "content" to match Archive API
         return self.content(namespace, *args, **kwargs)   # Note extra "self" as argument is intentional - needed sicne content is @exposed
+
+    @exposed
+    def thumbnail(self, namespace, *args, **kwargs):
+        # Get a thumbnail image - required because https://archive.org/service/img/<itemid> has CORS issues
+        if namespace == "archiveid":
+            return self.arc("archive.org", "thumbnail", *args, **kwargs)
+        raise ToBeImplementedException(name="{}/{}/{}?{}".format("thumbnail", namespace, "/".join(args), kwargs))
 
     # End of Legacy ##########
 

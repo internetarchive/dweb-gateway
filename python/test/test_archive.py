@@ -22,7 +22,6 @@ def test_archiveid():
     assert "ipfs:/ipfs" in res["data"]["metadata"]["thumbnaillinks"][0]
     assert itemid in res["data"]["metadata"]["thumbnaillinks"][1]
     if verbose: logging.debug("test_archiveid complete")
-    #TODO-ARC check if still using this for anything, and if so how
     res = _processurl("magnetlink/btih/{}".format(btih), verbose)
     if verbose: logging.debug("test_archiveid magnetlink returned {0}".format(res))
     assert res["data"] == magnetlink

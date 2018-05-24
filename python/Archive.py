@@ -284,7 +284,7 @@ class ArchiveItem(NameResolverDir):
                 self._metadata["metadata"]["magnetlink"] = magnetlink  # Store on metadata if have one
         if verbose: logging.info("Magnetlink for {} = {}".format(self.itemid, magnetlink))
 
-    def torrent(self, headers=True, verbose=False):
+    def torrent(self, headers=True, verbose=False, **kwargs):
         """
         Output the torrent
         :return:
