@@ -11,13 +11,15 @@
 # Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
 #
 # SUMMARY
+# https://dweb.me (secure server) proxypass http://dweb.me (research server)
 # http://dweb.me/ -> https://dweb.me/
-# http://gateway.dweb.me/ proxypass localhost:4244 (gateway python)
+# TODO http://dweb.archive.org/metadata/xxx -> gateway /arc/archive.org/metadata  etc
 # https://{gateway.dweb.me, dweb.me}/ -> https://dweb.archive.org  - exact URL only
 # https://{gateway.dweb.me, dweb.me}/ proxypass localhost:4244 (gateway python)
-# https://{gateway.dweb.me, dweb.me}/examples -> file
-# https://{gateway.dweb.me, dweb.me}/arc/archive.org/details -> bootloader
-# https://{dweb.me, gateway.dweb.me}/{ws,wss} proxypass localhost:4002 (websockets for IPFS) - not yet working
+# https://{gateway.dweb.me, dweb.me, dweb.archive.org}/examples -> file
+# http://dweb.archive.org/{details,search} -> bootloader
+# https://{gateway.dweb.me, dweb.me}/arc/archive.org/{details,search} -> bootloader
+# https://{dweb.me, gateway.dweb.me, dweb.archive.org}/{ws,wss} proxypass localhost:4002 (websockets for IPFS) - not yet working
 ##
 
 ####
@@ -62,8 +64,14 @@ server {
 	ssl_certificate /etc/letsencrypt/live/dweb.me/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/dweb.me/privkey.pem;
 
-    # Forward /arc/archive.org/details -> bootloader
+    # Forward details and search -> bootloader
+    # On dweb.me & gateway.dweb.me thsi is at /arc/archive.org/{details,search}, on dweb.archive.org its at /{details,search}
     location /arc/archive.org/details {
+        add_header Access-Control-Allow-Origin *;
+        try_files /examples/bootloader.html =404;
+    }
+    location /arc/archive.org/search {
+        add_header Access-Control-Allow-Origin *;
         try_files /examples/bootloader.html =404;
     }
 
@@ -114,13 +122,14 @@ server {
 #       proxy_read_timeout      600;
 #	}
 
-    # Exact root URL - Forward root URL to dweb.archive.org, shouldnt be hitting it here - probably a crawler
+    # Exact root URL - on dweb.me or gateway.dweb.me redirect to https://dweb.archive.org so client uses https, most of these are going to be crawlers/hackers
     location ~ ^/$ {
         return 301 https://dweb.archive.org/;
     }
 
-    # Forward everything else to the gateway on port 4244
+    # on dweb.me or gatewy.dweb.me Forward everything else to the gateway on port 4244, not on dweb.archive.org as assumes /arc/archive.org
 	location / {
+		# rewrite (.*)  /arc/archive.org/$1 break;  # On dweb.archive.org rewrite it to /arc/archive.org/...
         proxy_set_header        Host $host;
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -129,20 +138,4 @@ server {
         proxy_read_timeout    600;
 	}
 
-	# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-	#location ~ \.php$ {
-	#	include snippets/fastcgi-php.conf;
-	#
-	#	# With php7.0-cgi alone:
-	#	fastcgi_pass 127.0.0.1:9000;
-	#	# With php7.0-fpm:
-	#	fastcgi_pass unix:/run/php/php7.0-fpm.sock;
-	#}
-
-	# deny access to .htaccess files, if Apache's document root
-	# concurs with nginx's one
-	#
-	#location ~ /\.ht {
-	#	deny all;
-	#}
 }
