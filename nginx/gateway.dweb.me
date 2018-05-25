@@ -88,6 +88,11 @@ server {
         try_files /examples/bootloader.html =404;
     }
 
+    # Forward /arc/archive.org/search -> bootloader
+    location /arc/archive.org/search {
+        try_files /examples/bootloader.html =404;
+    }
+
     # Not yet working forward, unclear if should be /ws or /wss
     location /ws  {
         proxy_pass http://localhost:4002;
