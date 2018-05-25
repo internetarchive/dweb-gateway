@@ -1,7 +1,11 @@
 #!/bin/bash
 
 set -x
-cd /usr/local/dweb-gateway
+ARG=$1
+GITNAME=dweb-gateway
+GITDIR=/usr/local/${GITNAME}
+
+cd $GITDIR
 #pip install --disable-pip-version-check -U $PIPS
 pip3 -q install --disable-pip-version-check -U -r python/requirements.txt
 [ -d data ] || mkdir data
@@ -26,6 +30,12 @@ then
 	gunzip data/idents_files_urls.sqlite.gz
 fi
 
-sudo supervisorctl restart dweb-gateway
+diff -r nginx /etc/nginx/sites-enabled
+if [ "$ARG" == "NGINX" ]
+    sudo cp nginx/* /etc/nginx/sites-available
+    sudo service nginx reload
+fi
+
+sudo supervisorctl restart $GITNAME
 
 
