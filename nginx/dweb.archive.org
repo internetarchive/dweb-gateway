@@ -38,14 +38,17 @@ server {
         server_name dweb.archive.org;
 
     # On dweb.me & gateway.dweb.me thsi is at /arc/archive.org/{details,search}, on dweb.archive.org its at /{details,search}
+    # Load bootloader which will examine the URL
+    location ~ ^/$ {
+        add_header Access-Control-Allow-Origin *;
+        try_files /examples/bootloader.html =404;
+    }
     location /details {
         add_header Access-Control-Allow-Origin *;
-        # Default for dweb.archive.org is to laod the bootloader which will attempt to resolve the rest of the URL as a name.
         try_files /examples/bootloader.html =404;
     }
     location /search {
         add_header Access-Control-Allow-Origin *;
-        # Default for dweb.archive.org is to laod the bootloader which will attempt to resolve the rest of the URL as a name.
         try_files /examples/bootloader.html =404;
     }
 
@@ -104,7 +107,7 @@ server {
 
     # on dweb.me or gatewy.dweb.me Forward everything else to the gateway on port 4244, not on dweb.archive.org as assumes /arc/archive.org
 	location / {
-		rewrite (.*)  /arc/archive.org/$1 break;
+		rewrite (.*)  /arc/archive.org$1 break;
         proxy_set_header        Host $host;
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
