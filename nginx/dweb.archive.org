@@ -13,7 +13,7 @@
 # SUMMARY
 # https://dweb.me (secure server) proxypass http://dweb.me (research server)
 # http://dweb.me/ -> https://dweb.me/
-# TODO http://dweb.archive.org/metadata/xxx -> gateway /arc/archive.org/metadata  etc
+# http://dweb.archive.org/aaa/xxx -> gateway /arc/archive.org/aaa/xxx
 # https://{gateway.dweb.me, dweb.me}/ -> https://dweb.archive.org  - exact URL only
 # https://{gateway.dweb.me, dweb.me}/ proxypass localhost:4244 (gateway python)
 # https://{gateway.dweb.me, dweb.me, dweb.archive.org}/examples -> file
@@ -27,8 +27,9 @@
 ####
 
 server {
-    # dweb.archive.org answers on 80, dweb.me and gateway.dweb.me on 443
-	listen 80;
+    # dweb.me and gateway.dweb.me on 443
+	# dweb.archive.org answers on 80 because its the end-point from port 443 proxypass on the real dweb.archive.org
+    listen 80;
 
 	root /var/www/html;
 
