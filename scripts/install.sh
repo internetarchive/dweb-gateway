@@ -34,7 +34,12 @@ diff -r nginx /etc/nginx/sites-enabled
 if [ "$ARG" == "NGINX" ]
 then
     sudo cp nginx/* /etc/nginx/sites-available
-    sudo service nginx reload
+    if sudo service nginx reload
+    then
+	echo "NGINX restarted"
+    else
+	systemctl status nginx.service	
+    fi
 fi
 
 sudo supervisorctl restart $GITNAME
