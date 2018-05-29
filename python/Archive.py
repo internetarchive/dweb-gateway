@@ -173,7 +173,8 @@ class ArchiveItem(NameResolverDir):
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
-                return ArchiveFilePadding(verbose=verbose)
+                len = int(name.split('/')[-1])
+                return ArchiveFilePadding(verbose=verbose, len=len)
             else:
                 f = [f for f in obj._metadata["files"] if f["name"] == name]
                 if not f: raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    # TODO change to islice
@@ -466,17 +467,21 @@ class ArchiveFilePadding(ArchiveFile):
     # It also makes it much easier to edit a torrent and rebuild new from old.
 
     # noinspection PyMissingConstructor
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, len=0):
         # Intentionally not calling superclass's init.
         self.mimetype = "application/octet-stream"
+        self.len = len
 
     def retrieve(self, _headers=None, verbose=False, **kwargs):
         # Return a string of nulls of a length specified by the range header
         # TODO better error handling
         _range = _headers.get("range")
-        #logging.debug("XXX@255 {}".format(_range))  # bytes=32976781-33501068
-        rr = _range[6:].split('-')
-        rangelength = int(rr[1]) - int(rr[0]) + 1
+        if _range:
+            #logging.debug("XXX@255 {}".format(_range))  # bytes=32976781-33501068
+            rr = _range[6:].split('-')
+            rangelength = int(rr[1]) - int(rr[0]) + 1
+        else:
+            rangelength = self.len
         #logging.debug("XXX@261 {} bytes".format(rangelength))  # bytes=32976781-33501068
         return '\0' * rangelength
 
