@@ -20,6 +20,8 @@
 # http://dweb.archive.org/{details,search} -> bootloader
 # https://{gateway.dweb.me, dweb.me}/arc/archive.org/{details,search} -> bootloader
 # https://{dweb.me, gateway.dweb.me, dweb.archive.org}/{ws,wss} proxypass localhost:4002 (websockets for IPFS) - not yet working
+# https://dweb.archive.org/{about, donate, projects} -> https://archive.org/{about,donate,projects}
+# https://{gatgeway.dweb.me, dweb.me}/arc/archive.org/{about, donate, projects} -> https://archive.org/{about,donate,projects}
 ##
 
 ####
@@ -52,6 +54,17 @@ server {
     location /search {
         add_header Access-Control-Allow-Origin *;
         try_files /examples/bootloader.html =404;
+    }
+
+    # Handle archive.org urls that cant currently be done with Dweb
+    location /about {
+        return 302 https://archive.org$request_uri;
+    }
+    location /donate {
+        return 302 https://archive.org$request_uri;
+    }
+    location /projects {
+        return 302 https://archive.org$request_uri;
     }
 
     # Not yet working forward, unclear if should be /ws or /wss
