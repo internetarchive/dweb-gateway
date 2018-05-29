@@ -479,3 +479,14 @@ class ArchiveFilePadding(ArchiveFile):
         rangelength = int(rr[1]) - int(rr[0]) + 1
         #logging.debug("XXX@261 {} bytes".format(rangelength))  # bytes=32976781-33501068
         return '\0' * rangelength
+
+    def content(self, _headers=None, verbose=False, **kwargs):
+        """
+        Return the content, by default its just the result of self.retrieve() which must be defined in superclass
+        Requires mimetype to be set in subclass
+        Note this is the default (NameResolverFile.content)
+
+        :param verbose:
+        :return:
+        """
+        return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers)}
