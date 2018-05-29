@@ -100,13 +100,13 @@ server {
 
     # Handle archive.org urls that cant currently be done with Dweb
     location /arc/archive.org/about {
-        rewrite /arc/archive.org/(.*) https://archive.org/$1
+        rewrite /arc/archive.org/(.*) https://archive.org/$1;
     }
     location /arc/archive.org/donate {
-        rewrite /arc/archive.org/(.*) https://archive.org/$1
+        rewrite /arc/archive.org/(.*) https://archive.org/$1;
     }
     location /arc/archive.org/projects {
-        rewrite /arc/archive.org/(.*) https://archive.org/$1
+        rewrite /arc/archive.org/(.*) https://archive.org/$1;
     }
 
     # Not yet working forward, unclear if should be /ws or /wss
