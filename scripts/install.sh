@@ -32,6 +32,7 @@ fi
 
 diff -r nginx /etc/nginx/sites-enabled
 if [ "$ARG" == "NGINX" ]
+then
     sudo cp nginx/* /etc/nginx/sites-available
     sudo service nginx reload
 fi
