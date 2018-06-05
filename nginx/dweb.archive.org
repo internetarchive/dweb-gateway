@@ -127,7 +127,7 @@ server {
 
     # on dweb.me or gatewy.dweb.me Forward everything else to the gateway on port 4244, not on dweb.archive.org as assumes /arc/archive.org
 	location / {
-	    try_files $uri /archive$uri @gateway
+	    try_files $uri /archive$uri @gateway;
     }
 
     location @gateway {
