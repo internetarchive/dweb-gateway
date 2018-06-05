@@ -483,6 +483,7 @@ class ArchiveFilePadding(ArchiveFile):
         else:
             rangelength = self.len
         #logging.debug("XXX@261 {} bytes".format(rangelength))  # bytes=32976781-33501068
+        logging.debug("Returning {}".format(rangelength))
         return '\0' * rangelength
 
     def content(self, _headers=None, verbose=False, **kwargs):
@@ -495,3 +496,4 @@ class ArchiveFilePadding(ArchiveFile):
         :return:
         """
         return {"Content-type": self.mimetype, "data": self.retrieve(_headers=_headers)}
+
