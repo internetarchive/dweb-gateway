@@ -16,7 +16,7 @@
 # http://dweb.archive.org/aaa/xxx -> gateway /arc/archive.org/aaa/xxx
 # https://{gateway.dweb.me, dweb.me}/ -> https://dweb.archive.org  - exact URL only
 # https://{gateway.dweb.me, dweb.me}/ proxypass localhost:4244 (gateway python)
-# https://{gateway.dweb.me, dweb.me, dweb.archive.org}/examples -> file
+# https://{gateway.dweb.me, dweb.me, dweb.archive.org}/{archive,examples} -> file
 # http://dweb.archive.org/{details,search} -> bootloader
 # https://{gateway.dweb.me, dweb.me}/arc/archive.org/{details,search} -> bootloader
 # https://{dweb.me, gateway.dweb.me, dweb.archive.org}/{ws,wss} proxypass localhost:4002 (websockets for IPFS) - not yet working
@@ -91,11 +91,11 @@ server {
     # On dweb.me & gateway.dweb.me thsi is at /arc/archive.org/{details,search}, on dweb.archive.org its at /{details,search}
     location /arc/archive.org/details {
         add_header Access-Control-Allow-Origin *;
-        try_files /examples/bootloader.html =404;
+        try_files /archive/bootloader.html =404;
     }
     location /arc/archive.org/search {
         add_header Access-Control-Allow-Origin *;
-        try_files /examples/bootloader.html =404;
+        try_files /archive/bootloader.html =404;
     }
 
     # Handle archive.org urls that cant currently be done with Dweb
@@ -138,6 +138,12 @@ server {
 		try_files $uri $uri/ =404;
 	}
 
+	location /archive {
+		add_header Access-Control-Allow-Origin *;
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
 
     location /dweb-serviceworker-bundle.js {
         add_header Access-Control-Allow-Origin *;
