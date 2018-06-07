@@ -125,11 +125,15 @@ server {
 #        return 301 https://dweb.archive.org/;
 #    }
 
-    # on dweb.me or gatewy.dweb.me Forward everything else to the gateway on port 4244, not on dweb.archive.org as assumes /arc/archive.org
+    location ~ ^.+/dweb-(transports|objects)-bundle.js  {   // contains dweb-*-bundles, but doesnt start with it - probably relative url in bootstrap.html
+        rewrite ^.*/dweb-(transports|objects)-bundle.js.*$  /dweb-$1-bundle.js redirect;
+    }
+
 	location / {
 	    try_files $uri /archive$uri @gateway;
     }
 
+    # on dweb.me or gatewy.dweb.me Forward everything else to the gateway on port 4244, not on dweb.archive.org as assumes /arc/archive.org
     location @gateway {
 		rewrite (.*)  /arc/archive.org$1 break; # On dweb.archive.org rewrite it to /arc/archive.org/...
         proxy_set_header        Host $host;
