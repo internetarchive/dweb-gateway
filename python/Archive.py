@@ -173,8 +173,8 @@ class ArchiveItem(NameResolverDir):
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
-                len = int(name.split('/')[-1])
-                return ArchiveFilePadding(verbose=verbose, len=len)
+                ln = int(name.split('/')[-1])
+                return ArchiveFilePadding(verbose=verbose, len=ln)
             else:
                 f = [f for f in obj._metadata["files"] if f["name"] == name]
                 if not f: raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    # TODO change to islice
@@ -467,10 +467,10 @@ class ArchiveFilePadding(ArchiveFile):
     # It also makes it much easier to edit a torrent and rebuild new from old.
 
     # noinspection PyMissingConstructor
-    def __init__(self, verbose=False, len=0):
+    def __init__(self, verbose=False, ln=0):
         # Intentionally not calling superclass's init.
         self.mimetype = "application/octet-stream"
-        self.len = len
+        self.len = ln
 
     def retrieve(self, _headers=None, verbose=False, **kwargs):
         # Return a string of nulls of a length specified by the range header
