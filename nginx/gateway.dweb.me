@@ -167,7 +167,7 @@ server {
         return 301 https://dweb.archive.org/;
     }
 
-    location ~ ^.+/dweb-(transports|objects)-bundle.js  {   // contains dweb-*-bundles, but doesnt start with it - probably relative url in bootstrap.html
+    location ~ ^.+/dweb-(transports|objects)-bundle.js  {   # contains dweb-*-bundles, but doesnt start with it - probably relative url in bootstrap.html
         rewrite ^.*/dweb-(transports|objects)-bundle.js.*$  /dweb-$1-bundle.js redirect;
     }
 
