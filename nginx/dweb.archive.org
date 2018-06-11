@@ -57,13 +57,7 @@ server {
     }
 
     # Handle archive.org urls that cant currently be done with Dweb
-    location /about {
-        return 302 https://archive.org$request_uri;
-    }
-    location /donate {
-        return 302 https://archive.org$request_uri;
-    }
-    location /projects {
+    location ~ ^/(about|bookmarks|donate|projects) {
         return 302 https://archive.org$request_uri;
     }
 
