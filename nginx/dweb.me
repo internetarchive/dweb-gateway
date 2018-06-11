@@ -155,7 +155,6 @@ server {
 
     # on dweb.me or gatewy.dweb.me Forward everything else to the gateway on port 4244, not on dweb.archive.org as assumes /arc/archive.org
     location @gateway {
-		rewrite (.*)  /arc/archive.org$1 break; # On dweb.archive.org rewrite it to /arc/archive.org/...
         proxy_set_header        Host $host;
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
