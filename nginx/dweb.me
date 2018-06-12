@@ -34,7 +34,6 @@ server {
     rewrite ^ https://$http_host$request_uri? permanent;    # force redirect http to https
 }
 
-
 # Default server configuration
 #
 server {
@@ -163,4 +162,21 @@ server {
         proxy_read_timeout    600;
 	}
 
+}
+
+server {
+    listen 4245;
+	root /var/www/html;
+    server_name dweb.me;
+	ssl on;
+	ssl_certificate /etc/letsencrypt/live/dweb.me/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/dweb.me/privkey.pem;
+
+    # Tunnel websocket
+    location /  {
+        proxy_pass http://localhost:4002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
 }
