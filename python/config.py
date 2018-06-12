@@ -15,9 +15,9 @@ config = {
         "url_dht_provide": "http://localhost:5001/api/v0/dht/provide",
     },
     "gateway": {
-        "url_download": "https://gateway.dweb.me/arc/archive.org/download/",
-        "url_servicesimg": "https://gateway.dweb.me/arc/archive.org/thumbnail/",
-        "url_torrent": "https://gateway.dweb.me/arc/archive.org/torrent/",
+        "url_download": "https://dweb.me/arc/archive.org/download/",
+        "url_servicesimg": "https://dweb.me/arc/archive.org/thumbnail/",
+        "url_torrent": "https://dweb.me/arc/archive.org/torrent/",
     },
     "domains": {
         # This is also name of directory in /usr/local/dweb-gateway/.cache/table, if change this then can safely rename that directory to new name to retain metadata saved

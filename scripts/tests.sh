@@ -11,7 +11,7 @@ curl https://gateway.dweb.me/metadata/doi/10.1001/jama.2009.1064?verbose=True
 echo; echo # Terminate response and blank line
 
 # Fetch the sha1 multihash from above
-curl -D- -o /dev/null https://gateway.dweb.me/content/contenthash/5dqpnTaoMSJPpsHna58ZJHcrcJeAjW?verbose=True
+curl -D- -o /dev/null https://dweb.me/contenthash/5dqpnTaoMSJPpsHna58ZJHcrcJeAjW?verbose=True
 echo; echo # Terminate response and blank line
 
 echo "Now trying errors"

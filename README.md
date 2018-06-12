@@ -90,5 +90,5 @@ scripts/install.sh # Should install, get data and run
 # Then try
 curl http://localhost:4244/info
 curl http://localhost:4244/doi/10.1001/jama.2009.1064?verbose=True
-curl https://gateway.dweb.me/content/contenthash/5dr1gqVNt1mPzCL2tMRSMnJpWsJ5Qs?verbose=True
+curl https://localhost:4244/contenthash/5dr1gqVNt1mPzCL2tMRSMnJpWsJ5Qs?verbose=True
 ```

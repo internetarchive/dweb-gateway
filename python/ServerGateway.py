@@ -167,7 +167,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).getall(headers=True, verbose=verbose, **kwargs)
 
     #### A group that breaks the naming convention####
-    # urls of form https://gateway.dweb.me/archive.org/details/foo, conceptually to be moved to dweb.archive.org/details/foo
+    # urls of form https://dweb.me/archive.org/details/foo, conceptually to be moved to dweb.archive.org/details/foo
     # Its unclear if we use this - normally mapping /arc/archive.org/details ->  bootloader via nginx on dweb.archive.org or dweb.me
     @exposed
     def archive_org(self, *args, **kwargs):
