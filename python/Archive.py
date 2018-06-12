@@ -357,6 +357,7 @@ class ArchiveItem(NameResolverDir):
             try:
                 # Store on IPFS - dont ping gateway (which is slow) allow first browser to ping on timeout by adding ipfs.io URL to return
                 thumbnailipfsurl = TransportIPFS().store(urlfrom=archive_servicesimgurl, verbose=verbose, pinggateway=False, mimetype="image/PNG")
+                logging.debug("Got thumbnail IPFS URL {}".format(thumbnailipfsurl))
             except IPFSException as e:
                 logging.error(e)
                 return [archive_servicesimgurl_cors]    # Just return the http URL, dont store in REDIS so will try again next time
