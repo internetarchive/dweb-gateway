@@ -316,15 +316,14 @@ class ArchiveItem(NameResolverDir):
             raise IPFSException(message=e)
         # TODO-DOMAIN probably encapsulate construction of name once all tested
         pkeymetadatadomain = config["domains"]["metadata"]
-        server = "https://gateway.dweb.me"
+        server = "https://dweb.me"
         #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         leaf = {
             # expires:   # Not needed, a later dated version is sufficient.
             "name": self.itemid,
             "signatures": [],
             "table": "leaf",
-            # "urls": [ipfsurl, ipfsurl.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/'), "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
-            "urls": [ipfsurl, "{}/metadata/archiveid/{}".format(server, self.itemid)]  # Where to get the content
+            "urls": [ipfsurl, "{}/arc/archive.org/metadata/{}".format(server, self.itemid)]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
