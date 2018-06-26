@@ -25,3 +25,5 @@ print("Step 3: Clearing out IPFS repo")
 
 '
 ipfs pin ls --type recursive -q | xargs ipfs pin rm
+ipfs repo gc
+
