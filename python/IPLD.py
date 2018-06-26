@@ -10,6 +10,7 @@ class IPLD(OutputFormat):
 class IPLDdir(OutputFormat):
     """
     IPFS compatible Directory of files
+    NOTE THIS DOESNT APPEAR TO BE USED AT PRESENT AND MIGHT NOT WORK
     """
     #TODO-IPLD implement building a IPLDdir from a list of files
     pass
@@ -18,6 +19,7 @@ class IPLDdir(OutputFormat):
 class IPLDfile(OutputFormat):
     """
     IPFS compatible file (with Shards)
+    NOTE THIS DOESNT APPEAR TO BE USED AT PRESENT AND MIGHT NOT WORK
     """
     #TODO-IPLD implement building a IPLDfile by sharding a file, when have some examples from Kyle
 

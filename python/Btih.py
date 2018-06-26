@@ -1,11 +1,7 @@
 import logging
-from .NameResolver import NameResolverFile, NameResolverDir
-from .miscutils import httpget
+from .NameResolver import NameResolverDir
 from .Errors import CodingException, ToBeImplementedException
-from .HashStore import LocationService, MagnetLinkService
-from .LocalResolver import LocalResolverFetch
-from .Multihash import Multihash
-from .DOI import DOIfile
+from .HashStore import MagnetLinkService
 
 class BtihResolver(NameResolverDir):
     """

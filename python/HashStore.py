@@ -30,7 +30,24 @@ class HashStore(object):
 
     Delete and Push are not supported but could be if required.
 
+    Subclasses map
+
+    Note Contenthash = multihash base58 of content (typically SHA1 on IA at present)
+    itemid = archive's item id, e.g. "commute"
+
+    Class               StoredAt                        Maps        To
+    StateService        __STATE__.<field>               field       arbitraryvalue    For global state
+    StateService        __STATE__.LastDHTround          number?     Used by cron_ipfs.py to track whats up next
+    LocationService     <contenthash>.location          url         As returned by rawstore or url of content on IA
+    MimetypeService     <contenthash>.mimetype          mimetype
+    IPLDService         Not used currently
+    IPLDHashService     <contenthash>.ipld              IPFS hash   e.g. Q123 or z123 (hash of the IPLD)
+    ThumbnailIPFSfromItemIdService <itemid>.thumbnailipfs ipfsurl   e.g. ipfs:/ipfs/Q1…
+    MagnetLinkService   bits:<b32hash>.magnetlink       magnetlink
+    MagnetLinkService   archived:<itemid>.magnetlink    magnetlink
+    TitleService        archived:<itemid>.title         title       Used to map collection item’s to their titles (cache search query)
     """
+
     _redis = None   # Will be connected to a redis instance by redis()
     redisfield = None   # Subclasses define this, and use set & get
 
@@ -109,6 +126,12 @@ class HashStore(object):
         return cls.set("btih:"+btihhash, value)
 
 class StateService(HashStore):
+    """
+    Store some global state for the server
+
+    Field   Value   Means
+    LastDHTround    ??  Used by cron_ipfs.py to record which part of hash table it last worked on
+    """
 
     @classmethod
     def set(cls, field, value, verbose=False):
@@ -148,18 +171,22 @@ class LocationService(HashStore):
 
 
 class MimetypeService(HashStore):
+    # Maps contenthash58 to mimetype
     redisfield = "mimetype"
 
 
 class IPLDService(HashStore):
     # TODO-IPFS may need to move this to ContentStore (which needs implementing)
+    # Note this doesnt appear to be used except by IPLDFile/IPLDdir which themselves arent used
     redisfield = "ipld"
 
 
 class IPLDHashService(HashStore):
+    # Maps contenthash58 to IPLD's multihash CIDv0 or CIDv1
     redisfield = "ipldhash"
 
 class ThumbnailIPFSfromItemIdService(HashStore):
+    # Maps itemid to IPFS URL (e.g. ipfs:/ipfs/Q123...)
     redisfield = "thumbnailipfs"
 
 class MagnetLinkService(HashStore):
@@ -171,10 +198,3 @@ class TitleService(HashStore):
     # uses archiveidset/get
     # TODO-REDIS note this is caching for ever, which is generally a bad idea ! Should figure out how to make Redis expire this cache every few days
     redisfield = "title"
-
-class ArchiveidService(HashStore):
-    # Map something to an archiveid
-    # uses archiveidset/get
-    # TODO-REDIS note this is caching for ever, which is generally a bad idea ! Should figure out how to make Redis expire this cache every few days
-    redisfield = "archiveid"
-
