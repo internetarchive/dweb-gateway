@@ -284,9 +284,9 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             if func:
                 return func(headers=True, **kwargs)
             else:
-                raise ToBeImplementedException(name="{}/{}?{}".format(namesace, "/".join(args), kwargs))
+                raise ToBeImplementedException(name="{}/{}?{}".format(namespace, "/".join(args), kwargs))
         elif output:
-            raise ToBeImplementedException(name="{}/{}?{}".format(namesace, "/".join(args), kwargs))
+            raise ToBeImplementedException(name="{}/{}?{}".format(namespace, "/".join(args), kwargs))
         else: # Default to returning content
             return namespaceclass.new(namespace, *args, **kwargs).content(verbose=kwargs.get("verbose"), _headers=self.headers)
 

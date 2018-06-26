@@ -1,7 +1,9 @@
 import logging
 from .NameResolver import NameResolverDir
-from .Errors import CodingException, ToBeImplementedException
+from .Errors import CodingException, ToBeImplementedException, NoContentException
 from .HashStore import MagnetLinkService
+from .miscutils import httpget, loads
+from .config import config
 
 class BtihResolver(NameResolverDir):
     """
@@ -47,14 +49,21 @@ class BtihResolver(NameResolverDir):
         ch = super(BtihResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
         return ch
 
-    def retrieve(self, verbose=False, **kwargsx):
+    def itemid(self, verbose=False, **kwargs):
+        searchurl = config["archive"]["url_btihsearch"] + self.btih
+        searchres = loads(httpget(searchurl))
+        if not searchres["response"]["numFound"]:
+            return None
+        return searchres["response"]["docs"][0]["identifier"]
+
+    def retrieve(self, verbose=False, **kwargs):
         """
         Fetch the content, dont pass to caller (typically called by NameResolver.content()
         TODO - if needed can retrieve the torrent file here - look at HashStore for example of getting from self.url
 
         :returns:   content - i.e. bytes
         """
-        raise ToBeImplementedException(name="btih.retrieve()")
+        raise ToBeImplementedException("btih retrieve")
 
     def content(self, verbose=False, **kwargs):
         """
@@ -77,3 +86,15 @@ class BtihResolver(NameResolverDir):
         magnetlink = MagnetLinkService.btihget(self.btih)
         data = magnetlink or "" # Current paths mean we should have it, but if not we'll return "" as we have no way of doing that lookup
         return {"Content-type": "text/plain", "data": data} if headers else data
+
+    def torrenturl(self, verbose=False):
+        itemid = self.itemid(verbose=verbose)
+        if not itemid:
+            raise NoContentException()
+        return "https://archive.org/download/{}/{}_archive.torrent".format(itemid, itemid)
+
+    def torrent(self, verbose=False, headers=False, **kwargs):
+        torrenturl = self.torrenturl(verbose=verbose)   # NoContentException if not found
+        data = httpget(torrenturl)
+        return {"Content-type": "application/x-bittorrent", "data": data} if headers else data
+

@@ -6,6 +6,7 @@ config = {
         "url_download": "https://archive.org/download/",
         "url_servicesimg": "https://archive.org/services/img/",
         "url_metadata": "https://archive.org/metadata/",
+        "url_btihsearch": 'https://archive.org/advancedsearch.php?fl=identifier,btih&output=json&rows=1&q=',
     },
     "ipfs": {
         "url_add_data": "http://localhost:5001/api/v0/add", # FOr use on gateway or if run "ipfs daemon" on test machine
