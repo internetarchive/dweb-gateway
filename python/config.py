@@ -22,9 +22,10 @@ config = {
     "domains": {
         # This is also name of directory in /usr/local/dweb-gateway/.cache/table, if change this then can safely rename that directory to new name to retain metadata saved
         "metadata": 'NACL VERIFY:h9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0=',
+        "directory": '/usr/local/dweb-gateway/.cache/table/',                             # Used by maintenance note overridden below for mitraglass (mitra's laptop)
     },
     "directories": {
-        "bootloader": "/usr/local/dweb-transport/examples/bootloader.html",
+        "bootloader": "/usr/local/dweb-transport/examples/bootloader.html",               # Location of bootloader file, note overridden below for mitraglass (mitra's laptop)
     },
     "logging": {
         "level": logging.DEBUG
@@ -35,7 +36,8 @@ if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
     config["logging"] = { "filename": 'dweb-gateway.log', "level": logging.DEBUG }  #Not to file
 elif socket.gethostname().startswith('mitraglass'):
-    config["directories"]["bootloader"] = "/Users/mitra/git/_github_internetarchive/dweb-transport/examples/bootloader.html"
+    config["directories"]["bootloader"] = "/Users/mitra/git/dweb-archive/bootloader.html"
+    config["domains"]["directory"] = "/Users/mitra/git/dweb-gateway/.cache/table/"
 else:
     print("Needs configuring for {}".format(socket.gethostname()))
 
