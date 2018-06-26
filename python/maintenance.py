@@ -44,7 +44,7 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
                 withipfs = withipfs + 1
                 ipfs = ipfs.replace("ipfs:/ipfs/", "")
                 if removeipfs:
-                    r.hdel(i, "ipldhash")
+                    r.hdel(i, k)
                     removed = removed + 1
                 if reseedipfs:
                     #logging.debug("Reseeding {} {}".format(i, ipfs))  # Logged in TransportIPFS

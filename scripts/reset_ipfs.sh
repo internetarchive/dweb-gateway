@@ -7,7 +7,8 @@ from python.maintenance import resetipfs
 logging.basicConfig(**config["logging"])    # For server
 cachetabledomain=config["domains"]["directory"]+config["domains"]["metadata"]+"/domain"
 cachetable=config["domains"]["directory"]+config["domains"]["metadata"]
-print("removing",cachetable)
+
+print("Step 1: removing", cachetable, "which is where leafs stored - these refer to IPFS hashes for metadata")
 try:
     os.remove(cachetabledomain)
 except FileNotFoundError:    # Might already have been deleted
@@ -16,11 +17,11 @@ try:
     os.rmdir(cachetable)
 except FileNotFoundError:    # Might already have been deleted
     pass
-print("Resetting IPFS - slowish loop")
+
+print("Step 2: Remove all REDIS links to IPFS hashes")
 resetipfs(removeipfs=True)
+
+print("Step 3: Clearing out IPFS repo")
+
 '
-
-# To fully reset IPFS need to also ...
-# rm /usr/local/dweb-gateway/.cache/table/{config["domains"]["metadata"]} which is where leafs stored - these refer to IPFS hashes for metadata
-
-
+ipfs pin ls --type recursive -q | xargs ipfs pin rm
