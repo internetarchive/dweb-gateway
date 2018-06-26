@@ -3,12 +3,21 @@ import logging
 from python.config import config
 import redis
 import base58
-from python.HashStore import StateService
-from python.TransportIPFS import TransportIPFS
+from .HashStore import StateService
+from .TransportIPFS import TransportIPFS
 
 logging.basicConfig(**config["logging"])    # For server
 
 def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=False, fixbadurls=False):
+    """
+    Loop over and "reset" ipfs
+    :param removeipfs:      If set will remove all cached pointers to IPFS - note this is part of a three stage process see notes in cleanipfs.sh
+    :param reseedipfs:      If set we will ping the ipfs.io gateway to make sure it knows about our files, this isn't used any more
+    :param announcedht:     Announce our files to the DHT - currently run by cron regularly
+    :param verbose:         Generate verbose debugging - the code below could use more of this
+    :param fixbadurls:      Removes some historically bad URLs, this was done so isn't needed again - just left as a modifyable stub.
+    :return:
+    """
 
     r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
     reseeded = 0
@@ -49,7 +58,10 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
                         announceddht = announceddht + 1
     logging.debug("Scanned {}, withipfs {}, deleted {}, reseeded {}, announced {}".format(total, withipfs, removed, reseeded, announceddht))
 
-resetipfs(announcedht=True)
+# To announce DHT under cron
+#logging.basicConfig(**config["logging"])    # For server
+#resetipfs(announcedht=True)
 
 # To fully reset IPFS need to also ...
 # rm /usr/local/dweb-gateway/.cache/table/{config["domains"]["metadata"]} which is where leafs stored - these refer to IPFS hashes for metadata
+# Clean out the repo (Arkadiy to provide info)
