@@ -4,6 +4,7 @@ set -x
 ARG=$1
 GITNAME=dweb-gateway
 GITDIR=/usr/local/${GITNAME}
+SERVICENAME="dweb:dweb-gateway"
 
 cd $GITDIR
 #pip install --disable-pip-version-check -U $PIPS
@@ -36,12 +37,12 @@ then
     sudo cp nginx/* /etc/nginx/sites-available
     if sudo service nginx reload
     then
-	echo "NGINX restarted"
+	    echo "NGINX restarted"
     else
-	systemctl status nginx.service	
+    	systemctl status nginx.service
     fi
 fi
 
-sudo supervisorctl restart $GITNAME
+sudo supervisorctl restart $SERVICENAME
 
 
