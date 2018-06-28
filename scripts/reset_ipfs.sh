@@ -24,6 +24,7 @@ resetipfs(removeipfs=True)
 print("Step 3: Clearing out IPFS repo")
 
 '
-ipfs pin ls --type recursive -q | xargs ipfs pin rm
-ipfs repo gc
+# The sudo stuff below here isn't tested - all these commands need running as ipfs
+sudo -u upfs ipfs pin ls --type recursive -q | sudo -u ipfs xargs ipfs pin rm
+sudo -u ipfs repo gc
 
