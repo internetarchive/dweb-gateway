@@ -47,6 +47,12 @@ server {
         add_header Access-Control-Allow-Origin *;
         try_files /archive/bootloader.html =404;
     }
+
+    # Catch /download/foo - displayed on details page; rather than /download/foo/bar which goes to gateway
+    location ~ ^/download/[^/]*$ {
+        rewrite ^/download/([^/]*)$ /details/$1&download=1 redirect;
+    }
+
     location /details {
         add_header Access-Control-Allow-Origin *;
         try_files /archive/bootloader.html =404;

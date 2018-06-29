@@ -65,6 +65,11 @@ server {
 	ssl_certificate /etc/letsencrypt/live/dweb.me/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/dweb.me/privkey.pem;
 
+    # Catch /download/foo - displayed on details page; rather than /download/foo/bar which goes to gateway
+    location ~ ^/arc/archive.org/download/[^/]*$ {
+        rewrite ^/arc/archive.org/download/([^/]*)$ /arc/archive.org/details/$1&download=1 redirect;
+    }
+
     # Forward details and search -> bootloader
     # On dweb.me & gateway.dweb.me thsi is at /arc/archive.org/{details,search}, on dweb.archive.org its at /{details,search}
     location /arc/archive.org/details {
