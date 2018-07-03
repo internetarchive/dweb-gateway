@@ -7,22 +7,26 @@ import nacl.secret
 import nacl.signing
 import nacl.utils
 from base58 import b58encode
+import logging
 
-from Errors import CodingException
-from SmartDict import SmartDict
-from util_multihash import encode, SHA2_256
+from .Errors import CodingException, SignatureException, ToBeImplementedException, EncryptionException
+from .SmartDict import SmartDict
+#NOT BACKPORTED - MAY NOT NEED THS ... from util_multihash import encode, SHA2_256
+# Backporting so far has been easy, just line by line comparisom of Javascript against (older) Python and trivial tweaks to old python to match new semantics or bug fixes.
+
+
+"""
+This file was original written in Python, then ported to JS, and now the old Python file is below, mostly commented out as parts are replaced with checked back-ported JS.
+"""
 
 
 # See Libsodium docs
 # https://download.libsodium.org/doc/public-key_cryptography/authenticated_encryption.html
 # https://pynacl.readthedocs.io/en/latest/encoding/
 
-class KeyPair(SmartDict):
+class KeyPair(SmartDict):   # Note this include is a partial implementation of SmartDict without full store/retrieve
     """
     Encapsulates public key cryptography
-
-    Fields:
-    _key    Holds a structure, that may depend on cryptographic library used.
 
     Constants:
     KeyPair.KEYTYPESIGN=1, KEYTYPEENCRYPT=2, KEYTYPESIGNANDENCRYPT=3  specify which type of key to generate
@@ -30,12 +34,13 @@ class KeyPair(SmartDict):
     PyNaCl implementation
     Note JS uses libsodium bindings which are similar but not exactly the same.
 
-    _key = {
+    Fields:
+    _key = { # Holds a structure, that may depend on cryptographic library used - this is the PyNaCl version
         sign: { publicKey: Uint8Array, privateKey: Uint8Array, keyType: "ed25519" }
         encrypt: { publicKey: Uint8Array, privateKey: Uint8Array},
         seed: Uint8Array,
     }
-     */
+    _publicurls:    List of urls holding public version
 
     This uses the CryptoLib functions to encapsulate KeyPairs of different Public Key systems.
     Currently supports: RSA; and the PyNaCl bindings to LibSodium
@@ -60,25 +65,49 @@ class KeyPair(SmartDict):
     def __repr__(self):
         return "KeyPair" + repr(self.__dict__)  # TODO only useful for debugging,
 
+    def __setattr__(self, name, value):
+        """
+        Subclasses SmartDict.__setattr__ to import "key"
+        Note Pyton could use @key.setter but that makes it different from JS unneccessarily.
 
-    @property
-    def key(self): return self._key # Unused
+        :param name:   String - name of field to set, if "key" then imports, else to SmartDict.__setattr__
+        :param value:  Any - stored in field, for key can be urlsafebase64 string, or Uint8Array, or dict in libsodium format above.
+        #Backported from JS 20180703
+        """
+        verbose = False
+        if name == "key":
+            self._key_setter(value)
+        elif name == "private":
+            raise ToBeImplementedError(message="Undefined functionality KeyPair.private.setter")
+        elif name == "public":
+            raise ToBeImplementedError(message="Undefined functionality KeyPair.public.setter")
+        else:
+            super(KeyPair, self).__setattr__(name, value)
 
-    @key.setter
-    def key(self, value):
+    #Could use @key.setter but left like this for more compatability with JS
+    def _key_setter(self, value):
         """
         Set a key, convert formats or generate key if required.
-        """
-        if isinstance(value, basestring):  # Should be exported string, maybe public or private
-            self._key = self._importkey(value)
-        else:  # Its already a key
-            self._key = value
 
+        value:  Dictionary in local format, or Uint8Array or urlsafebase64 string {
+            mnemonic: BIP39 style mnemonic (currently unsupported except one fake test case
+            passphrase: A phrase to hash to get a seed
+            keygen:     true to generate a new key
+            seed:       32 byte string or buffer
+
+        #Backported from JS 20180703
+        """
+        verbose = False # Running inside __setattr__ dont generate debugging
+        if (verbose): logging.debug("KP._key_setter");
+
+        if isinstance(value, (str, list, tuple, set)):  # Should be exported string, maybe public or private
+            self._importkey(value)
+        else:  # Its already a key (or possibly undefined)
             if isinstance(value, dict): # Dictionary of options
                 if value.get("mnemonic",None):
                     if (value["mnemonic"] == "coral maze mimic half fat breeze thought champion couple muscle snack heavy gloom orchard tooth alert cram often ask hockey inform broken school cotton"): #32 byte
-                        value["seed"] = "01234567890123456789012345678901";  #Note this is seed from mnemonic above
-                        print "Faking mnemonic encoding for now"
+                        value["seed"] = "01234567890123456789012345678901"  #Note this is seed from mnemonic above
+                        print("Faking mnemonic encoding for now")
                     else:
                         raise CodingException(message="MNEMONIC STILL TO BE IMPLEMENTED")    #TODO-mnemonic
                 if value.get("passphrase",None):
@@ -86,14 +115,20 @@ class KeyPair(SmartDict):
                     for i in range(0,100):  # 100 iterations
                         pp = KeyPair.sha256(pp) # Its write length for seed = i.e. 32 bytes
                     value["seed"] = pp
+                    # Intentionally drop through and handle seed
                 if value.get("keygen", None):
                     assert nacl.bindings.crypto_box_SECRETKEYBYTES == nacl.bindings.crypto_sign_SEEDBYTES,"Presuming seeds same size (they are on JS"
                     value["seed"] = nacl.utils.random(nacl.bindings.crypto_sign_SEEDBYTES)
                     del value["keygen"]
+                    # Intentionally drop through and handle seed
                 if value.get("seed", None):
-                    value = KeyPair._keyfromseed(value["seed"], self.KEYTYPESIGNANDENCRYPT, self.verbose);
+                    value = KeyPair._keyfromseed(value["seed"], self.KEYTYPESIGNANDENCRYPT, verbose)
             self._key = value
 
+
+
+    """
+    BELOW HERE NOT BACKPORTED FROM JS
 
     def store(self, verbose=False):
         if (self._url):
@@ -106,12 +141,12 @@ class KeyPair(SmartDict):
 
 
     def preflight(self, dd):
-        """
+        "-"-"
         Subclasses SmartDict.preflight, checks not exporting unencrypted private keys, and exports private or public.
 
         :param dd: dict of fields, maybe processed by subclass
         :returns: dict of fields suitable for storing in Dweb
-        """
+        "-"-"
         if self._key_has_private(dd["_key"]) and not dd.get("_acl") and not self._allowunsafestore:
             raise SecurityWarning(message="Probably shouldnt be storing private key")  # Can set KeyPair._allowunsafestore to allow this when testing
         if dd.get("_key"):  # Based on whether the CommonList is master, rather than if the key is (key could be master, and CL not)
@@ -124,6 +159,8 @@ class KeyPair(SmartDict):
             dd["_publicurl"] = publicurl  # May be None, have to do this AFTER the super call as super filters out "_*"
         return dd
 
+    ABOVE NOT BACKPORTED FROM JS
+    """
 
     @classmethod
     def _keyfromseed(cls, seed, keytype, verbose):
@@ -134,12 +171,15 @@ class KeyPair(SmartDict):
         :param keytype: One of KeyPair.KEYTYPExyz to specify type of key wanted
         :returns:       Dict suitable for storing in _key
         """
+        #Backported from JS 20180703
         key = {}
+        if nacl.bindings.crypto_sign_SEEDBYTES != len(seed): raise CodingException(message="Seed should be {} but is {}".format(nacl.bindings.crypto_sign_SEEDBYTES, len(length)))
         key["seed"] = seed
         if keytype == cls.KEYTYPESIGN or keytype == cls.KEYTYPESIGNANDENCRYPT:
-            key["sign"] = nacl.signing.SigningKey(seed)     # ValueError if seed != 32 bytes
+            key["sign"] = nacl.signing.SigningKey(seed)     # ValueError if seed != 32 bytes #Should be Object { publicKey: Uint8Array[32], privateKey: Uint8Array[64] } <<maybe other keyType
         if keytype == cls.KEYTYPEENCRYPT or keytype == cls.KEYTYPESIGNANDENCRYPT:
-            key["encrypt"] = nacl.public.PrivateKey(seed)   # ValueError if seed != 32 bytes
+            key["encrypt"] = nacl.public.PrivateKey(seed)   # ValueError if seed != 32 bytes  #Should be Object { publicKey: Uint8Array[32], privateKey: Uint8Array[64] } <<maybe other keyType
+        if (verbose): logging.debug("key generated:{}".format(key))
         return key
 
     """
@@ -160,7 +200,7 @@ class KeyPair(SmartDict):
         # assert keytype  # Required parameter
         if not keyclass:
             keyclass = RSA if CryptoLib.defaultlib == CryptoLib.CRYPTO else CryptoLib.NACL
-        if verbose: print "Generating key for", keyclass
+        if verbose: print("Generating key for", keyclass)
         if mnemonic:
             seed = str(Mnemonic("english").to_entropy(mnemonic))
         if keyclass in (RSA, "RSA"):
@@ -184,19 +224,20 @@ class KeyPair(SmartDict):
         return cls(key=key)
     END OF OBS BUT NOT DELETABLE
     """
-
     def _importkey(self, value):
         """
         Import a key, sets fields of _key without disturbing any already set unless its SEED.
 
         :param value: "xyz:1234abc" where xyz is one of "NACL PUBLIC, NACL SEED, NACL VERIFY" and 1234bc is a ursafebase64 string
                 Note NACL PRIVATE, NACL SIGNING,  are not yet supported as "NACL SEED" is exported
-
+        #Backported from JS 20180703
         """
+        #First tackle standard formats created by exporting functionality on keys
+        #Call route is ... data.setter > ...> key.setter > _importkey
         if isinstance(value, (list,tuple)):
             for i in value: self._importkey(value)
         else:
-            assert isinstance(value, basestring)  # Should be exported string, maybe public or private
+            assert isinstance(value, str)  # Should be exported string, maybe public or private
             # First tackle standard formats created by exporting functionality on keys
             """
             #RSA not supported currently
@@ -206,35 +247,31 @@ class KeyPair(SmartDict):
             """
             if ":" in value:
                 tag, hash = value.split(':')
-                """
-                #WORDHASH not supported currently - probably never will be
-                # Tackle our own formats always xyz:key
-                if tag == "WORDHASH":
-                    return WordHashKey(public=hash)
-                else
-                """
                 if not self._key:
                     self._key = {}
-                if tag == "NACL PUBLIC":    self._key["encrypt"] = nacl.public.PrivateKey(str(hash),  nacl.encoding.URLSafeBase64Encoder);
-                if tag == "NACL VERIFY":    self._key["sign"] = nacl.signing.VerifyKey(str(hash), nacl.encoding.URLSafeBase64Encoder);
-                if tag == "NACL SEED":      self._key = self._keyfromseed(hash, self.KEYTYPESIGNANDENCRYPT )
+                if tag == "NACL PUBLIC":    self._key["encrypt"] = {"publicKey": nacl.public.PrivateKey(str(hash),  nacl.encoding.URLSafeBase64Encoder)};
+                elif tag == "NACL PRIVATE": raise EncryptionException(message="Unsupported key for import Private key: "+tag+" normally use SEED")
+                elif tag == "NACL SIGNING": raise EncryptionException(message="Unsupported key for import Signing key: "+tag+" normally use SEED")
+                elif tag == "NACL SEED":    self._key = self._keyfromseed(hash, self.KEYTYPESIGNANDENCRYPT )
+                elif tag == "NACL VERIFY":  self._key["sign"] = {"publicKey": nacl.signing.VerifyKey(str(hash), nacl.encoding.URLSafeBase64Encoder)};
                 else:
-                    raise EncryptionException(message="Unsupported key for import: "+tag)
+                    raise ToBeImplementedError(message="_importkey: Cant (yet) import"+value)
             else:
                 raise EncryptionException(message="Badly formatted key for import: " + value)
 
-
+    """
+    BELOW HERE NOT BACKPORTED
     def publicexport(self):
-        """
+        "-"-"
         :return: an array include one or more "NACL PUBLIC:abc123", or "NACL VERIFY:abc123" urlsafebase64 string
-        """
+        "-"-"
         res = []
         if self._key.get("encrypt", None):
             res.append("NACL PUBLIC:"+self._key["encrypt"].encode(nacl.encoding.URLSafeBase64Encoder))
         if self._key.get("sign", None):
             res.append("NACL VERIFY:"+self._key["sign"].encode(nacl.encoding.URLSafeBase64Encoder))
 
-    """
+    "-"-"
     OBSOLETE - not used now
     @property
     def private(self):
@@ -288,7 +325,7 @@ class KeyPair(SmartDict):
             raise ToBeImplementedException(name="mnemonic for " + self._key.__class__.__name__)
 
 
-    """
+    "-"-"
 
     def privateexport(self):
         #if isinstance(self._key, WordHashKey):
@@ -302,10 +339,10 @@ class KeyPair(SmartDict):
 
     @staticmethod
     def _key_has_private(key):
-        """
+        "-"-"
         :param key:
         :return: true if the _key has a private version (or sign or encrypt or seed)
-        """
+        "-"-"
         # Helper function used by has_private and preflight
         #if isinstance(key, (RSA._RSAobj, WordHashKey)):
         #    return key.has_private()
@@ -317,12 +354,12 @@ class KeyPair(SmartDict):
         raise EncryptionException(mesage="Unrecognized keys" + repr(key))
 
     def has_private(self):
-        """
+        "-"-"
         :return: true if key has a private version (or sign or encrypt or seed)
-        """
+        "-"-"
         return self._key_has_private(self._key)
 
-    """
+    "-"-"
     # OBSPLETE - NOT USED ANY MORE
     @property
     def naclprivate(self):
@@ -350,18 +387,18 @@ class KeyPair(SmartDict):
             return self._exportkey(self.naclpublic)
         else:
             return None
-    """
+    "-"-"
 
     def encrypt(self, data, b64=False, signer=None):
-        """
+        "-"-"
          Encrypt a string, the destination string has to include any information needed by decrypt, e.g. Nonce etc
 
          :param data:   String to encrypt
          :b64 bool:  True if want result encoded in urlsafebase64
          :signer AccessControlList or KeyPair: If want result signed (currently ignored for RSA, reqd for NACL)
          :return: str, binary encryption of data or urlsafebase64
-        """
-        """
+        "-"-"
+        "-"-"
         #NOT SUPPORTING RSA
         if isinstance(self._key, RSA._RSAobj):
             # TODO currently it ignores "sign" which was introduced with NACL, if keep using RSA then implement here
@@ -374,7 +411,7 @@ class KeyPair(SmartDict):
             if b64:
                 res = KeyPair.b64enc(res)
             return res
-        """
+        "-"-"
         #if isinstance(self._key, (nacl.public.PrivateKey, nacl.signing.SigningKey)):
         assert signer, "Until PyNaCl bindings have secretbox we require a signer and have to add authentication"
         nonce = nacl.utils.random(nacl.bindings.crypto_box_NONCEBYTES)
@@ -382,7 +419,7 @@ class KeyPair(SmartDict):
         return box.encrypt(data, nonce=nonce, encoder=(nacl.encoding.URLSafeBase64Encoder if b64 else nacl.encoding.RawEncoder))
 
     def decrypt(self, data, signer=None, outputformat=None ):
-        """
+        "-"-"
         Decrypt data encrypted with encrypt (above)
 
         :param data:  urlsafebase64 or Uint8array, starting with nonce
@@ -390,8 +427,8 @@ class KeyPair(SmartDict):
         :param outputformat:    Only currently supports "text"
         :return: Data decrypted to outputformat
         :raises: EnryptionError if no encrypt.privateKey, CodingError if !data||!signer
-        """
-        """
+        "-"-"
+        "-"-"
         #NOt supporting
         if isinstance(self._key, RSA._RSAobj):
             if b64:
@@ -402,7 +439,7 @@ class KeyPair(SmartDict):
             aeskey = cipher.decrypt(enckey)  # Matches aeskey in encrypt
             return KeyPair.sym_decrypt(data, aeskey)
         elif isinstance(self._key, (nacl.public.PrivateKey, nacl.signing.SigningKey)):
-        """
+        "-"-"
         assert outputformat == "text", "Unlike JS, box.decrypt doesnt support output format - should always be text, else write encoder"
         if not data: raise EncryptionException(message="Cant decrypt empty data")
         if not signer: raise EncryptionException(message="Until PyNaCl bindings have secretbox we require a signer and have to add authentication")
@@ -412,46 +449,54 @@ class KeyPair(SmartDict):
         # Convert data to "str" first as its most likely unicode having gone through JSON.
         return box.decrypt(str(data), encoder=nacl.encoding.URLSafeBase64Encoder)
 
-    def sign(self, signable, verbose=False, **options):
+    ABOVE HERE NOT YET BACKPORTED FROM JS
+    """
+
+    def sign(self, signable, verbose=False):
         """
         Sign and date a url using public key function.
         Pair of "verify()"
 
-        :param date: Date that signing (usually now)
-        :param url: URL being signed, it could really be any data,
+        :param signable: A signable string
         :return: signature that can be verified with verify
+        #Backported from JS 20180703
         """
         assert signable
-        sig = self._key["sign"].sign(signable, nacl.encoding.URLSafeBase64Encoder).signature
+        assert self._key.sign.privateKey    # Needs private key to sign
+        sig = self._key.sign.sign(signable, nacl.encoding.URLSafeBase64Encoder).signature
         # Can uncommen next line if seeing problems veriying things that should verify ok - tests immediate verification
         self.verify(signable, sig)
         return sig
 
+
     def verify(self, signable, urlb64sig):
         """
         Verify a signature generated by sign()
-        TODO - this is not yet incorporated - should be in CommonList and currently just generates an assertion fail if not verified.
 
         :param date, url: date (ISO string) and url exactly as signed.
         :param urlb64sig: urlsafebase64 encoded signature
+        :raises SignatureException if fails to verify
+        #Backported from JS 20180703
         """
         sig = nacl.encoding.URLSafeBase64Encoder.decode(urlb64sig)
         try:
             self._key["sign"].verify_key.verify(signable, sig, encoder=nacl.encoding.RawEncoder)
         except nacl.exceptions.BadSignatureError:
-            1 / 0  # This really shouldnt be happenindg - catch it and figure out why
-            return False
+            raise SignatureException(message="Unable to verify signature")
         else:
             return True
 
+    """
+    BELOW HERE NOT YET BACKPORTED FROM JS
+
     @staticmethod
     def b64dec(data):
-        """
+        "-"-"
         Decode arbitrary data encoded using b64enc
 
         :param data:    b64 encoding of arbitrary binary
         :return: str    arbitrary binary
-        """
+        "-"-"
         if data is None:
             return None
         if not isinstance(data, basestring):
@@ -461,17 +506,17 @@ class KeyPair(SmartDict):
         try:
             return nacl.encoding.URLSafeBase64Encoder.decode(data)
         except TypeError as e:
-            print "Cant urlsafe_b64decode data", data.__class__.__name__, data
+            print("Cant urlsafe_b64decode data", data.__class__.__name__, data)
             raise e
 
     @staticmethod
     def b64enc(data):
-        """
+        "-"-"
         Encode arbitrary data to b64
 
         :param data:
         :return:
-        """
+        "-"-"
         if data is None:
             return None  # Json can handle none
         elif not isinstance(data, basestring):
@@ -480,19 +525,19 @@ class KeyPair(SmartDict):
         try:
             return nacl.encoding.URLSafeBase64Encoder.encode(data)
         except TypeError as e:
-            print "Cant urlsafe_b64encode data", data.__class__.__name__, e, data
+            print("Cant urlsafe_b64encode data", data.__class__.__name__, e, data)
             raise e
         except Exception as e:
-            print "b64enc error:", e  # Dont get exceptions printed inside dumps, just obscure higher level one
+            print("b64enc error:", e)  # Dont get exceptions printed inside dumps, just obscure higher level one
             raise e
 
     @staticmethod
     def randomkey():
-        """
+        "-"-"
         Return a key suitable for symetrically encrypting content or sessions
 
         :return:
-        """
+        "-"-"
         # see http://stackoverflow.com/questions/20460061/pythons-pycrypto-library-for-random-number-generation-vs-os-urandom
         return nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)  # 32 bytes - required for SecretBox
         # return os.urandom(16)
@@ -502,7 +547,7 @@ class KeyPair(SmartDict):
 
     @classmethod
     def sym_encrypt(cls, data, sym_key, b64=False, **options):
-        """
+        "-"-"
         Pair of sym_decrypt
         ERR: DecryptFail if cant decrypt - this is to be expected if unsure if have valid key (e.g. in acl.decrypt)
 
@@ -511,7 +556,7 @@ class KeyPair(SmartDict):
         :param b64:         True if want output in base64
         :param options:     Unused
         :return:            Encrypted string, either str or EncodedMessage (which is subclass of str)
-        """
+        "-"-"
         if isinstance(sym_key, basestring):
             sym_key = nacl.secret.SecretBox(sym_key)  # Requires 32 bytes
         nonce = nacl.utils.random(nacl.bindings.crypto_secretbox_NONCEBYTES)
@@ -522,14 +567,14 @@ class KeyPair(SmartDict):
 
     @classmethod
     def sym_decrypt(cls, data, sym_key, outputformat, **options):
-        """
+        "-"-"
         Decrypt data based on a symetric key
 
         :param data:    urlsafebase64
         :param sym_key: symetric key encoded in urlsafebase64 or Uint8Array
         :param outputformat:    Only "text" supported
         :returns:       decrypted data in selected outputformat
-        """
+        "-"-"
         assert outputformat == "text", "Only support output format of text currently, can add encoding if reqd"
         if not data:
             raise EncryptionException(message="Keypair.sym_decrypt meaningless to decrypt undefined, null or empty strings")
@@ -544,6 +589,9 @@ class KeyPair(SmartDict):
             return sym_key.decrypt(data, encoder=encoder)
         except nacl.exceptions.CryptoError as e:
             raise DecryptionFailException()  # Is expected in some cases, esp as looking for a valid key in acl.decrypt
+
+    ABOVE HERE NOT YET BACKPORTED FROM JS
+    """
 
     @staticmethod
     def sha256(data):

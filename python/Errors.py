@@ -39,6 +39,10 @@ class CodingException(MyBaseException):
     httperror = 501
     msg = "Coding Error: {message}"
 
+class SignatureException(MyBaseException):
+    httperror = 501
+    msg = "Signature Verification Error: {message}"
+
 class EncryptionException(MyBaseException):
     httperror = 500  # Failure in the encryption code other than lack of authentication
     msg = "Encryption error: {message}"

@@ -14,6 +14,7 @@ from .Errors import CodingException, MyBaseException, IPFSException
 from .HashStore import MagnetLinkService, ThumbnailIPFSfromItemIdService, TitleService
 from .TransportIPFS import TransportIPFS
 from .LocalResolver import KeyValueTable
+from .KeyPair import KeyPair
 
 archiveconfig = {
     "staticnames": {    # Build static collection names here for fake collections that dont respond to search below
@@ -327,7 +328,7 @@ class ArchiveItem(NameResolverDir):
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
-        keypair = None  # TODO-DOMAIN need keypair, which might mean porting the old library.
+        keypair = KeyPair({"key": pkeymetadatadomain})
         signature = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature and sign "signable"
         pubkeyexport = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature
         leaf["signatures"].append({"date": datenow, "signature": signature, "signedby": pubkeyexport})

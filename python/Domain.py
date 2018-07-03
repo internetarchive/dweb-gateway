@@ -1,3 +1,11 @@
+"""
+This file was written on JS, and then partially ported to Python - uncommented parts aren't yet ported
+
+TODO A good project would be to backport this, which is going to require KeyValueTable and the storage part of SmartDict, then patch into Archive.py where it creates a Leaf
+"""
+
+"""
+BELOW HERE NOT PORTED TO PYTHON YET
 const errors = require('./Errors'); // Standard Dweb Errors
 // Depends on var DwebTransports being set externally - its done this way so that both direct and ServiceWorker/Proxy can be used
 const SmartDict = require("./SmartDict"); //for extends
@@ -186,9 +194,10 @@ class Leaf extends SmartDict {
 NameMixin.call(Leaf.prototype);
 SignatureMixin.call(Leaf.prototype, ["urls", "name", "expires"]);
 SmartDict.table2class["leaf"] = Leaf;
-
-class Domain extends KeyValueTable {
-    /*
+ABOVE HERE NOT PORTED TO PYTHON YET
+"""
+class Domain(KeyValueTable, SignatureMixin, NameMixin) {    #TODO-DOMAIN need KeyValueTable
+    """
     The Domain class is for name resolution across multiple technologies.
 
     Domains are of the form /arc/somedomain/somepath/somename
@@ -205,7 +214,10 @@ class Domain extends KeyValueTable {
     Fields inherited from KeyValueTable
     tablepublicurls: [ str* ]       Where to find the table.
     _map:   KeyValueTable   Mapping of name strings beneath this Domain
-    */
+
+    """
+    """
+    BELOW HERE NOT PORTED TO PYTHON YET
     constructor(data, verbose, options) {
         super(data, verbose, options); // Initializes _map if not already set
         this.table = "domain"; // Superclasses may override
@@ -524,8 +536,12 @@ class Domain extends KeyValueTable {
             }
         }
     }
+    ABOVE HERE NOT PORTED TO PYTHON YET
+    """
 
-}
+"""
+BELOW HERE NOT PORTED TO PYTHON YET
+
 NameMixin.call(Domain.prototype);   // Add in the Mixin
 SignatureMixin.call(Domain.prototype, ["tablepublicurls", "name", "keys", "expires"]);
 
@@ -533,3 +549,5 @@ Domain.clsLeaf = Leaf;  // Just So exports can find it and load into Dweb TODO m
 SmartDict.table2class["domain"] = Domain;
 DwebTransports.resolveNamesWith(Domain.p_resolveNames); // Note this won't work if tried in Client to a Service Worker, must be in same thread as Transport
 exports = module.exports = Domain;
+ABOVE HERE NOT PORTED TO PYTHON YET
+"""
