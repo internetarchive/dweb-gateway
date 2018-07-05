@@ -41,7 +41,7 @@ def test_leaf():
     leafurl="arc/archive.org/leaf"
     res = _processurl(leafurl, verbose=verbose, key=item)  # Simulate what the server would do with the URL
     if verbose: logging.debug("{} returned {}".format(leafurl, res))
-    leafurl="get/table/{}/domain".format(config["domains"]["metadata"])  #TODO-ARC
+    leafurl="get/table/{}/domain".format(config["domains"]["metadataverifykey"])  #TODO-ARC
     res = _processurl(leafurl, verbose=verbose, key=item) # Should get value cached above
     if verbose: logging.debug("{} returned {}".format(leafurl, res))
 

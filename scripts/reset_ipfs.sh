@@ -5,8 +5,8 @@ from python.config import config
 from python.maintenance import resetipfs
 
 logging.basicConfig(**config["logging"])    # For server
-cachetabledomain=config["domains"]["directory"]+config["domains"]["metadata"]+"/domain"
-cachetable=config["domains"]["directory"]+config["domains"]["metadata"]
+cachetabledomain=config["domains"]["directory"]+config["domains"]["metadataverifykey"]+"/domain"
+cachetable=config["domains"]["directory"]+config["domains"]["metadataverifykey"]
 
 print("Step 1: removing", cachetable, "which is where leafs stored - these refer to IPFS hashes for metadata")
 try:

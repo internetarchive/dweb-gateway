@@ -387,7 +387,7 @@ class Domain(KeyValueTable, SignatureMixin, NameMixin) {    #TODO-DOMAIN need Ke
         }); //root
         const testing = Domain.root.tablepublicurls.map(u => u.includes("localhost")).includes(true);
         console.log("Domain.root publicurls for",testing ? "testing:" : "inclusion in Domain.js:p_rootSet():",Domain.root._publicurls);
-        const metadatatableurl = Domain.root._map["arc"]._map["archive.org"]._map["metadata"].tablepublicurls.find(u=>u.includes("getall/table"))
+        const metadatatableurl = Domain.root._map["arc"]._map["archive.org"]._map["metadataverifykey"].tablepublicurls.find(u=>u.includes("getall/table"))
         if (!testing) {
             console.log("Put this in gateway config.py config.domains.metadata:", metadatatableurl);
         }

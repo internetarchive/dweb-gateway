@@ -22,7 +22,8 @@ config = {
     },
     "domains": {
         # This is also name of directory in /usr/local/dweb-gateway/.cache/table, if change this then can safely rename that directory to new name to retain metadata saved
-        "metadata": 'NACL VERIFY:h9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0=',
+        "metadataverifykey": 'NACL VERIFY:h9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0=',
+        "metadatapassphrase": "Replace this with something secret/arc/archive.org/metadata",                       # TODO - change for something secret!
         "directory": '/usr/local/dweb-gateway/.cache/table/',                             # Used by maintenance note overridden below for mitraglass (mitra's laptop)
     },
     "directories": {

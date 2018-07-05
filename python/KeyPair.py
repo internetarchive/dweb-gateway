@@ -16,7 +16,7 @@ from .SmartDict import SmartDict
 
 
 """
-This file was original written in Python, then ported to JS, and now the old Python file is below, mostly commented out as parts are replaced with checked back-ported JS.
+This file was original written in Python2, then ported to JS, and now the old Python2 file is below, mostly commented out as parts are replaced with checked JS back-ported to Python3.
 """
 
 
@@ -176,7 +176,9 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
         if nacl.bindings.crypto_sign_SEEDBYTES != len(seed): raise CodingException(message="Seed should be {} but is {}".format(nacl.bindings.crypto_sign_SEEDBYTES, len(length)))
         key["seed"] = seed
         if keytype == cls.KEYTYPESIGN or keytype == cls.KEYTYPESIGNANDENCRYPT:
-            key["sign"] = nacl.signing.SigningKey(seed)     # ValueError if seed != 32 bytes #Should be Object { publicKey: Uint8Array[32], privateKey: Uint8Array[64] } <<maybe other keyType
+            key["sign"] = nacl.signing.SigningKey(seed)     # ValueError if seed != 32 bytes
+            # On JS is Object { publicKey: Uint8Array[32], privateKey: Uint8Array[64] }
+            # On PY is Object { _seed, _signing_key, verify_key }
         if keytype == cls.KEYTYPEENCRYPT or keytype == cls.KEYTYPESIGNANDENCRYPT:
             key["encrypt"] = nacl.public.PrivateKey(seed)   # ValueError if seed != 32 bytes  #Should be Object { publicKey: Uint8Array[32], privateKey: Uint8Array[64] } <<maybe other keyType
         if (verbose): logging.debug("key generated:{}".format(key))
@@ -249,29 +251,39 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
                 tag, hash = value.split(':')
                 if not self._key:
                     self._key = {}
-                if tag == "NACL PUBLIC":    self._key["encrypt"] = {"publicKey": nacl.public.PrivateKey(str(hash),  nacl.encoding.URLSafeBase64Encoder)};
+                if tag == "NACL PUBLIC":    self._key["encrypt"] = nacl.public.PrivateKey(str(hash),  nacl.encoding.URLSafeBase64Encoder); # Note format of obj different PY/JS
                 elif tag == "NACL PRIVATE": raise EncryptionException(message="Unsupported key for import Private key: "+tag+" normally use SEED")
                 elif tag == "NACL SIGNING": raise EncryptionException(message="Unsupported key for import Signing key: "+tag+" normally use SEED")
-                elif tag == "NACL SEED":    self._key = self._keyfromseed(hash, self.KEYTYPESIGNANDENCRYPT )
-                elif tag == "NACL VERIFY":  self._key["sign"] = {"publicKey": nacl.signing.VerifyKey(str(hash), nacl.encoding.URLSafeBase64Encoder)};
+                elif tag == "NACL SEED":    self._key = self._keyfromseed(hash, self.KEYTYPESIGNANDENCRYPT ) # Note format of obj different PY/JS
+                elif tag == "NACL VERIFY":  self._key["sign"] = nacl.signing.VerifyKey(str(hash), nacl.encoding.URLSafeBase64Encoder); # Note format of obj different PY/JS
                 else:
                     raise ToBeImplementedError(message="_importkey: Cant (yet) import"+value)
             else:
                 raise EncryptionException(message="Badly formatted key for import: " + value)
 
-    """
-    BELOW HERE NOT BACKPORTED
+    def signingexport(self):
+        """
+        Useful to be able to export the signing key
+        :return: string like "NACL VERIFY: <base64>"
+        """
+        return "NACL VERIFY:"+self._key["sign"].encode(nacl.encoding.URLSafeBase64Encoder).decode('utf8')
+
     def publicexport(self):
-        "-"-"
-        :return: an array include one or more "NACL PUBLIC:abc123", or "NACL VERIFY:abc123" urlsafebase64 string
-        "-"-"
+        """
+
+        :return: an array include one or more "NACL PUBLIC:abc123", or "NACL VERIFY:abc123" urlsafebase64 string.
+
+
+
+        """
         res = []
         if self._key.get("encrypt", None):
-            res.append("NACL PUBLIC:"+self._key["encrypt"].encode(nacl.encoding.URLSafeBase64Encoder))
+            res.append("NACL PUBLIC:"+self._key["encrypt"].encode(nacl.encoding.URLSafeBase64Encoder).decode('utf8'))
         if self._key.get("sign", None):
-            res.append("NACL VERIFY:"+self._key["sign"].encode(nacl.encoding.URLSafeBase64Encoder))
+            res.append(self.signingexport())
+        return res
 
-    "-"-"
+    """
     OBSOLETE - not used now
     @property
     def private(self):
@@ -325,8 +337,10 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
             raise ToBeImplementedException(name="mnemonic for " + self._key.__class__.__name__)
 
 
-    "-"-"
-
+    """
+    """
+    BELOW HERE NOT BACKPORTED
+    
     def privateexport(self):
         #if isinstance(self._key, WordHashKey):
         #    return ""  # Not exportable
@@ -359,8 +373,9 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
         "-"-"
         return self._key_has_private(self._key)
 
-    "-"-"
-    # OBSPLETE - NOT USED ANY MORE
+    """
+    """
+    # OBSOLETE - NOT USED ANY MORE
     @property
     def naclprivate(self):
         if isinstance(self._key, nacl.public.PrivateKey):
@@ -387,7 +402,10 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
             return self._exportkey(self.naclpublic)
         else:
             return None
-    "-"-"
+    #ABOVE HERE OBSOLETE
+    """
+    """
+    #BELOW HERE NOT BACKPORTED
 
     def encrypt(self, data, b64=False, signer=None):
         "-"-"
@@ -462,8 +480,9 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
         #Backported from JS 20180703
         """
         assert signable
-        assert self._key.sign.privateKey    # Needs private key to sign
-        sig = self._key.sign.sign(signable, nacl.encoding.URLSafeBase64Encoder).signature
+        assert self._key["sign"]._signing_key    # Needs private key to sign
+        # Note pattern slightly different form JS because NaCl wants "bytes" and we use/need utf8 strings.
+        sig = self._key["sign"].sign(signable if isinstance(signable, bytes) else bytes(signable, 'utf8'), nacl.encoding.URLSafeBase64Encoder).signature.decode('utf8')
         # Can uncommen next line if seeing problems veriying things that should verify ok - tests immediate verification
         self.verify(signable, sig)
         return sig
@@ -479,6 +498,9 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
         #Backported from JS 20180703
         """
         sig = nacl.encoding.URLSafeBase64Encoder.decode(urlb64sig)
+
+        signable = bytes(signable, 'utf8')
+
         try:
             self._key["sign"].verify_key.verify(signable, sig, encoder=nacl.encoding.RawEncoder)
         except nacl.exceptions.BadSignatureError:
@@ -599,6 +621,7 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
         data:       String or Buffer containing string of arbitrary length
         returns:    32 byte Uint8Array with SHA256 hash
         """
+        if isinstance(data, (str)): data = bytes(data, 'utf8');
         return nacl.hash.sha256(data, encoder=nacl.encoding.RawEncoder)
 
     @staticmethod

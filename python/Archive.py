@@ -316,7 +316,8 @@ class ArchiveItem(NameResolverDir):
         except Exception as e:
             raise IPFSException(message=e)
         # TODO-DOMAIN probably encapsulate construction of name once all tested
-        pkeymetadatadomain = config["domains"]["metadata"]
+        metadataverifykey = config["domains"]["metadataverifykey"]
+        metadatapassphrase = config["domains"]["metadatapassphrase"]
         server = "https://dweb.me"
         #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         leaf = {
@@ -328,16 +329,16 @@ class ArchiveItem(NameResolverDir):
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "fullname", "expires"]}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
-        keypair = KeyPair({"key": pkeymetadatadomain})
-        signature = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature and sign "signable"
-        pubkeyexport = "FAKEFAKEFAKE"  # TODO-DOMAIN obviously remove this fake signature
+        keypair = KeyPair({"key": {"passphrase": metadatapassphrase}})
+        signature = keypair.sign(signable, verbose=True)  # TODO-DOMAIN test then remove verbose=True
+        pubkeyexport = keypair.publicexport()
         leaf["signatures"].append({"date": datenow, "signature": signature, "signedby": pubkeyexport})
         # TODO-DOMAIN now have encapsulated leaf
         # Store the domain in the http domain server, its also always going to be retrievable from this gateway, we cant write to YJS, but a client can copy it TODO-DOMAIN
         # Next two lines would be if adding to HTTP on different machine, instead assuming this machine *is* the KeyValueTable we can go direct.
         # tableurl = "{}/get/table/{}/domains".format(server, pkeymetadatadomain)
         # TransportHTTP().set(tableurl, self.itemid, dumps(leaf), verbose)  # TODO-DOMAIN need to write TransportHTTP
-        KeyValueTable.new("table", pkeymetadatadomain, "domain", verbose=verbose)\
+        KeyValueTable.new("table", metadataverifykey, "domain", verbose=verbose)\
             .set(headers=False, verbose=verbose, data=[{"key": self.itemid, "value": dumps(leaf)}])
         mimetype = 'application/json'
         data = {self.itemid: dumps(leaf)}

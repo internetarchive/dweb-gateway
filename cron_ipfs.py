@@ -11,4 +11,4 @@ logging.basicConfig(**config["logging"])    # For server
 resetipfs(announcedht=True)
 
 # To fully reset IPFS need to also ...
-# rm /usr/local/dweb-gateway/.cache/table/{config["domains"]["metadata"]} which is where leafs stored - these refer to IPFS hashes for metadata
+# rm /usr/local/dweb-gateway/.cache/table/{config["domains"]["metadataverifykey"]} which is where leafs stored - these refer to IPFS hashes for metadata

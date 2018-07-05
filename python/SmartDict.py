@@ -10,10 +10,10 @@ from Transportable import Transportable
 # THIS FILE IS COPIED FROM THE OLD DWEB repo IT IS NOT TESTED FULLY, SO BIG CHUNKS ARE COMMENTED OUT
 # - ONLY PARTS NEEDED FOR KEYPAIR ARE BACKPORTED FROM JS AND UNCOMMENTED
 
-class SmartDict(object): #TODO-SMARTDICT - normally subclass of Transportable
+class SmartDict(object):
 
     """
-    Subclass of Transport that stores a data structure, usually a single layer Javascript dictionary object.
+    Stores a data structure, usually a single layer Javascript dictionary object.
     SmartDict is intended to support the mechanics of storage and retrieval while being  subclassed to implement functionality
     that understands what the data means.
 
