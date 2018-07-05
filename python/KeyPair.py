@@ -266,7 +266,7 @@ class KeyPair(SmartDict):   # Note this include is a partial implementation of S
         Useful to be able to export the signing key
         :return: string like "NACL VERIFY: <base64>"
         """
-        return "NACL VERIFY:"+self._key["sign"].encode(nacl.encoding.URLSafeBase64Encoder).decode('utf8')
+        return "NACL VERIFY:"+self._key["sign"].verify_key.encode(nacl.encoding.URLSafeBase64Encoder).decode('utf8')
 
     def publicexport(self):
         """
