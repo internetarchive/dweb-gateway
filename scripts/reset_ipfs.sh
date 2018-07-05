@@ -25,6 +25,6 @@ print("Step 3: Clearing out IPFS repo")
 
 '
 # The sudo stuff below here isn't tested - all these commands need running as ipfs
-sudo -u upfs ipfs pin ls --type recursive -q | sudo -u ipfs xargs ipfs pin rm
-sudo -u ipfs repo gc
+sudo -u ipfs ipfs pin ls --type recursive -q | sudo -u ipfs xargs ipfs pin rm
+sudo -u ipfs ipfs repo gc
 
