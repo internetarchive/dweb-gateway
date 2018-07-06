@@ -5,7 +5,6 @@ from .config import config
 from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
-from .IPLD import IPLDdir, IPLDfile
 from .Errors import ToBeImplementedException, NoContentException, TransportFileNotFound
 # !SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
@@ -19,6 +18,7 @@ For documentation on this project see https://docs.google.com/document/d/1FO6Tdj
 """
 
 
+# noinspection PyUnusedLocal,PyUnusedLocal
 class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     """
     Routes queries to handlers based on the first part of the URL for the output format,
@@ -34,10 +34,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     /contenthash    Return the hash of the content
 
     outputformat:  Format wanted e.g. [IPLD](#IPLD) or [nameresolution](#nameresolution)
-    namespace: is a extensible descripter for name spaces e.g. "doi"
+    namespace: is a extensible descriptor for name spaces e.g. "doi"
     namespace-dependent-string: is a string, that may contain additional "/" dependent on the namespace.
     aaa=bbb,ccc=ddd are optional arguments to the name space resolver.
-    _headers contains a dictioanry of HTTP headers, especially "range"
+    _headers contains a dictionary of HTTP headers, especially "range"
 
     Pseudo Code for each service
     * lookup namespace in a config table to get a class
@@ -50,20 +50,17 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     *   { Content-type: result.contenttype, data: result.content() }
 
     Notes:
-    *The namespace is passed to the specific constuctor since a single name resolver might implement multiple namespaces.
+    *The namespace is passed to the specific constructor since a single name resolver might implement multiple namespaces.
 
     Future Work:
     #TODO-STREAM Expand the ServerBase classes to support streams as a return from these routines
     """
-
-
-
-    defaulthttpoptions = { "ipandport": ('localhost', 4244) }
+    defaulthttpoptions = {"ipandport": ('localhost', 4244)}
     onlyexposed = True          # Only allow calls to @exposed methods
-    expectedExceptions = (NoContentException, ArchiveItemNotFound)     # List any exceptions that you "expect" (and dont want stacktraces for)
+    expectedExceptions = (NoContentException, ArchiveItemNotFound)     # List any exceptions that you "expect" (and don't want stacktraces for)
 
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
-        #!SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients
+        # !SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients
         "advancedsearch": AdvancedSearch,
         "archiveid": ArchiveItem,
         "doi": DOI,
@@ -79,6 +76,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     _voidreturn = {'Content-type': 'application/octet-stream', 'data': None}
 
+    # noinspection PyPep8Naming
     @classmethod
     def DwebGatewayHTTPServeForever(cls, httpoptions=None, verbose=False):
         """
@@ -101,6 +99,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 'data': {"FOO": foo, "BAR": bar, "kwargs": kwargs}
                 }
 
+    # noinspection PyPep8
     @exposed
     def info(self, **kwargs):  # http://.../info
         """
@@ -111,11 +110,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             "type" consumed by status function TransportHTTP (in Dweb client library)
         Consumes:
         """
-        return { 'Content-type': 'application/json',
-                 'data': { "type": "gateway",
-                           "services": [ ]}     # A list of names of services supported below  (not currently consumed anywhere)
+        return {'Content-type': 'application/json',
+                'data': {"type": "gateway",
+                         "services": []}     # A list of names of services supported below  (not currently consumed anywhere)
                }
-
 
     @exposed
     def contenthash(self, namespace, *args, **kwargs):
@@ -146,31 +144,33 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     @exposed
     def get(self, namespace, *args, verbose=False, **kwargs):
-        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        verbose = kwargs.get("verbose")  # Also passed on to get in kwargs
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).get(headers=True, verbose=verbose, **kwargs)
 
     @exposed
     def delete(self, namespace, *args, verbose=False, **kwargs):
-        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        verbose = kwargs.get("verbose")  # Also passed on to get in kwargs
         self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).delete(headers=True, verbose=verbose, **kwargs)
         return self._voidreturn
 
     @exposed
     def keys(self, namespace, *args, verbose=False, **kwargs):
-        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        verbose = kwargs.get("verbose")  # Also passed on to get in kwargs
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).keys(headers=True, verbose=verbose, **kwargs)
 
     @exposed
     def getall(self, namespace, *args, verbose=False, **kwargs):
-        verbose = kwargs.get("verbose") # Also passed on to get in kwargs
+        verbose = kwargs.get("verbose")  # Also passed on to get in kwargs
         return self.namespaceclasses[namespace].new(namespace, *args, verbose=verbose, **kwargs).getall(headers=True, verbose=verbose, **kwargs)
 
     #### A group that breaks the naming convention####
     # urls of form https://dweb.me/archive.org/details/foo, conceptually to be moved to dweb.archive.org/details/foo
     # Its unclear if we use this - normally mapping /arc/archive.org/details ->  bootloader via nginx on dweb.archive.org or dweb.me
+    # noinspection PyUnusedLocal
     @exposed
     def archive_org(self, *args, **kwargs):
         filename = config["directories"]["bootloader"]
+        # noinspection PyUnusedLocal
         try:
             # if verbose: logging.debug("Opening {0}".format(filename))
             with open(filename, 'rb') as file:
@@ -209,7 +209,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 if kwargs.get("key"):
                     args.append(kwargs["key"])  # Push key into place normally held by itemid in URL of archiveid/xyz
                     del kwargs["key"]
-                return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True,**kwargs)    #ERR: ArchiveItemNotFound if invalid id
+                return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True, **kwargs)    # ERR: ArchiveItemNotFound if invalid id
             if arg2 == "service" and args[0] == "img":
                 args.pop(0)
                 arg2 = "thumbnail"
@@ -222,9 +222,9 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 func = getattr(obj, arg2, None)
                 return func(headers=True, **kwargs)
             if arg2 == "details" or arg2 == "search":
-                raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, args.join('/')))
-            raise ToBeImplementedException(name="name /arc/{}/{}/{}".format(arg1, arg2, ('/').join(args)))
-        raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1, ('/').join(args)))
+                raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, '/'.join(args)))
+            raise ToBeImplementedException(name="name /arc/{}/{}/{}".format(arg1, arg2, '/'.join(args)))
+        raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1, '/'.join(args)))
 
     def _namedclass(self, namespace, *args, **kwargs):
         namespaceclass = self.namespaceclasses[namespace]  # e.g. doi=>DOI, sha1hex => Sha1Hex
@@ -242,7 +242,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 raise ToBeImplementedException(name="{}/{}?{}".format(namespace, "/".join(args), kwargs))
         elif output:
             raise ToBeImplementedException(name="{}/{}?{}".format(namespace, "/".join(args), kwargs))
-        else: # Default to returning content
+        else:  # Default to returning content
             return namespaceclass.new(namespace, *args, **kwargs).content(verbose=kwargs.get("verbose"), _headers=self.headers)
 
     @exposed
@@ -268,30 +268,30 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     @exposed
     def metadata(self, namespace, *args, **kwargs):
         if namespace == "archiveid":
-            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, '/'.join(args), kwargs))
             return self.arc("archive.org", "metadata", *args, **kwargs)
         if namespace == "advancedsearch":
-            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, '/'.join(args), kwargs))
             return self.arc("archive.org", "advancedsearch", *args, **kwargs)
         if namespace not in ["sha1hex", "contenthash", "doi"]:
-            logging.debug("Accessing unsupported legacy URL - needs implementing metadata/{}/{} {}".format(namespace, ('/').join(args), kwargs))
-        #legacy supporting metadata/xxx
+            logging.debug("Accessing unsupported legacy URL - needs implementing metadata/{}/{} {}".format(namespace, '/'.join(args), kwargs))
+        # legacy supporting metadata/xxx
         return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).metadata(headers=True, **kwargs)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def content(self, namespace, *args, **kwargs):
         if namespace == "archiveid":
-            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, '/'.join(args), kwargs))
             return self.arc("archive.org", "download", *args, **kwargs)
         else:
-            logging.debug("Accessing unsupported legacy URL - needs implementing content/{}/{} {}".format(namespace, ('/').join(args), kwargs))
+            logging.debug("Accessing unsupported legacy URL - needs implementing content/{}/{} {}".format(namespace, '/'.join(args), kwargs))
             verbose = kwargs.get("verbose")
             return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
 
     @exposed
     def download(self, namespace, *args, **kwargs):
         # Synonym for "content" to match Archive API
-        return self.content(namespace, *args, **kwargs)   # Note extra "self" as argument is intentional - needed sicne content is @exposed
+        return self.content(namespace, *args, **kwargs)   # Note extra "self" as argument is intentional - needed since content is @exposed
 
     @exposed
     def thumbnail(self, namespace, *args, **kwargs):
@@ -309,7 +309,8 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     # End of Legacy ##########
 
+
 if __name__ == "__main__":
     logging.basicConfig(**config["logging"])
-    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost',4244)}, verbose=True) # Run local gateway
+    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost', 4244)}, verbose=True)  # Run local gateway
 
