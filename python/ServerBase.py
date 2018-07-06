@@ -221,6 +221,63 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             httperror = e.httperror if hasattr(e, "httperror") else 500
             self.send_error(httperror, str(e))  # Send an error response
 
+    def send_error(self, code, message=None, explain=None):
+        """
+        THIS IS A COPY OF superclass's send_error with cors header added
+        """
+        """Send and log an error reply.
+
+        Arguments are
+        * code:    an HTTP error code
+                   3 digits
+        * message: a simple optional 1 line reason phrase.
+                   *( HTAB / SP / VCHAR / %x80-FF )
+                   defaults to short entry matching the response code
+        * explain: a detailed message defaults to the long entry
+                   matching the response code.
+
+        This sends an error response (so it must be called before any
+        output has been generated), logs the error, and finally sends
+        a piece of HTML explaining the error to the user.
+
+        """
+
+        try:
+            shortmsg, longmsg = self.responses[code]
+        except KeyError:
+            shortmsg, longmsg = '???', '???'
+        if message is None:
+            message = shortmsg
+        if explain is None:
+            explain = longmsg
+        self.log_error("code %d, message %s", code, message)
+        self.send_response(code, message)
+        self.send_header('Connection', 'close')
+
+        # Message body is omitted for cases described in:
+        #  - RFC7230: 3.3. 1xx, 204(No Content), 304(Not Modified)
+        #  - RFC7231: 6.3.6. 205(Reset Content)
+        body = None
+        if (code >= 200 and
+            code not in (HTTPStatus.NO_CONTENT,
+                         HTTPStatus.RESET_CONTENT,
+                         HTTPStatus.NOT_MODIFIED)):
+            # HTML encode to prevent Cross Site Scripting attacks
+            # (see bug #1100201)
+            content = (self.error_message_format % {
+                'code': code,
+                'message': html.escape(message, quote=False),
+                'explain': html.escape(explain, quote=False)
+            })
+            body = content.encode('UTF-8', 'replace')
+            self.send_header("Content-Type", self.error_content_type)
+            self.send_header('Content-Length', int(len(body)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+
+        if self.command != 'HEAD' and body:
+            self.wfile.write(body)
+
 
 def exposed(func):
     def wrapped(*args, **kwargs):
