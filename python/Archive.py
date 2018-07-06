@@ -331,7 +331,7 @@ class ArchiveItem(NameResolverDir):
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "name", "expires"] if leaf.get(k)}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
         keypair = KeyPair({"key": {"passphrase": metadatapassphrase}})
         signature = keypair.sign(signable, verbose=True)  # TODO-DOMAIN test then remove verbose=True
-        signature = "FAKEFAKEFAKE"
+        #signature = "FAKEFAKEFAKE"
         leaf["signatures"].append({"date": datenow, "signature": signature, "signedby": keypair.signingexport()})
         # TODO-DOMAIN now have encapsulated leaf
         # Store the domain in the http domain server, its also always going to be retrievable from this gateway, we cant write to YJS, but a client can copy it TODO-DOMAIN
