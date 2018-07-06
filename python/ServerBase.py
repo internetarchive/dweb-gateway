@@ -6,7 +6,8 @@ from sys import version as python_version
 from cgi import parse_header, parse_multipart
 #from Dweb import Dweb      # Import Dweb library (wont use for Academic project
 #TODO-API needs writing up
-
+import html
+from http import HTTPStatus
 """
 This file is intended to be Application independent , i.e. not dependent on Dweb Library
 """
@@ -165,8 +166,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 logging.error("Sending Unexpected Error {0}:".format(httperror), exc_info=True)
             else:
                 logging.info("Sending Error {0}:{1}".format(httperror, str(e)))
-            if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
-                self.send_header('Access-Control-Allow-Origin', '*')  # '*' didnt work
+            #if self.headers.get('Origin'):  # Handle CORS (Cross-Origin)
+                #self.send_header('Access-Control-Allow-Origin', '*')  # '*' didnt work
                 # self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])  # '*' didnt work
             self.send_error(httperror, str(e))    # Send an error response
 
