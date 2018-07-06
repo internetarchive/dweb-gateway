@@ -1,5 +1,5 @@
 # encoding: utf-8
-#from sys import version as python_version
+# from sys import version as python_version
 import logging
 from .config import config
 from .miscutils import mergeoptions
@@ -7,7 +7,7 @@ from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
 from .IPLD import IPLDdir, IPLDfile
 from .Errors import ToBeImplementedException, NoContentException, TransportFileNotFound
-#!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
+# !SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
 from .Archive import AdvancedSearch, ArchiveItem, ArchiveItemNotFound
@@ -20,7 +20,6 @@ For documentation on this project see https://docs.google.com/document/d/1FO6Tdj
 
 
 class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
-
     """
     Routes queries to handlers based on the first part of the URL for the output format,
     that routine will create an object by calling the constructor for the Namespace, and
@@ -78,7 +77,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         "table": KeyValueTable,         # Probably still support under TODO-ARC or make it /table/xxx/...since could be keys or get
     }
 
-    _voidreturn = {'Content-type': 'application/octet-stream', 'data': None }
+    _voidreturn = {'Content-type': 'application/octet-stream', 'data': None}
 
     @classmethod
     def DwebGatewayHTTPServeForever(cls, httpoptions=None, verbose=False):
@@ -89,21 +88,21 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
         :return: Never Returns
         """
-        httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions or {}) # Deepcopy to merge options
+        httpoptions = mergeoptions(cls.defaulthttpoptions, httpoptions or {})  # Deepcopy to merge options
         logging.info("Starting server with options={0}".format(httpoptions))
-        #any code needed once (not per thread) goes here.
-        cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)    # Uses defaultipandport
+        # any code needed once (not per thread) goes here.
+        cls.serve_forever(ipandport=httpoptions["ipandport"], verbose=verbose)  # Uses defaultipandport
 
-    @exposed    # Exposes this function for outside use
+    @exposed  # Exposes this function for outside use
     def sandbox(self, foo, bar, **kwargs):
         # Changeable, just for testing HTTP etc, feel free to play with in your branch, and expect it to be overwritten on master branch.
-        logging.debug("foo={} bar={}, kwargs={}".format(foo, bar,  kwargs))
-        return { 'Content-type': 'application/json',
-                 'data': { "FOO": foo, "BAR": bar, "kwargs": kwargs}
-               }
+        logging.debug("foo={} bar={}, kwargs={}".format(foo, bar, kwargs))
+        return {'Content-type': 'application/json',
+                'data': {"FOO": foo, "BAR": bar, "kwargs": kwargs}
+                }
 
     @exposed
-    def info(self, **kwargs):   # http://.../info
+    def info(self, **kwargs):  # http://.../info
         """
         Return info about this server
         The content of this may change, make sure to retain the "type" field.
@@ -122,9 +121,9 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def contenthash(self, namespace, *args, **kwargs):
         verbose = kwargs.get("verbose")
         namespaceclass = self.namespaceclasses.get(namespace)
-        if namespaceclass: # Old style e.g. contenthash/rawstore
+        if namespaceclass:  # Old style e.g. contenthash/rawstore
             return self.namespaceclasses[namespace].new(namespace, *args, **kwargs).contenthash(verbose=verbose)
-        else: # New style e.g. contenthash/Q123 //TODO-ARC complete this and replace cases of above
+        else:  # New style e.g. contenthash/Q123 //TODO-ARC complete this and replace cases of above
             # /contenthash/foo => content/contenthash
             return ContentHash.new("contenthash", namespace, *args, **kwargs).content(verbose=verbose, _headers=self.headers)  # { Content-Type: xxx; data: "bytes" }
 
@@ -173,13 +172,13 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def archive_org(self, *args, **kwargs):
         filename = config["directories"]["bootloader"]
         try:
-            #if verbose: logging.debug("Opening {0}".format(filename))
+            # if verbose: logging.debug("Opening {0}".format(filename))
             with open(filename, 'rb') as file:
                 content = file.read()
-            #if verbose: logging.debug("Opened")
+            # if verbose: logging.debug("Opened")
         except IOError as e:
             raise TransportFileNotFound(file=filename)
-        return  {'Content-type': 'text/html', 'data': content }
+        return {'Content-type': 'text/html', 'data': content}
 
     @exposed
     def arc(self, arg1, *args, **kwargs):
@@ -205,7 +204,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 return ArchiveItem.new("archiveid", *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
             if arg2 == "advancedsearch":
                 return AdvancedSearch.new("advancedsearch", *args, **kwargs).metadata(headers=True, **kwargs)  # { Content-Type: xxx; data: "bytes" }
-            if arg2 == "leaf": #This needs to catch the special case of /arc/archive.org/leaf?key=xyz
+            if arg2 == "leaf":  # This needs to catch the special case of /arc/archive.org/leaf?key=xyz
                 args = list(args)
                 if kwargs.get("key"):
                     args.append(kwargs["key"])  # Push key into place normally held by itemid in URL of archiveid/xyz
@@ -225,17 +224,17 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             if arg2 == "details" or arg2 == "search":
                 raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, args.join('/')))
             raise ToBeImplementedException(name="name /arc/{}/{}/{}".format(arg1, arg2, ('/').join(args)))
-        raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1,('/').join(args)))
+        raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1, ('/').join(args)))
 
     def _namedclass(self, namespace, *args, **kwargs):
-        namespaceclass = self.namespaceclasses[namespace] # e.g. doi=>DOI, sha1hex => Sha1Hex
+        namespaceclass = self.namespaceclasses[namespace]  # e.g. doi=>DOI, sha1hex => Sha1Hex
         output = kwargs.get("output")
         if output and output in ["metadata", "magnetlink", "archiveid", "torrent"]:
             # Supports:
             # btih:zzzz?output=magnetlink - get a Webtorrent magnetlink only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
             # btih:zzzz?output=archiveid - get the archiveid, only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
             # btih:zzzz?output=torrent - get a torrentfile, only currently supported by btih - could (easily) be supported on ArchiveFile, ArchiveItem
-            obj =  namespaceclass.new(namespace, *args, **kwargs)
+            obj = namespaceclass.new(namespace, *args, **kwargs)
             func = getattr(obj, output, None)
             if func:
                 return func(headers=True, **kwargs)
@@ -251,11 +250,11 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         return self._namedclass("doi", *args, **kwargs)
 
     @exposed
-    def sha1hex(self,  *args, **kwargs):
+    def sha1hex(self, *args, **kwargs):
         return self._namedclass("sha1hex", *args, **kwargs)
 
     @exposed
-    def btih(self, *args, **kwargs):   # /btih/xxxxx or /btih/xxxxx?output=magnetlink
+    def btih(self, *args, **kwargs):  # /btih/xxxxx or /btih/xxxxx?output=magnetlink
         return self._namedclass("btih", *args, **kwargs)
 
     # Legacy support ############
@@ -300,7 +299,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         if namespace == "archiveid":
             return self.arc("archive.org", "thumbnail", *args, **kwargs)
         raise ToBeImplementedException(name="{}/{}/{}?{}".format("thumbnail", namespace, "/".join(args), kwargs))
-
 
     @exposed
     def torrent(self, namespace, *args, **kwargs):
