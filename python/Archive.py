@@ -146,13 +146,13 @@ class ArchiveItem(NameResolverDir):
 
         :param namespace:   "archiveid"
         :param itemid:      Archive item id
-        :param args:       *optional - Name of file - case sensitive or none for the item
+        :param args:        *optional - Name of file - case sensitive or none for the item
                             Special case of ____padding_file to send back a file of all 0's
         :param kwargs:      {
             wanttorrent     If True, then load obj.torrentdata with the modified torrent file (called if we expect to return it via a .torrent call)
         }
         :return:            ArchiveItem or ArchiveFile instance.
-        :raises:        ArchiteItemNotFound if itemid invalid
+        :raises:            ArchiveItemNotFound if itemid invalid
         """
         verbose = kwargs.get("verbose")
         if verbose: del kwargs["verbose"]

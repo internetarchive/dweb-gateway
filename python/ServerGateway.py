@@ -10,7 +10,7 @@ from .Errors import ToBeImplementedException, NoContentException, TransportFileN
 #!SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
-from .Archive import AdvancedSearch, ArchiveItem
+from .Archive import AdvancedSearch, ArchiveItem, ArchiveItemNotFound
 from .Btih import BtihResolver
 from .LocalResolver import KeyValueTable
 
@@ -61,7 +61,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     defaulthttpoptions = { "ipandport": ('localhost', 4244) }
     onlyexposed = True          # Only allow calls to @exposed methods
-    expectedExceptions = (NoContentException,)     # List any exceptions that you "expect" (and dont want stacktraces for)
+    expectedExceptions = (NoContentException, ArchiveItemNotFound)     # List any exceptions that you "expect" (and dont want stacktraces for)
 
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
         #!SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients
@@ -210,7 +210,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 if kwargs.get("key"):
                     args.append(kwargs["key"])  # Push key into place normally held by itemid in URL of archiveid/xyz
                     del kwargs["key"]
-                return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True,**kwargs)
+                return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True,**kwargs)    #ERR: ArchiveItemNotFound if invalid id
             if arg2 == "service" and args[0] == "img":
                 args.pop(0)
                 arg2 = "thumbnail"
