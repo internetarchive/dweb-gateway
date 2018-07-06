@@ -44,26 +44,6 @@ Please see the main [README](./README.md) for the overall structure and [Classes
 -#TODO: Copy the use case from [google doc with previous architecture version](https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit#)
 with edits to match current names etc in Microservices below. Below is draft
 
-##### Resolution of DOI to list of files
-* IPFS Gateway 
-    * Receives request from IPFS for /iplddir/doi/10.1037/arc0000014
-    * Requests http://gateway.dweb.me/ipld/doi/10.1037/arc0000014
-* Name Server/Service gateway.dweb.me 
-    * recognizes “doi” and calls DOI(“10.1037”,”arc0000014”)
-* DOI(“10.1037”,”arc0000014”)
-    * Canonicalises the name  (lower case, remove all but fixed list of punctuation)
-    * looks up the DOI in a sqlite table and retrieves a list of (Internal) URLs and metadata into an internal structure
-* Name Server
-    * Passes the DOI object to IPLDDir(DOI)
-* IPLDDir(DOI)
-    * Calls an iterator on the DOI to get each DOIFile
-    * Builds an IPFS specific IPLD in particular
-    * Builds outgoing contenthashes in form IPFS can recognize
-    * returns the obj to NameServer
-* Name Server > IPFS Gateway > User
-    * NameServer calls IPDSDir.content() to get the resulting data structure
-    * Returns this to the user who can select from the files offered
-
 ##### Retrieval of file by content hash
 * IPFS Gateway
     * Receives a request by contenthash
@@ -108,33 +88,3 @@ with edits to match current names etc in Microservices below. Below is draft
 * Multihash.content()
     * Retrieves the bytes (from elsewhere in Archive) and returns to Gateway Server
 * Gateway Server > IPFS Gateway > Client
-
-##### Alternative - where IPFS Gatway shards the content
-* IPFS Gateway
-    * Requests gateway.dweb.me/content/contenthash/Q....
-* Gateway Server/Service GET gateway.dweb.doi/content/contenthash/Q.... DONE
-    * Calls ContentHash(Qm...) DONE
-* ContentHash(Qm...)  
-    * (ContentHash is subclass of NameResolverFile) DONE UNTESTED
-    * Locates file in the locationStore WAITING ON LOCATIONSTORE
-    * Loads meta-data for that file NOT REQD YET
-* Gateway Server
-    * calls content method on ContentHash DONE
-* ContentHash.content()
-    * retrieves the content (all of it) from the server DONE UNTESTED
-    * returns it (as a stream ideally) RETURN DONE, STREAM NOT YET
-* Gateway Server
-    * Returns this to IPFS Gateway DONE
-* IPFS Gateway 
-    * shards the content, calculting hash on each byterange
-    * stores the IPLD in its own storage
-    * Stores & Pins the reference multihash: {contenthash, byterange} for each shard
-    * Optionally stores the IPLD on the Gateway Server ... via POST gateway.dweb.me/storeipld/contenthash/Q...
-* GatewayServer POST gateway.dweb.me/storeipld/contenthash/Q...
-    * Calls ContentHash("contenthash", Q...) which loads metadata
-    * calls ContentHash.storeipld(data) with the IPLD as parameter
-* ContentHash.storeipld
-    * Stores the IPLD in the content store and gets the multihash of it back
-    * Stores the multihash in a ipldhashstore 
-    * Note that for this to work ... the IPLDdir generator should return this ipldhash as part of the meta-data
-    

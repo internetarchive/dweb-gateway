@@ -181,50 +181,6 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             raise TransportFileNotFound(file=filename)
         return  {'Content-type': 'text/html', 'data': content }
 
-    #### A group for IPLD assuming we were sharding on server for IPFS - we arent since we use the local IPFS server so this is not complete #####
-    @exposed
-    def iplddir(self, namespace, *args, **kwargs):
-        #TODO-IPLD This is not complete yet
-        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)
-        i = IPLDdir(obj)
-        return i.content()
-
-    def storeipld(self, namespace, *args, **kwargs):
-        """
-        Post a IPLD and store for a multihash
-        XXXX THIS IS NOT USED, PROBABLY NEVER COMPLETED
-
-        :param namespace:   Where to store this - must be "contenthash" currently
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        if namespace != "contenthash":
-            raise ToBeImplementedException(name="POST_storeipld for namespace="+namespace)
-        data = kwargs["data"]
-        del kwargs["data"]
-        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)  # Construct our local object
-        IPLDfile.storeFromString(obj.multihash, data)   # Store IPLD and hash of IPLD
-        return {} # Empty return, just success
-
-    def storeipldhash(self, namespace, *args, **kwargs):
-        """
-        Post a IPLD and store for a multihash
-        XXXX THIS IS NOT USED, PROBABLY NEVER COMPLETED
-
-        :param namespace:   Where to store this - must be "contenthash" currently
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        if namespace != "contenthash":
-            raise ToBeImplementedException(name="POST_storeipld for namespace="+namespace)
-        data = kwargs["data"]   # multihash of IPLD that IPFS gateway has created
-        del kwargs["data"]
-        obj = self.namespaceclasses[namespace](namespace, *args, **kwargs)  # Construct our local object
-        IPLDfile.storeFromHash(obj.multihash, data)   # Store IPLD and hash of IPLD
-        return {} # Empty return, just success
-
     @exposed
     def arc(self, arg1, *args, **kwargs):
         """

@@ -28,11 +28,6 @@ In practice some combinations don't make any sense.
 * metadata: Return a JSON with metadata about the file - its format is type dependent
 * void: Return emptiness
 
-### Not yet working, but reserved for future development
-* iplddir: Return an IPFS data structure for the files (not yet working)
-* ipldstore: Store the IPLD provided in the Post data (Not currently used, and possibly should be an item type)
-* storeipldhash: Save a hash that could be used in IPFS to retrieve the IPLD (dont believe its used)
- 
 ## Item Types
 
 * contenthash: The hash of a content, in base58 multihash form typically Q123abc or z123abc depending on which hash is used,
