@@ -4,6 +4,9 @@ from .Errors import CodingException, ToBeImplementedException, NoContentExceptio
 from .HashStore import MagnetLinkService
 from .miscutils import httpget, loads
 from .config import config
+from .Archive import ArchiveItem
+from magneturi import bencode
+
 
 class BtihResolver(NameResolverDir):
     """
@@ -95,6 +98,7 @@ class BtihResolver(NameResolverDir):
 
     def torrent(self, verbose=False, headers=False, **kwargs):
         torrenturl = self.torrenturl(verbose=verbose)   # NoContentException if not found
-        data = httpget(torrenturl)
-        return {"Content-type": "application/x-bittorrent", "data": data} if headers else data
+        data = bencode.bencode(ArchiveItem.modifiedtorrent(self.itemid(), wantmodified=True, verbose=verbose))
+        mimetype = "application/x-bittorrent"
+        return {"Content-type": mimetype, "data": data} if headers else data
 

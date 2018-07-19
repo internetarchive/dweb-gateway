@@ -42,7 +42,9 @@ then
     	systemctl status nginx.service
     fi
 fi
-
 sudo supervisorctl restart $SERVICENAME
 
-
+if [ "$ARG" == "TORRENT" ]
+then
+    echo "TODO run some kind of installer from dweb-transport"
+fi
