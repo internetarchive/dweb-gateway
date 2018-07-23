@@ -1,6 +1,7 @@
 # encoding: utf-8
 # from sys import version as python_version
 import logging
+import urllib.parse
 from .config import config
 from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
@@ -223,8 +224,8 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 return func(headers=True, **kwargs)
             if arg2 == "details" or arg2 == "search":
                 raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, '/'.join(args)))
-            if arg2 in ["%E2%80%9D"]:    # Looks like hacking
-                raise TransportFileNotFound(name="/arc/{}/{}".format(arg1, arg2, '/'.join(args)))
+            if arg2 in [urllib.parse.unquote("%E2%80%9D")]:    # Looks like hacking
+                raise TransportFileNotFound(name="/arc/{}/{}/{}".format(arg1, arg2, '/'.join(args)))
             raise ToBeImplementedException(name="name /arc/{}/{}/{}".format(arg1, arg2, '/'.join(args)))
         raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1, '/'.join(args)))
 
