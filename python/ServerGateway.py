@@ -223,6 +223,8 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 return func(headers=True, **kwargs)
             if arg2 == "details" or arg2 == "search":
                 raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, '/'.join(args)))
+            if ["%E2%80%9D"].includes(arg2):    # Looks like hacking
+                raise TransportFileNotFound(name="/arc/{}/{}".format(arg1, arg2, '/'.join(args)))
             raise ToBeImplementedException(name="name /arc/{}/{}/{}".format(arg1, arg2, '/'.join(args)))
         raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1, '/'.join(args)))
 
