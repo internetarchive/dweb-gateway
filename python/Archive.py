@@ -10,7 +10,7 @@ from .NameResolver import NameResolverDir, NameResolverFile
 from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
-from .Errors import CodingException, MyBaseException, IPFSException
+from .Errors import CodingException, MyBaseException, IPFSException, TransportURLNotFound
 from .HashStore import MagnetLinkService, ThumbnailIPFSfromItemIdService, TitleService
 from .TransportIPFS import TransportIPFS
 from .LocalResolver import KeyValueTable
@@ -193,7 +193,7 @@ class ArchiveItem(NameResolverDir):
         torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], itemid, torrentfilename)
         try:
             torrentcontents = httpget(torrentfileurl, wantmime=False)
-        except requests.exceptions.HTTPError as e:
+        except (requests.exceptions.HTTPError, TransportURLNotFound) as e:
             logging.warning("Inaccessible torrent at {}, {}".format(torrentfileurl, e))
             return  # Its ok if cant get a torrent
         try:
