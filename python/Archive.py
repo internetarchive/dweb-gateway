@@ -175,7 +175,7 @@ class ArchiveItem(NameResolverDir):
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
                 ln = int(name.split('/')[-1])
-                return ArchiveFilePadding(verbose=verbose, len=ln)
+                return ArchiveFilePadding(verbose=verbose, ln=ln)
             else:
                 f = [f for f in obj._metadata["files"] if f["name"] == name]
                 if not f: raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    # TODO change to islice
