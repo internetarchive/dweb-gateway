@@ -36,7 +36,7 @@ config = {
     },  # By default Not to file - overridden below for dev machine
     "ignoreurls": [ # Ignore these, they are hacks or similar
         urllib.parse.unquote("%E2%80%9D"),
-        "robots.txt",   // Not a hack, but we dont have one TODO
+        "robots.txt",   #Not a hack, but we dont have one TODO
     ]
 
 }
