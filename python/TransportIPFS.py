@@ -142,8 +142,10 @@ class TransportIPFS(Transport):
                     data = dumps(data)
                 url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, pinggateway=pinggateway, **options) # IPFSException if down
             return url
+        except (KeyError) as e:
+            raise IPFSException(message="Bad format back from IPFS - no key field" + json.dumps(res))
         except (json.decoder.JSONDecodeError) as e:
-            raise IPFSException(message="Bad format back from IPFS;"+str(e))
+            raise IPFSException(message="Bad format back from IPFS - not JSON;"+str(e))
         except (requests.exceptions.ConnectionError) as e:
             raise IPFSException(message="IPFS refused connection;"+str(e))
 
