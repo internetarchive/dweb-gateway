@@ -45,6 +45,8 @@ if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
     config["logging"] = { "filename": 'dweb-gateway.log', "level": logging.DEBUG }  #Not to file
 elif socket.gethostname().startswith('mitraglass'):
+    # TODO make sure to remove url_urlstore defnt !
+    config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
     config["directories"]["bootloader"] = "/Users/mitra/git/dweb-archive/bootloader.html"
     config["domains"]["directory"] = "/Users/mitra/git/dweb-gateway/.cache/table/"
 else:

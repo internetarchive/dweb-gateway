@@ -1,3 +1,5 @@
+cd /usr/local/dweb-gateway
+
 python3 -c '
 import logging
 import os

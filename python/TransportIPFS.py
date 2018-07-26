@@ -1,4 +1,5 @@
 # encoding: utf-8
+import json
 import logging
 from .miscutils import loads, dumps
 from .Transport import Transport
@@ -118,27 +119,31 @@ class TransportIPFS(Transport):
         :param pinggateway:    True (default) to ping ipfs.io so that it knows where to find, (alternative is to allow browser to ping it on failure to retrieve)
         :param mimetype:
         :param options:
-        :raises: IPFSException if cant reach server
+        :raises: IPFSException if cant reach server or doesnt return JSON
         :return:
         """
         assert (not returns), 'Not supporting "returns" parameter to TransportIPFS.store at this point'
-        headers = { "Connection": "keep-alive"}
-        if urlfrom and config["ipfs"].get("url_urlstore"):              # On a machine with urlstore and passed a url
-                ipfsurl = config["ipfs"]["url_urlstore"]
-                res = requests.get(ipfsurl, headers=headers, params={'arg': urlfrom}).json()
-                ipldhash = res['Key']
-                # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
-                # This next line is to get around bug in IPFS propogation
-                # See https://github.com/ipfs/js-ipfs/issues/1156
-                if pinggateway:
-                    self.pinggateway(ipldhash)
-                url = "ipfs:/ipfs/{}".format(ipldhash)
-        else:   # Need to store via "add"
-            if not data or not mimetype and urlfrom:
-                (data, mimetype) = httpget(urlfrom, wantmime=True) # This is a fetch from somewhere else before putting to gateway
-            if not isinstance(data, (str,bytes)):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
-                data = dumps(data)
-            url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, pinggateway=pinggateway, **options) # IPFSException if down
-        return url
-
+        try:
+            headers = { "Connection": "keep-alive"}
+            if urlfrom and config["ipfs"].get("url_urlstore"):              # On a machine with urlstore and passed a url
+                    ipfsurl = config["ipfs"]["url_urlstore"]
+                    res = requests.get(ipfsurl, headers=headers, params={'arg': urlfrom}).json()
+                    ipldhash = res['Key']
+                    # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
+                    # This next line is to get around bug in IPFS propogation
+                    # See https://github.com/ipfs/js-ipfs/issues/1156
+                    if pinggateway:
+                        self.pinggateway(ipldhash)
+                    url = "ipfs:/ipfs/{}".format(ipldhash)
+            else:   # Need to store via "add"
+                if not data or not mimetype and urlfrom:
+                    (data, mimetype) = httpget(urlfrom, wantmime=True) # This is a fetch from somewhere else before putting to gateway
+                if not isinstance(data, (str,bytes)):   # We've got data, but if its an object turn into JSON, (example is name/archiveid which passes metadata)
+                    data = dumps(data)
+                url = self.rawstore(data=data, verbose=verbose, returns=returns, mimetype=mimetype, pinggateway=pinggateway, **options) # IPFSException if down
+            return url
+        except (json.decoder.JSONDecodeError) as e:
+            raise IPFSException(message="Bad format back from IPFS;"+str(e))
+        except (requests.exceptions.ConnectionError) as e:
+            raise IPFSException(message="IPFS refused connection;"+str(e))
 
