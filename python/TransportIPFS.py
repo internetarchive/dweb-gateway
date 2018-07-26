@@ -98,7 +98,7 @@ class TransportIPFS(Transport):
         if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
         headers = { "Connection": "keep-alive"}
         try:
-            res = requests.post(ipfsurl, headers=headers, files={'file': ('', data, mimetype)}).json()
+            res = requests.post(ipfsurl, headers=headers, params={ 'trickle': 'true'}, files={'file': ('', data, mimetype)}).json()
         #except ConnectionError as e:  # TODO - for some reason this never catches even though it reports "ConnectionError" as the class
         except requests.exceptions.ConnectionError as e:  # Alternative - too broad a catch but not expecting other errors
             pass
@@ -127,7 +127,7 @@ class TransportIPFS(Transport):
             headers = { "Connection": "keep-alive"}
             if urlfrom and config["ipfs"].get("url_urlstore"):              # On a machine with urlstore and passed a url
                     ipfsurl = config["ipfs"]["url_urlstore"]
-                    res = requests.get(ipfsurl, headers=headers, params={'arg': urlfrom}).json()
+                    res = requests.get(ipfsurl, headers=headers, params={'arg': urlfrom, 'trickle': 'true'}).json()
                     ipldhash = res['Key']
                     # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
                     # This next line is to get around bug in IPFS propogation
