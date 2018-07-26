@@ -18,7 +18,11 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
     :param fixbadurls:      Removes some historically bad URLs, this was done so isn't needed again - just left as a modifyable stub.
     :return:
     """
-
+    knownbadhashes = [
+        "zb2rhhEncXjn7PnqJ16mzfeug1bqWuupQ3PnkhnWLpAaDatiZ", # audio
+        "zb2rhiSEszTZ4YuY7GJScy6jKZTJuR97MLs7KSe2nKLHwb4A7", # texts
+        "zb2rhk2FYVEy5VRHmaEzor7NuA936E8GGaokZFurKmUE959zx", # movies
+    ]
     r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
     reseeded = 0
     removed = 0
@@ -42,8 +46,8 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
             #print(i, ipfs)
             if ipfs:
                 withipfs = withipfs + 1
-                ipfs = ipfs.replace("ipfs:/ipfs/", "")
-                if removeipfs:
+                ipfs = ipfs.replace("ipfs:/ipfs/", "")  # The hash
+                if removeipfs or (ipfs in knownbadhashes):
                     r.hdel(i, k)
                     removed = removed + 1
                 if reseedipfs:
