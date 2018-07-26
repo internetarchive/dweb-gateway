@@ -223,7 +223,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                 return func(headers=True, **kwargs)
             if arg2 == "details" or arg2 == "search":
                 raise ToBeImplementedException(name="forwarding to details html for name /arc/%s/%s which should be intercepted by nginx first".format(arg1, '/'.join(args)))
-            if arg2 in config.ignoreurls:    # Looks like hacking or ignorable e.g. robots.txt, note this just ignores /arc/archive.org/xyz
+            if arg2 in config["ignoreurls"]:    # Looks like hacking or ignorable e.g. robots.txt, note this just ignores /arc/archive.org/xyz
                 raise TransportFileNotFound(name="/arc/{}/{}/{}".format(arg1, arg2, '/'.join(args)))
             raise ToBeImplementedException(name="name /arc/{}/{}/{}".format(arg1, arg2, '/'.join(args)))
         raise ToBeImplementedException(name="name /arc/{}/{}".format(arg1, '/'.join(args)))
