@@ -8,6 +8,8 @@ from cgi import parse_header, parse_multipart
 #TODO-API needs writing up
 import html
 from http import HTTPStatus
+from .config import config
+
 """
 This file is intended to be Application independent , i.e. not dependent on Dweb Library
 """
@@ -27,7 +29,7 @@ else:   # Python 2
 
 import traceback
 
-from .Errors import MyBaseException, ToBeImplementedException
+from .Errors import MyBaseException, ToBeImplementedException, TransportFileNotFound
 #from Transport import TransportBlockNotFound, TransportFileNotFound
 #from TransportHTTP import TransportHTTP
 
@@ -110,6 +112,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(301)
                 self.send_header('Location','https://dweb.me/favicon.ico')
                 self.end_headers()
+            if cmd in config["ignoreurls"]:  # Looks like hacking or ignorable e.g. robots.txt, note this just ignores /arc/archive.org/xyz
+                raise TransportFileNotFound(name=o.path)
             else:
                 kwargs.update(postvars)
 
