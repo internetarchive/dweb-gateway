@@ -47,7 +47,6 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
             if ipfs:
                 withipfs = withipfs + 1
                 ipfs = ipfs.replace("ipfs:/ipfs/", "")  # The hash
-                print(ipfs)
                 if removeipfs or (ipfs in knownbadhashes):
                     r.hdel(i, k)
                     removed = removed + 1
