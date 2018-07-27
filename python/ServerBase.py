@@ -112,7 +112,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(301)
                 self.send_header('Location','https://dweb.me/favicon.ico')
                 self.end_headers()
-            if cmd in config["ignoreurls"]:  # Looks like hacking or ignorable e.g. robots.txt, note this just ignores /arc/archive.org/xyz
+            elif cmd in config["ignoreurls"]:  # Looks like hacking or ignorable e.g. robots.txt, note this just ignores /arc/archive.org/xyz
                 raise TransportFileNotFound(name=o.path)
             else:
                 kwargs.update(postvars)
