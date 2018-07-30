@@ -1,7 +1,7 @@
 import logging
 import requests
 from urllib.parse import urlparse
-from .Errors import ToBeImplementedException, NoContentException
+from .Errors import ToBeImplementedException, NoContentException, IPFSException
 from .Multihash import Multihash
 from .HashStore import LocationService, MimetypeService, IPLDHashService
 from .config import config
@@ -178,6 +178,7 @@ class NameResolverFile(NameResolver):
         :param data:        # If present is the data for the file
         :param forceurlstore:   # Override default and use urlstore
         :param forceadd:        # Override default and use add
+        :raises:                # IPFS Exeption if its failing
         :return:                # IPLDhash
 
         Logical combinations of arguments attempt to get the "right" result.
@@ -198,7 +199,7 @@ class NameResolverFile(NameResolver):
             MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
         if (url and not forceadd):
             did = "urlstore"
-            ipldurl = TransportIPFS().store(urlfrom=url, pinggateway=False, verbose=verbose)
+            ipldurl = TransportIPFS().store(urlfrom=url, pinggateway=False, verbose=verbose)  # Can throw IPFSExeption
         elif data:  # Either provided or fetched from URL
             did = "add"
             ipldurl = TransportIPFS().store(data=data, pinggateway=False, mimetype=self.mimetype, verbose=verbose)
@@ -246,8 +247,12 @@ class NameResolverFile(NameResolver):
                     ipldhash = self.multihash and IPLDHashService.get(self.multihash.multihash58) # Try again now have hash
                     MimetypeService.set(self.multihash.multihash58, self.mimetype, verbose=verbose)
                 if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
-                    ipldhash = self.cache_ipfs(url=url, verbose=verbose, announcedht=False) # Not announcing to DHT here, its too slow (16+ seconds) better to let first client fail, try gateway, fail again, and subsequent work.
-                    if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
+                    # Can throw IPFSException - ignore it
+                    try:
+                        ipldhash = self.cache_ipfs(url=url, verbose=verbose, announcedht=False) # Not announcing to DHT here, its too slow (16+ seconds) better to let first client fail, try gateway, fail again, and subsequent work.
+                        if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
+                    except IPFSException as e:
+                        pass    # Ignore it - wont have an ipldhash, but usually dont care
         if self.multihash:
             LocationService.set(self.multihash.multihash58, url, verbose=verbose)
         return {"ipldhash": ipldhash}
