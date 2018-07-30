@@ -8,11 +8,12 @@ from .TransportIPFS import TransportIPFS
 
 logging.basicConfig(**config["logging"])    # For server
 
-def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=False, fixbadurls=False):
+def resetipfs(removeipfs=False, reseedipfs=False, removemagnet=False, announcedht=False, verbose=False, fixbadurls=False):
     """
     Loop over and "reset" ipfs
     :param removeipfs:      If set will remove all cached pointers to IPFS - note this is part of a three stage process see notes in cleanipfs.sh
     :param reseedipfs:      If set we will ping the ipfs.io gateway to make sure it knows about our files, this isn't used any more
+    :param removemagnet:    Remove all cached magnet links (e.g. to add a new default tracker
     :param announcedht:     Announce our files to the DHT - currently run by cron regularly
     :param verbose:         Generate verbose debugging - the code below could use more of this
     :param fixbadurls:      Removes some historically bad URLs, this was done so isn't needed again - just left as a modifyable stub.
@@ -26,8 +27,10 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
     r = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
     reseeded = 0
     removed = 0
+    magremoved = 0
     total = 0
     withipfs = 0
+    withmagnet = 0
     announceddht = 0
     if announcedht:
         dhtround = ((int(((StateService.get("LastDHTround", verbose)) or 0)) + 1) % 58)
@@ -41,6 +44,14 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
             if urls.startswith("ipfs:"):
                 logging.debug("Would delete {} .url= {}".format(i,url))
                 #r.hdel(i, "url")
+        for k in ["magnetlink"]:
+            magnetlink = r.hget(i, k)
+            if magnetlink:
+                withmagnet = withmagnet + 1
+                if removemagnet:
+                    r.hdel(i, k)
+                    magremoved = removed + 1
+
         for k in [ "ipldhash", "thumbnailipfs" ]:
             ipfs = r.hget(i, k)
             #print(i, ipfs)
@@ -60,7 +71,7 @@ def resetipfs(removeipfs=False, reseedipfs=False, announcedht=False, verbose=Fal
                         # logging.debug("Announcing {} {}".format(i, ipfs))  # Logged in TransportIPFS
                         TransportIPFS().announcedht(ipfs)
                         announceddht = announceddht + 1
-    logging.debug("Scanned {}, withipfs {}, deleted {}, reseeded {}, announced {}".format(total, withipfs, removed, reseeded, announceddht))
+    logging.debug("Scanned {}, withipfs {}, deleted {}, reseeded {}, announced {}, magremoved {}".format(total, withipfs, removed, reseeded, announceddht, magremoved))
 
 # To announce DHT under cron
 #logging.basicConfig(**config["logging"])    # For server
