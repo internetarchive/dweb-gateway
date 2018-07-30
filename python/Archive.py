@@ -212,7 +212,7 @@ class ArchiveItem(NameResolverDir):
 
         if wantmodified:  # Normally we want the torrent file modified to support WebTorrent and not use HTTP URLs
             # The trackers at bt1 and bt2 are http, but they dont support webtorrent anyway so that doesnt matter.
-            webtorrenttrackerlist = ['wss://tracker.btorrent.xyz', 'wss://tracker.openwebtorrent.com',
+            webtorrenttrackerlist = ['wss://dweb.archive.org:6969', wss://tracker.btorrent.xyz', 'wss://tracker.openwebtorrent.com',
                                      'wss://tracker.fastcast.nz']
             torrentdata["announce-list"] += [[wtt] for wtt in webtorrenttrackerlist]
             # Note announce-list is never empty after this, so can ignore announce field
