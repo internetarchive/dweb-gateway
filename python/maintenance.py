@@ -50,7 +50,7 @@ def resetipfs(removeipfs=False, reseedipfs=False, removemagnet=False, announcedh
                 withmagnet = withmagnet + 1
                 if removemagnet:
                     r.hdel(i, k)
-                    magremoved = removed + 1
+                    magremoved = magremoved + 1
 
         for k in [ "ipldhash", "thumbnailipfs" ]:
             ipfs = r.hget(i, k)
