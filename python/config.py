@@ -36,14 +36,41 @@ config = {
     },  # By default Not to file - overridden below for dev machine
     "ignoreurls": [ # Ignore these, they are hacks or similar
         urllib.parse.unquote("%E2%80%9D"),
+        ".well-known",
+        "clientaccesspolicy.xml",
+        "db",
+        "index.php",
+        "mysqladmin",
+        "login.cgi",
         "robots.txt",   #Not a hack, but we dont have one TODO
+        "phpmyadmin",
+        "phpMyAdminold",
+        "phpMyAdmin.old",
+        "phpmyadmin-old",
+        "phpMyadmin_bak",
+        "phpMyAdmin",
+        "phpma"
+        "phpmyadmin0",
+        "phpmyadmin1",
+        "phpmyadmin2",
+        "pma",
+        "PMA",
+        "scripts",
+        "setup.php",
+        "sitemap.xml",
+        "sqladmin",
+        "tools",
+        "typo3",
+        "web",
+        "www",
+        "xampp",
     ]
 
 }
 
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
-    config["logging"] = { "filename": 'dweb-gateway.log', "level": logging.DEBUG }  #Not to file
+    config["logging"] = { "filename": '/var/log/dweb/dweb-gateway', "level": logging.DEBUG }  #Not to file
 elif socket.gethostname().startswith('mitraglass'):
     # TODO make sure to remove url_urlstore defnt !
     config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine

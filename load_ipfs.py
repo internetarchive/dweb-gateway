@@ -7,7 +7,7 @@ import redis
 from python.config import config
 from python.Archive import ArchiveItem, ArchiveFile
 
-logging.basicConfig(**config["logging"])    # On server logs to /usr/local/dweb_gateway/dweb-gateway.log
+logging.basicConfig(**config["logging"])    # On server logs to /var/log/dweb/dweb-gateway
 
 #print(config);
 logging.debug("load_ipfs args={}".format(sys.argv)) # sys.argv[1] is first arg (0 is this script)
