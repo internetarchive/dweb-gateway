@@ -65,30 +65,100 @@ See [HTTPS API](./HTTPSAPI.md) for the API exposed by the URLs.
 
 This should work, someone please confirm on a clean(er) machine and remove this comment.
 
-You'll also need REDIS, Supervisor and IPFS
-On a Mac
+You'll first need REDIS & Supervisor to be installed
+### On a Mac
 ```bash
 brew install redis
 brew services start redis
 brew install supervisor
-
-<< need install info for go-ipfs running on port 5001>>
-ipfs config show #To view ipfs port settings
 ```
 
-On a Linux
-Supervisor install details
-  https://pastebin.com/ctEKvcZt
-  http://supervisord.org/installing.html
+### On a Linux
 
+Supervisor install details are in: [https://pastebin.com/ctEKvcZt] and [http://supervisord.org/installing.html]
+  
+Its unclear to me how to install REDIS, its been on every machine I've used.
 
+### Python gateway: 
+#### Installation
 ```bash
-git clone http://github.com/internetarchive/dweb-gateway.cid
-cd dweb-gateway
-scripts/install.sh # Should install, get data and run
+# Note it uses the #deployable branch, #master may have more experimental features. 
+cd /usr/local   # On our servers its always in /usr/local/dweb-gateway and there may be dependencies on this
+git clone http://github.com/internetarchive/dweb-gateway.git
 
-# Then try
-curl http://localhost:4244/info
-curl http://localhost:4244/doi/10.1001/jama.2009.1064?verbose=True
-curl https://localhost:4244/contenthash/5dr1gqVNt1mPzCL2tMRSMnJpWsJ5Qs?verbose=True
 ```
+Run this complex install script, if it fails then check the configuration at top and rerun. It will:
+
+* Do the pip install (its all python3)
+* Updates from the repo#deployable (and pushes back any locally made changes) to #deployed
+* Pulls a sqlite file that isn’t actually used any more (it was for academic docs in the first iteration of the gateway)
+* Checks the NGINX files map what I expect and (if run as `install.sh NGINX`) copies them over if you have permissions
+* Restarts service via supervisorctl, it does NOT setup supervisor 
+
+There are zero guarrantees that changing the config will not cause it to fail! 
+```bash
+cd dweb-gateway
+scripts/install.sh 
+```
+In addition 
+* Check and copy etc_supervisor_conf.d_dweb.conf to /etc/supervisor/conf.d/dweb.conf or server-specific location
+* Check and copy etc_ferm_input_nginx to /etc/ferm/input/nginx or server specific location
+
+#### Update
+`cd /usr/local/dweb-gateway; scripts/install.sh` 
+should update from the repo and restart
+
+#### Restart
+`supervisorctl restart dweb:dweb-gateway`
+
+### Gun, Webtorrent Seeder; Webtorrent-tracker
+#### Installation
+They are all in the dweb-transport repo so ... 
+```bash
+cd /usr/local # There are probably dependencies on this location
+git clone http://github.com/internetarchive/dweb-transport.git
+npm install
+# Supervisorctl, nginx and ferm should have been setup above.
+supervisorctl start dweb:dweb-gun
+supervisorctl start dweb:dweb-seeder
+supervisorctl start dweb:dweb-tracker
+```
+#### Update
+```bash
+cd /usr/local/dweb-transport
+git pull
+npm update
+supervisorctl restart dweb:*
+sleep 10    # Give it time to start and not quickly exit
+supervisorctl status
+```
+
+#### Restart
+`supervisorctl restart dweb:*` will restart these, and the python gateway and IPFS 
+or restart `dweb:dweb-gun` or `dweb:dweb-seeder` or `dweb:dweb-tracker` individually.
+
+### IPFS
+### Installation
+Was done by Protocol labs and I’m not 100% sure the full set of things done to setup the repo in a slightly non-standard way,
+
+In particular I know there is a command that have to be run once to enable the ‘urlstore’ functionality
+
+And there may be something needed to enable WebSockets connections (they are enabled in the gateway’s nginx files)
+
+There is a cron task running every 10 minutes that calls one of the scripts and works around a IPFS problem that should be fixed at some point, but not necessarily soon.
+```
+3,13,23,33,43,53 * * * * python3 /usr/local/dweb-gateway/cron_ipfs.py
+```
+
+### Update 
+```bash
+ipfs update install latest
+supervisorctl restart dweb:dweb-ipfs
+```
+Should work, but there have been issues with IPFS's update process in the past with non-automatic revisions of the IPFS repo. 
+
+### Restart
+```
+supervisorctl restart dweb:dweb-ipfs
+```
+

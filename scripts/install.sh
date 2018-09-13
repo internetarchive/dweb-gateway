@@ -42,6 +42,8 @@ then
     	systemctl status nginx.service
     fi
 fi
+diff etc_supervisor_conf.d_dweb.conf /etc/supervisor/conf.d/dweb.conf
+
 sudo supervisorctl restart $SERVICENAME
 
 if [ "$ARG" == "TORRENT" ]

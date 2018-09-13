@@ -1,0 +1,9 @@
+proto tcp dport 80 ACCEPT;
+proto tcp dport 443 ACCEPT;
+proto tcp dport 4001 ACCEPT;
+proto tcp dport 4245 ACCEPT;
+proto tcp dport 4246 ACCEPT;
+proto tcp dport 8080 ACCEPT;
+proto tcp dport 6881 ACCEPT;
+proto tcp dport 6969 ACCEPT;
+proto udp dport 6969 ACCEPT;
