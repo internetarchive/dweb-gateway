@@ -1,0 +1,13 @@
+[group:dweb]
+programs=dweb-gateway
+
+[program:dweb-gateway]
+command=/usr/bin/python3 -m python.ServerGateway
+directory = /usr/local/dweb-gateway
+stdout_logfile = /var/log/dweb/dweb-gateway
+stdout_logfile_maxbytes=500MB
+redirect_stderr = True
+autostart = True
+autorestart = True
+environment=PYTHONUNBUFFERED=TRUE
+exitcodes=0
