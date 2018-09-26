@@ -14,7 +14,7 @@ config = {
         "url_add_data": "http://localhost:5001/api/v0/add", # FOr use on gateway or if run "ipfs daemon" on test machine
         # "url_add_data": "https://ipfs.dweb.me/api/v0/add",  # note Kyle was using localhost:5001/api/v0/add which wont resolve externally.
         # "url_add_url": "http://localhost:5001/api/v0/add",  #TODO-IPFS move uses of url_add_data to urladd when its working
-        #"url_urlstore": "http://localhost:5001/api/v0/urlstore/add",    # FOr use on gateway or if run "ipfs daemon" on test machine
+        "url_urlstore": "http://localhost:5001/api/v0/urlstore/add",    # Should have "ipfs daemon" running locally
         "url_dht_provide": "http://localhost:5001/api/v0/dht/provide",
     },
     "gateway": {
@@ -29,10 +29,11 @@ config = {
         "directory": '/usr/local/dweb-gateway/.cache/table/',                             # Used by maintenance note overridden below for mitraglass (mitra's laptop)
     },
     "directories": {
-        "bootloader": "/usr/local/dweb-transport/examples/bootloader.html",               # Location of bootloader file, note overridden below for mitraglass (mitra's laptop)
+        "bootloader": "/usr/local/dweb-archive/dist/bootloader.html",               # Location of bootloader file, note overridden below for mitraglass (mitra's laptop)
     },
     "logging": {
-        "level": logging.DEBUG
+        "level": logging.DEBUG,
+        "filename": '/var/log/dweb/dweb-gateway'
     },  # By default Not to file - overridden below for dev machine
     "ignoreurls": [ # Ignore these, they are hacks or similar
         urllib.parse.unquote("%E2%80%9D"),
@@ -69,13 +70,11 @@ config = {
 }
 
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
-    config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
-    config["logging"] = { "filename": '/var/log/dweb/dweb-gateway', "level": logging.DEBUG }  #Not to file
+    pass
 elif socket.gethostname().startswith('mitraglass'):
-    # TODO make sure to remove url_urlstore defnt !
-    config["ipfs"]["url_urlstore"] = "http://localhost:5001/api/v0/urlstore/add" # Only runs in beta on archive.org research machine
     config["directories"]["bootloader"] = "/Users/mitra/git/dweb-archive/bootloader.html"
     config["domains"]["directory"] = "/Users/mitra/git/dweb-gateway/.cache/table/"
 else:
-    print("Needs configuring for {}".format(socket.gethostname()))
+    # Probably on docker
+    pass
 
