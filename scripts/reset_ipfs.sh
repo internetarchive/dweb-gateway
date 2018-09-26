@@ -1,3 +1,6 @@
+# Removes references to IPFS from the server, and cleans up ipfs.
+# It might be worth running `sudo ipfs sh; cd /home/ipfs; gzip -c -r .ipfs >ipfsrepo.20180915.prerestore.zip` before 
+# And will need to run the preseeder in /usr/local/dweb-mirror afterwards to get the popular collections back in
 cd /usr/local/dweb-gateway
 
 python3 -c '

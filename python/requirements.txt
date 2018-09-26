@@ -4,7 +4,7 @@ requests
 #multihash - no longer used and its buggy anyway
 py-dateutil
 base58
-#pynacl # - pynacl is needed, but requires sudo - uncomment and run as sudo once.
+pynacl # - pynacl is needed, but requires sudo - uncomment and run as sudo once.
 pyblake2
 # For Brians search, maybe not in production
 flask
