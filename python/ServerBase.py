@@ -108,9 +108,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             for (k,b) in parse_qsl(o.query):
                 a = kwargs.get(k)
                 kwargs[k] = b if (a is None) else a+[b] if (isinstance(a,list)) else [a,b]
+            if cmd == "":
+                cmd = config["httpserver"]["root_path"];
+                # Drop through and parse that command
             if cmd == "favicon.ico":    # May general case this for a set of top level links e.g. robots.txt
                 self.send_response(301)
-                self.send_header('Location','https://dweb.me/favicon.ico')
+                self.send_header('Location',config["httpserver"]["favicon_url"])
                 self.end_headers()
             elif cmd in config["ignoreurls"]:  # Looks like hacking or ignorable e.g. robots.txt, note this just ignores /arc/archive.org/xyz
                 raise TransportFileNotFound(file=o.path)

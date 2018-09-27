@@ -22,6 +22,10 @@ config = {
         "url_servicesimg": "https://dweb.me/arc/archive.org/thumbnail/",
         "url_torrent": "https://dweb.me/arc/archive.org/torrent/",
     },
+    "httpserver": {  # Configuration used by generic HTTP server
+        "favicon_url": "https://dweb.me/favicon.ico",
+        "root_path": "info",
+    },
     "domains": {
         # This is also name of directory in /usr/local/dweb-gateway/.cache/table, if change this then can safely rename that directory to new name to retain metadata saved
         "metadataverifykey": 'NACL VERIFY:h9MB6YOnYEgby-ZRkFKzY3rPDGzzGZ8piGNwi9ltBf0=',
