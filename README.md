@@ -162,3 +162,8 @@ Should work, but there have been issues with IPFS's update process in the past w
 supervisorctl restart dweb:dweb-ipfs
 ```
 
+### dweb.archive.org UI
+```bash
+cd /usr/local && git clone http://github.com/internetarchive/dweb-archive.git
+cd /usr/local/dweb-archive && npm install
+```
