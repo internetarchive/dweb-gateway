@@ -37,8 +37,8 @@ config = {
     },
     "logging": {
         "level": logging.DEBUG,
-        "filename": '/var/log/dweb/dweb-gateway'
-    },  # By default Not to file - overridden below for dev machine
+        # "filename": '/var/log/dweb/dweb-gateway', # Use stdout for logging and redirect in supervisorctl
+    },
     "ignoreurls": [ # Ignore these, they are hacks or similar
         urllib.parse.unquote("%E2%80%9D"),
         ".well-known",
