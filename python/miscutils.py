@@ -47,6 +47,12 @@ def dumps(obj):    #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transport to
     return json.dumps(obj, sort_keys=True, separators=(',', ':'), default=json_default)
 
 def loads(s):
+    """
+
+    :param s:  JSON string to convert
+    :return:   Python dictionary, array, string etc depending on s
+    :raises:   json.decoder.JSONDecodeError if not json
+    """
     if isinstance(s, bytes): #TODO can remove once python upgraded to 3.6.2
         s = s.decode('utf-8')
     return json.loads(s)    # Will fail if s empty, or not json

@@ -5,13 +5,14 @@ from .config import config
 from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed
 from .DOI import DOI
-from .Errors import ToBeImplementedException, NoContentException, TransportFileNotFound
+from .Errors import ToBeImplementedException, NoContentException, TransportFileNotFound, SearchException
 # !SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
 from .Archive import AdvancedSearch, ArchiveItem, ArchiveItemNotFound
 from .Btih import BtihResolver
 from .LocalResolver import KeyValueTable
+import json
 
 """
 For documentation on this project see https://docs.google.com/document/d/1FO6Tdjz7A1yi4ABcd8vDz4vofRDUOrKapi3sESavIcc/edit# 
@@ -203,7 +204,10 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
             if (arg2 == "download") or (arg2 == "serve"):
                 return ArchiveItem.new("archiveid", *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
             if arg2 == "advancedsearch":
-                return AdvancedSearch.new("advancedsearch", *args, **kwargs).metadata(headers=True, **kwargs)  # { Content-Type: xxx; data: "bytes" }
+                try:
+                    return AdvancedSearch.new("advancedsearch", *args, **kwargs).metadata(headers=True, **kwargs)  # { Content-Type: xxx; data: "bytes" }
+                except json.decoder.JSONDecodeError:
+                    raise SearchException(search=kwargs)
             if arg2 == "leaf":  # This needs to catch the special case of /arc/archive.org/leaf?key=xyz
                 args = list(args)
                 if kwargs.get("key"):

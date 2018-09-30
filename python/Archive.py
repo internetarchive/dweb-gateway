@@ -15,6 +15,8 @@ from .HashStore import MagnetLinkService, ThumbnailIPFSfromItemIdService, TitleS
 from .TransportIPFS import TransportIPFS
 from .LocalResolver import KeyValueTable
 from .KeyPair import KeyPair
+import json  # for json.decoder.JSONDecodeError
+
 
 archiveconfig = {
     "staticnames": {    # Build static collection names here for fake collections that dont respond to search below
@@ -71,17 +73,21 @@ class AdvancedSearch(NameResolverDir):
         :param args:
         :param kwargs:
         :return:
+        :raises: json.decoder.JSONDecodeError if gets bad json from server
         """
         verbose = kwargs.get("verbose")
         if verbose: del kwargs["verbose"]
         if verbose: logging.debug("AdvancedSearch for {0} {1}".format(args, kwargs))
         obj = super(AdvancedSearch, cls).new(namespace, *args, **kwargs)
         # args is ignored, there are none to advancedsearch
-        obj.query = "https://archive.org/advancedsearch.php?" + '&'.join([k + "=" + v for (k, v) in kwargs.items()])
-        # TODO-DETAILS may need to handle url escaping, i.e. some queries may be invalid till that is done
+        obj.query = "https://archive.org/advancedsearch.php?" + '&'.join([k + "=" + urllib.parse.quote(v) for (k, v) in kwargs.items()])
         if verbose: logging.debug("AdvancedSearch url={0}".format(obj.query))
         res = httpget(obj.query)
-        obj.res = loads(res)  # TODO unsure if there are any possible errors, and if so how to handle them.
+        try:
+            obj.res = loads(res)  # TODO unsure if there are any possible errors, and if so how to handle them. json.decoder.JSONDecodeError if not json
+        except json.decoder.JSONDecodeError as e:
+            logging.error("Failed to decode JSON from search, query %s failed".format(obj.query));
+            raise e
         for doc in obj.res["response"]["docs"]:
             doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["identifier"], verbose)
             c = doc.get("collection")
