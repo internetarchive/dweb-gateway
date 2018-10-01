@@ -325,14 +325,12 @@ class ArchiveItem(NameResolverDir):
         # TODO-DOMAIN probably encapsulate construction of name once all tested
         metadataverifykey = config["domains"]["metadataverifykey"]
         metadatapassphrase = config["domains"]["metadatapassphrase"]
-        server = "https://dweb.me"
-        #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         leaf = {
             # expires:   # Not needed, a later dated version is sufficient.
             "name": self.itemid,
             "signatures": [],
             "table": "leaf",
-            "urls": [ipfsurl, "{}/arc/archive.org/metadata/{}".format(server, self.itemid)]  # Where to get the content
+            "urls": [ipfsurl, config["gateway"]["url_metadata"]+self.itemid]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "name", "expires"] if leaf.get(k)}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
