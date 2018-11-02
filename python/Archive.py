@@ -474,7 +474,7 @@ class ArchiveFile(NameResolverFile):
 
     def inTorrent(self):
         # TODO may be some specific files e.g. _meta.xml that should also return false
-        return self.parent.torrenttime() > int(self._metadata["mtime"]) and  (not self._metadata["name"] in [self.itemid + "_meta.xml"])
+        return self._metadata.get("mtime") and self.parent.torrenttime() > int(self._metadata["mtime"]) and  (not self._metadata["name"] in [self.itemid + "_meta.xml"])
 
 
 class ArchiveFilePadding(ArchiveFile):
