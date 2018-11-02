@@ -192,6 +192,10 @@ class ArchiveItem(NameResolverDir):
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
+    def torrenttime(self):
+        files = [ f for f in self._metadata["files"] if f["name"].endswith(self.itemid +"_archive.torrent")]
+        return int(files[0]["mtime"]) if len(files) else 0
+
     @classmethod
     def modifiedtorrent(cls, itemid, wantmodified=True, verbose=False):
         # Assume its named <itemid>_archive.torrent
@@ -325,14 +329,12 @@ class ArchiveItem(NameResolverDir):
         # TODO-DOMAIN probably encapsulate construction of name once all tested
         metadataverifykey = config["domains"]["metadataverifykey"]
         metadatapassphrase = config["domains"]["metadatapassphrase"]
-        server = "https://dweb.me"
-        #server = "http://localhost:4244"  # TODO-DOMAIN just for testing
         leaf = {
             # expires:   # Not needed, a later dated version is sufficient.
             "name": self.itemid,
             "signatures": [],
             "table": "leaf",
-            "urls": [ipfsurl, "{}/arc/archive.org/metadata/{}".format(server, self.itemid)]  # Where to get the content
+            "urls": [ipfsurl, config["gateway"]["url_metadata"]+self.itemid]  # Where to get the content
         }
         datenow = datetime.utcnow().isoformat()
         signable = dumps({"date": datenow, "signed": {k: leaf.get(k) for k in ["urls", "name", "expires"] if leaf.get(k)}})  # TODO-DOMAIN-DOC matches SignatureMixin.call in Domain.js
@@ -409,7 +411,7 @@ class ArchiveFile(NameResolverFile):
         else:
             obj.multihash = None
             logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
-        if obj.parent._metadata["metadata"].get("magnetlink"):
+        if obj.inTorrent() and obj.parent._metadata["metadata"].get("magnetlink"):
             obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
         if obj.multihash:  # For the _files.xml there is no SHA1 and if didn't fetch to cache for IPFS then we cant set it
             obj._metadata["contenthash"] = "contenthash:/contenthash/{}".format(obj.multihash.multihash58)
@@ -469,6 +471,10 @@ class ArchiveFile(NameResolverFile):
         (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range"))
         return {"Content-type": self.mimetype, "data": data}
         # TODO this should really pass back a stream
+
+    def inTorrent(self):
+        # TODO may be some specific files e.g. _meta.xml that should also return false
+        return self.parent.torrenttime() > int(self._metadata["mtime"]) and  (not self._metadata["name"] in [self.itemid + "_meta.xml"])
 
 
 class ArchiveFilePadding(ArchiveFile):

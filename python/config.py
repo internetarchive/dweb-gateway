@@ -18,6 +18,7 @@ config = {
         "url_dht_provide": "http://localhost:5001/api/v0/dht/provide",
     },
     "gateway": {
+        "url_metadata": "https://https://dweb.me/arc/archive.org/metadata/",
         "url_download": "https://dweb.me/arc/archive.org/download/",
         "url_servicesimg": "https://dweb.me/arc/archive.org/thumbnail/",
         "url_torrent": "https://dweb.me/arc/archive.org/torrent/",
