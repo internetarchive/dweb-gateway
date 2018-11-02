@@ -98,7 +98,7 @@ class TransportIPFS(Transport):
         if verbose: logging.debug("Posting IPFS to {0}".format(ipfsurl))
         headers = { "Connection": "keep-alive"}
         try:
-            res = requests.post(ipfsurl, headers=headers, params={ 'trickle': 'true'}, files={'file': ('', data, mimetype)}).json()
+            res = requests.post(ipfsurl, headers=headers, params={ 'trickle': 'true', 'pin': 'true'}, files={'file': ('', data, mimetype)}).json()
         #except ConnectionError as e:  # TODO - for some reason this never catches even though it reports "ConnectionError" as the class
         except requests.exceptions.ConnectionError as e:  # Alternative - too broad a catch but not expecting other errors
             pass
