@@ -1,3 +1,4 @@
+# encoding: utf-8
 import socket
 import logging
 import urllib.parse
@@ -70,10 +71,22 @@ config = {
         "web",
         "www",
         "xampp",
+    ],
+    "torrent_reject_list": [ # Baked into torrentmaker at in petabox/sw/bin/ia_make_torrent.py
+        "_archive.torrent", # Torrent file isnt in itself !
+        "_files.xml",
+        "_reviews.xml",
+        "_all.torrent",     # aborted abuie torrent-izing
+        "_64kb_mp3.zip",    # old packaged streamable mp3s for etree
+        "_256kb_mp3.zip",
+        "_vbr_mp3.zip",
+        "_meta.txt",        # s3 upload turds
+        "_raw_jp2.zip",     # scribe nodes
+        "_orig_cr2.tar",
+        "_orig_jp2.tar",
+        "_raw_jpg.tar"    # could exclude scandata.zip too maybe...
     ]
-
 }
-
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:
     pass
 elif socket.gethostname().startswith('mitraglass'):

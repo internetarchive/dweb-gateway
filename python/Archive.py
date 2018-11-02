@@ -474,8 +474,12 @@ class ArchiveFile(NameResolverFile):
 
     def inTorrent(self):
         # TODO may be some specific files e.g. _meta.xml that should also return false
-        return self._metadata.get("mtime") and self.parent.torrenttime() > int(self._metadata["mtime"]) and  (not self._metadata["name"] in [self.itemid + "_meta.xml"])
-
+        if any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]):
+            return False
+        if (not self._metadata.get("mtime")) or (self.parent.torrenttime() < int(self._metadata["mtime"])):
+            logging.warning("Aaron believes all that torrents updated for files not in reject_list exception=%s/%s".format(self.itemid, self._metadata["name"]));
+            return False
+        return True
 
 class ArchiveFilePadding(ArchiveFile):
     # Catch special case of ".____padding_file/nnn" and deliver a range of 0 bytes.
