@@ -34,7 +34,7 @@ from .Errors import MyBaseException, ToBeImplementedException, TransportFileNotF
 #from TransportHTTP import TransportHTTP
 
 class HTTPdispatcherException(MyBaseException):
-    httperror = 501     # Unimplemented
+    httperror = 400     # Unimplemented
     msg = "HTTP request {req} not recognized"
 
 class HTTPargrequiredException(MyBaseException):
