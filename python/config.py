@@ -85,6 +85,9 @@ config = {
         "_orig_cr2.tar",
         "_orig_jp2.tar",
         "_raw_jpg.tar"    # could exclude scandata.zip too maybe...
+    ],
+    "have_no_sha1_list": [
+        "_files.xml"
     ]
 }
 if socket.gethostname() in ["wwwb-dev0.fnf.archive.org"]:

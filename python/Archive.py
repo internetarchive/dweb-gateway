@@ -287,15 +287,16 @@ class ArchiveItem(NameResolverDir):
         """
         if not self._metadata:
             raise CodingException(message="Must have fetched metadata before read torrentdata")
-        magnetlink = self._metadata["metadata"].get("magnetlink")  # First check the metadata
-        if not magnetlink or wanttorrent:  # Skip if its already set.
-            magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for cached version
-            if not magnetlink or wanttorrent:  # If not cached then build new one
-                self.torrentdata = self.modifiedtorrent(self.itemid, wantmodified=wantmodified, verbose=True) # Note sideeffect of setting magnetlinks in redis cache
-                magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for version cached above
-            if magnetlink:
-                self._metadata["metadata"]["magnetlink"] = magnetlink  # Store on metadata if have one
-        if verbose: logging.info("Magnetlink for {} = {}".format(self.itemid, magnetlink))
+        if not self._metadata["metadata"].get("noarchivetorrent", None) == "true": # Some items intentionally dont have torrents
+            magnetlink = self._metadata["metadata"].get("magnetlink")  # First check the metadata
+            if not magnetlink or wanttorrent:  # Skip if its already set.
+                magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for cached version
+                if not magnetlink or wanttorrent:  # If not cached then build new one
+                    self.torrentdata = self.modifiedtorrent(self.itemid, wantmodified=wantmodified, verbose=True) # Note sideeffect of setting magnetlinks in redis cache
+                    magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for version cached above
+                if magnetlink:
+                    self._metadata["metadata"]["magnetlink"] = magnetlink  # Store on metadata if have one
+            if verbose: logging.info("Magnetlink for {} = {}".format(self.itemid, magnetlink))
 
     def torrent(self, headers=True, verbose=False, **kwargs):
         """
@@ -410,7 +411,8 @@ class ArchiveFile(NameResolverFile):
             obj.multihash = Multihash(sha1hex=obj._metadata["sha1"])
         else:
             obj.multihash = None
-            logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
+            if not any([ obj._metadata["name"].endswith(ending) for ending in config["have_no_sha1_list"] ]):
+                logging.debug("No sha1 for file:{}/{}".format(itemid, filename))
         if obj.inTorrent() and obj.parent._metadata["metadata"].get("magnetlink"):
             obj._metadata["magnetlink"] = "{}/{}".format(obj.parent._metadata["metadata"]["magnetlink"], filename)
         if obj.multihash:  # For the _files.xml there is no SHA1 and if didn't fetch to cache for IPFS then we cant set it
@@ -474,7 +476,9 @@ class ArchiveFile(NameResolverFile):
 
     def inTorrent(self):
         # TODO may be some specific files e.g. _meta.xml that should also return false
-        if any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]):
+        pass
+        if (self.parent._metadata["metadata"].get("noarchivetorrent", None) == "true") or \
+            any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]):
             return False
         if (not self._metadata.get("mtime")) or (self.parent.torrenttime() < int(self._metadata["mtime"])):
             logging.warning("Aaron believes all that torrents updated for files not in reject_list exception={}/{}".format(self.itemid, self._metadata["name"]));
