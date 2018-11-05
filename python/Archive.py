@@ -481,7 +481,8 @@ class ArchiveFile(NameResolverFile):
             any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]):
             return False
         if (not self._metadata.get("mtime")) or (self.parent.torrenttime() < int(self._metadata["mtime"])):
-            logging.warning("Aaron believes all that torrents updated for files not in reject_list exception={}/{}".format(self.itemid, self._metadata["name"]));
+            if self.parent.torrenttime(): # Only log the data inconsistency if the torrent exists
+                logging.warning("Aaron believes all that torrents updated for files not in reject_list exception={}/{}".format(self.itemid, self._metadata["name"]));
             return False
         return True
 

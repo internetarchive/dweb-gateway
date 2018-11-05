@@ -9,7 +9,7 @@ from magneturi import bencode
 import base64
 import hashlib
 import urllib.parse
-from .Errors import TransportURLNotFound
+from .Errors import TransportURLNotFound, ForbiddenException
 from .config import config
 
 
@@ -75,6 +75,7 @@ def json_default(obj): #TODO-BACKPORT FROM GATEWAY TO DWEB - moved from Transpor
 
 def httpget(url, wantmime=False, range=None):
     # Returns the content - i.e. bytes
+    # Raises TransportFileNotFound or HTTPError TODO latter error should be caughts
     #TODO-STREAMS future work to return a stream
 
     r = None  # So that if exception in get, r is still defined and can be tested for None
@@ -97,6 +98,8 @@ def httpget(url, wantmime=False, range=None):
     except (requests.exceptions.RequestException, requests.exceptions.HTTPError, requests.exceptions.InvalidSchema) as e:
         if r is not None and (r.status_code == 404):
             raise TransportURLNotFound(url=url)
+        elif r is not None and (r.status_code == 403):
+            raise ForbiddenException(what=e)
         else:
             logging.error("HTTP request failed err={}".format(e))
             raise e

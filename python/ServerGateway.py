@@ -5,7 +5,7 @@ from .config import config
 from .miscutils import mergeoptions
 from .ServerBase import MyHTTPRequestHandler, exposed, HTTPdispatcherException
 from .DOI import DOI
-from .Errors import ToBeImplementedException, NoContentException, TransportFileNotFound, SearchException, TransportFileNotFound
+from .Errors import ToBeImplementedException, NoContentException, SearchException, TransportFileNotFound, ForbiddenException
 # !SEE-OTHERNAMESPACE add new namespaces here and see other #!SEE-OTHERNAMESPACE
 from .HashResolvers import ContentHash, Sha1Hex
 from .LocalResolver import LocalResolverStore, LocalResolverFetch, LocalResolverList, LocalResolverAdd
@@ -58,7 +58,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     """
     defaulthttpoptions = {"ipandport": ('localhost', 4244)}
     onlyexposed = True          # Only allow calls to @exposed methods
-    expectedExceptions = (NoContentException, ArchiveItemNotFound, HTTPdispatcherException, TransportFileNotFound)     # List any exceptions that you "expect" (and don't want stacktraces for)
+    expectedExceptions = (NoContentException, ArchiveItemNotFound, HTTPdispatcherException, TransportFileNotFound, ForbiddenException)     # List any exceptions that you "expect" (and don't want stacktraces for)
 
     namespaceclasses = {    # Map namespace names to classes each of which has a constructor that can be passed the URL arguments.
         # !SEE-OTHERNAMESPACE add new namespaces here and see other !SEE-OTHERNAMESPACE here and in clients

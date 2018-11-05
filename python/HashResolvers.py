@@ -91,7 +91,7 @@ class HashResolver(NameResolverFile):
         Fetch the content, dont pass to caller (typically called by NameResolver.content()
 
         :returns:   content - i.e. bytes
-        :raise:     TransportFileNotFound if cant find url
+        :raise:     TransportFileNotFound, ForbiddenException, HTTPError if cant find url
         """
         # TODO-STREAMS future work to return a stream
         if not self.url:
@@ -106,7 +106,7 @@ class HashResolver(NameResolverFile):
                 raise CodingException(message="unsupported for local: {0}".format(self.url))
             """
         else:
-            return httpget(self.url)  # Err TransportFileNotFound
+            return httpget(self.url)  # Err TransportFileNotFound or HTTPError
 
     def searcharchivefor(self, multihash=None, verbose=False, **kwargs):
         # Note this only works on certain machines
