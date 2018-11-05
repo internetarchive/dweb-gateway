@@ -10,7 +10,7 @@ from .NameResolver import NameResolverDir, NameResolverFile
 from .miscutils import loads, dumps, httpget
 from .config import config
 from .Multihash import Multihash
-from .Errors import CodingException, MyBaseException, IPFSException, TransportURLNotFound
+from .Errors import CodingException, MyBaseException, IPFSException, TransportURLNotFound, ForbiddenException
 from .HashStore import MagnetLinkService, ThumbnailIPFSfromItemIdService, TitleService
 from .TransportIPFS import TransportIPFS
 from .LocalResolver import KeyValueTable
@@ -203,7 +203,7 @@ class ArchiveItem(NameResolverDir):
         torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], itemid, torrentfilename)
         try:
             torrentcontents = httpget(torrentfileurl, wantmime=False)
-        except (requests.exceptions.HTTPError, TransportURLNotFound) as e:
+        except (requests.exceptions.HTTPError, TransportURLNotFound, ForbiddenException) as e:
             logging.warning("Inaccessible torrent at {}, {}".format(torrentfileurl, e))
             return  # Its ok if cant get a torrent
         try:
@@ -292,7 +292,7 @@ class ArchiveItem(NameResolverDir):
             if not magnetlink or wanttorrent:  # Skip if its already set.
                 magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for cached version
                 if not magnetlink or wanttorrent:  # If not cached then build new one
-                    self.torrentdata = self.modifiedtorrent(self.itemid, wantmodified=wantmodified, verbose=True) # Note sideeffect of setting magnetlinks in redis cache
+                    self.torrentdata = self.modifiedtorrent(self.itemid, wantmodified=wantmodified, verbose=True) # Note sideeffect of setting magnetlinks in redis cache, it can be none if torrent inaccessible
                     magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for version cached above
                 if magnetlink:
                     self._metadata["metadata"]["magnetlink"] = magnetlink  # Store on metadata if have one
