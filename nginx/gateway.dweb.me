@@ -24,21 +24,22 @@
 # https://{gatgeway.dweb.me, dweb.me}/arc/archive.org/{about, donate, projects} -> https://archive.org/{about,donate,projects}
 # https://{dweb.me, gateway}/arc/archive.org/download/xxx -> /arc/archive.org/details/xxx?download=1##
 # https://{dweb.archive.org}/download/xxx -> /details/xxx?download=1
+##
 
 ####
 #### THE SITES gateway.dweb.me & dweb.me ARE ALMOST IDENTICAL, ITS HIGHLY LIKEY ANY CHANGES HERE NEED TO BE MADE ON THE OTHER SITE
 ####
 
+# TODO gateway.dweb.me handles / as if it was on port 4244, dweb.me instead passes all to https - its not clear this difference is needed (dweb.me's forward to https prefered)
+
 server {
     # dweb.archive.org answers on 80, dweb.me and gateway.dweb.me on 443
-	listen 80;
 
+    listen 0.0.0.0:80;
 	root /var/www/html;
-
-	# Add index.php to the list if you are using PHP
-	index index.html index.htm index.nginx-debian.html;
-
     server_name gateway.dweb.me;
+
+    #rewrite ^ https://$http_host$request_uri? permanent;    # force redirect http to https
 
     # Exact root URL - Forward root URL to dweb.archive.org, shouldnt be hitting it here - probably a crawler
     location ~ ^/$ {
@@ -55,8 +56,11 @@ server {
         proxy_read_timeout    600;
     }
 }
-
-
+server {
+    listen 0.0.0.0:80;
+    server_name dweb.me;
+    rewrite ^ https://$http_host$request_uri? permanent;    # force redirect http to https
+}
 # Default server configuration
 #
 server {
@@ -83,7 +87,7 @@ server {
 	# Add index.php to the list if you are using PHP
 	index index.html index.htm index.nginx-debian.html;
 
-        server_name gateway.dweb.me;
+    server_name gateway.dweb.me;
 	ssl on;
 	ssl_certificate /etc/letsencrypt/live/gateway.dweb.me/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/gateway.dweb.me/privkey.pem;
@@ -172,7 +176,6 @@ server {
     location ~ ^/$ {
         return 301 https://dweb.archive.org/;
     }
-
     location ~ ^.+/dweb-(transports|objects)-bundle.js  {   # contains dweb-*-bundles, but doesnt start with it - probably relative url in bootstrap.html
         rewrite ^.*/dweb-(transports|objects)-bundle.js.*$  /dweb-$1-bundle.js redirect;
     }
