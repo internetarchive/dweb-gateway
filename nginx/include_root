@@ -1,0 +1,57 @@
+# This include file has patterns that assume the URL has NOT been rewritten to /arc/archive.org/ if it came via dweb.archive.org
+	root /var/www/html;
+
+	# Add index.php to the list if you are using PHP
+	index index.html index.htm index.nginx-debian.html;
+
+    # Not yet working forward, unclear if should be /ws or /wss
+    location /ws  {
+        proxy_pass http://localhost:4002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location /wss  {
+        proxy_pass http://localhost:4002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+	}
+    # First attempt to serve request as file, then
+    # as directory, then fall back to displaying a 404.
+
+	location ~ ^/(favicon.ico|examples|archive) {
+		add_header Access-Control-Allow-Origin *;
+		try_files $uri $uri/ =404;
+    }
+
+    location /dweb-serviceworker-bundle.js {        # For now this is in /examples but not really useful
+        add_header Access-Control-Allow-Origin *;
+        try_files /examples/$uri =404;
+    }
+
+	location /ipfs {
+		rewrite ^/ipfs/(.*)     /ipfs/$1 break;
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+        proxy_pass              http://localhost:8080/;
+        proxy_read_timeout      600;
+	}
+
+    location ~ ^.+/dweb-(transports|objects)-bundle.js  {   # contains dweb-*-bundles, but doesnt start with it - probably relative url in bootstrap.html
+        rewrite ^.*/dweb-(transports|objects)-bundle.js.*$  /dweb-$1-bundle.js redirect;
+    }
+
+    # on dweb.me or gatewy.dweb.me everything else will be forwarded to the gateway on port 4244,  on dweb.archive.org it will be rewritten first, as assumes /arc/archive.org
+    location @gateway {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+        proxy_pass          http://localhost:4244;
+        proxy_read_timeout    600;
+	}
+
