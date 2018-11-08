@@ -26,22 +26,7 @@
 #
 # include snippets/snakeoil.conf;
 #
-# SUMMARY
-# https://dweb.me (secure server) proxypass http://dweb.me (research server)
-# https://dweb.archive.org (secure server) proxypass http://dweb.archive.org (research server) << I think - but dont have config file
-# http://dweb.me/ -> https://dweb.me/
-#
-# http://dweb.archive.org/aaa/xxx -> gateway /arc/archive.org/aaa/xxx
-# https://{gateway.dweb.me, dweb.me}/ -> https://dweb.archive.org  - exact URL only
-# https://{gateway.dweb.me, dweb.me}/ proxypass localhost:4244 (gateway python)
-# https://{gateway.dweb.me, dweb.me, dweb.archive.org}/{archive,examples} -> file
-# http://dweb.archive.org/{details,search} -> bootloader
-# https://{gateway.dweb.me, dweb.me}/arc/archive.org/{details,search} -> bootloader
-# https://{dweb.me, gateway.dweb.me, dweb.archive.org}/{ws,wss} proxypass localhost:4002 (websockets for IPFS) - not yet working
-# https://dweb.archive.org/{about, donate, projects} -> https://archive.org/{about,donate,projects}
-# https://{gatgeway.dweb.me, dweb.me}/arc/archive.org/{about, donate, projects} -> https://archive.org/{about,donate,projects}
-# https://{dweb.me, gateway}/arc/archive.org/download/xxx -> /arc/archive.org/details/xxx?download=1##
-# https://{dweb.archive.org}/download/xxx -> /details/xxx?download=1
+# For SUMMARY or rules see dweb/README.md
 ##
 
 ####
@@ -124,11 +109,6 @@ server {
     }
     rewrite (.*)  /arc/archive.org$1 break; # On dweb.archive.org rewrite it to /arc/archive.org/...
     include include_arc_archive;         # Patterns that are rewritten then assume same on all servers last pattern routes to @gateway
-
-    @rewritegateway {
-        # TODO I'm not sure if this is the correct syntax
-        @gateway
-    }
 }
 
 
