@@ -140,4 +140,8 @@ class Multihash(object):
 
     @property
     def multihash58(self):
-        return base58.b58encode(bytes(self._multihash_binary))
+        foo = base58.b58encode(bytes(self._multihash_binary)) # Documentation says returns bytes, Mac returns string, want string
+        if isinstance(foo,bytes):
+            return foo.decode('ascii')
+        else:
+            return foo
