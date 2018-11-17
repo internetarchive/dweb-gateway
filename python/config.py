@@ -10,6 +10,7 @@ config = {
         "url_servicesimg": "https://archive.org/services/img/",
         "url_metadata": "https://archive.org/metadata/",
         "url_btihsearch": 'https://archive.org/advancedsearch.php?fl=identifier,btih&output=json&rows=1&q=btih:',
+        "url_sha1search": "http://archive.org/services/dwhf.php?key=sha1&val=",
     },
     "ipfs": {
         "url_add_data": "http://localhost:5001/api/v0/add", # FOr use on gateway or if run "ipfs daemon" on test machine
