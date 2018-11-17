@@ -42,7 +42,7 @@
 	}
 
     location ~ ^.+/dweb-(transports|objects)-bundle.js  {   # contains dweb-*-bundles, but doesnt start with it - probably relative url in bootstrap.html
-        rewrite ^.*/dweb-(transports|objects)-bundle.js.*$  /dweb-$1-bundle.js;
+        try_files /archive/dweb-$1-bundle.js =404;
     }
 
     # on dweb.me or gatewy.dweb.me everything else will be forwarded to the gateway on port 4244,  on dweb.archive.org it will be rewritten first, as assumes /arc/archive.org
