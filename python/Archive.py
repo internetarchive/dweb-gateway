@@ -480,9 +480,15 @@ class ArchiveFile(NameResolverFile):
         if (self.parent._metadata["metadata"].get("noarchivetorrent", None) == "true") or \
             any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]):
             return False
+        # The rule is a bit more complex, if any of the collctions an item is in are not open (don't start with open_) then can go to 250GB else 75GB)
+        if self.parent._metadata["size"] > 80530636800:
+            return False
         if (not self._metadata.get("mtime")) or (self.parent.torrenttime() < int(self._metadata["mtime"])):
             if self.parent.torrenttime(): # Only log the data inconsistency if the torrent exists
-                logging.warning("Aaron believes all that torrents updated for files not in reject_list exception={}/{}".format(self.itemid, self._metadata["name"]));
+                # Note known bug in Traceys code as of 13Nov2018 where doesnt update torrent when writing __ia_thumb.jpg TODO ask Tracey to fix
+                # Large torrents can be behind on updates
+                if (self.parent._metadata["size"] < 80530636800) and (self._metadata["name"] != "__ia_thumb.jpg"):
+                    logging.warning("Aaron believes all that torrents updated for files not in reject_list exception={}/{}".format(self.itemid, self._metadata["name"]));
             return False
         return True
 
