@@ -70,10 +70,13 @@ class HashResolver(NameResolverFile):
         ch = super(HashResolver, cls).new(namespace, hash, *args, **kwargs)    # By default (on NameResolver) calls cls() which goes to __init__
         if not ch.url:
             if verbose: logging.debug("No URL, looking on archive for {0}.{1}".format(namespace, hash))
-            #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
-            # ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
-            return ch.searcharchivefor(verbose=verbose)  # Will now be a ArchiveFile
-        if ch.url.startswith("local:") and not kwargs.get("nolocal"):
+            try:
+                #!SEE-OTHERHASHES -this is where we look things up in the DOI.sql etc essentially cycle through some other classes, asking if they know the URL
+                # ch = DOIfile(multihash=ch.multihash).url  # Will fill in url if known. Note will now return a DOIfile, not a Sha1Hex
+                return ch.searcharchivefor(verbose=verbose)  # Will now be a ArchiveFile
+            except NoContentException as e:
+                pass; # If doesnt or cant find on archive, we can still check locally
+        if not kwargs.get("nolocal") and (not ch.url or ch.url.startswith("local:")):
             ch = LocalResolverFetch.new("rawfetch", hash, **kwargs)
         if not (ch and ch.url):
             raise NoContentException()
