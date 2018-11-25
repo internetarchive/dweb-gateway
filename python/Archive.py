@@ -481,7 +481,7 @@ class ArchiveFile(NameResolverFile):
             any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]):
             return False
         # The rule is a bit more complex, if any of the collctions an item is in are not open (don't start with open_) then can go to 250GB else 75GB)
-        if self.parent._metadata["size"] > 80530636800:
+        if self.parent._metadata["item_size"] > 80530636800:
             return False
         if (not self._metadata.get("mtime")) or (self.parent.torrenttime() < int(self._metadata["mtime"])):
             if self.parent.torrenttime(): # Only log the data inconsistency if the torrent exists
