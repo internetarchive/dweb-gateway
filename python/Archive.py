@@ -487,7 +487,7 @@ class ArchiveFile(NameResolverFile):
             if self.parent.torrenttime(): # Only log the data inconsistency if the torrent exists
                 # Note known bug in Traceys code as of 13Nov2018 where doesnt update torrent when writing __ia_thumb.jpg TODO ask Tracey to fix
                 # Large torrents can be behind on updates
-                if (self.parent._metadata["size"] < 80530636800) and (self._metadata["name"] != "__ia_thumb.jpg"):
+                if (self.parent._metadata["item_size"] < 80530636800) and (self._metadata["name"] != "__ia_thumb.jpg"):
                     logging.warning("Aaron believes all that torrents updated for files not in reject_list exception={}/{}".format(self.itemid, self._metadata["name"]));
             return False
         return True
