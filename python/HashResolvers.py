@@ -118,7 +118,7 @@ class HashResolver(NameResolverFile):
         mh = multihash or self.multihash
         if mh.code != mh.SHA1:  #Can only search on sha1 currently
             raise NoContentException()
-        searchurl = config.archive.url_sha1search + (multihash or self.multihash).sha1hex
+        searchurl = config["archive"]["url_sha1search"] + (multihash or self.multihash).sha1hex
         res = loads(httpget(searchurl))
         #logging.info("XXX@searcharchivefor res={}".format(res))
         if res.get("error"):
