@@ -477,9 +477,9 @@ class ArchiveFile(NameResolverFile):
 
     def inTorrent(self):
         # TODO may be some specific files e.g. _meta.xml that should also return false
-        pass
         if (self.parent._metadata["metadata"].get("noarchivetorrent", None) == "true") or \
-            any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]):
+            any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]) or \
+            any([coll in config["torrent_reject_collections"] for coll in self.parent._metadata["metadata"].get("collection")]):
             return False
         # The rule is a bit more complex, if any of the collctions an item is in are not open (don't start with open_) then can go to 250GB else 75GB)
         if self.parent._metadata["item_size"] > 80530636800:
