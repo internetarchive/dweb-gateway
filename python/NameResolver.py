@@ -188,6 +188,7 @@ class NameResolverFile(NameResolver):
         forceadd && !data && url => fetch data then add
         url && data && !forceurl && !forcedata => default to urlstore (ignore data)
         """
+        # TODO-PERMS, this cant be caching to IPFS if dont have permission
         if not config["ipfs"].get("url_urlstore"):  # If not running on machine with urlstore
             forceadd = True
         if url and forceadd:  # To "add" from an URL we need to retrieve and then urlstore
@@ -249,6 +250,7 @@ class NameResolverFile(NameResolver):
                 if not ipldhash:    # We might have got it now especially for _files.xml if unchanged-
                     # Can throw IPFSException - ignore it
                     try:
+                        # TODO-PERMS cache_ipfs should be checking permissions
                         ipldhash = self.cache_ipfs(url=url, verbose=verbose, announcedht=False) # Not announcing to DHT here, its too slow (16+ seconds) better to let first client fail, try gateway, fail again, and subsequent work.
                         if verbose: logging.debug("ipfs pushed to: {}".format(ipldhash))
                     except IPFSException as e:

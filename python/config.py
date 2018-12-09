@@ -6,7 +6,7 @@ import urllib.parse
 
 config = {
     "archive": {
-        "url_download": "https://archive.org/download/",
+        "url_download": "https://archive.org/download/",  # TODO-PERMS - usage checked
         "url_servicesimg": "https://archive.org/services/img/",
         "url_metadata": "https://archive.org/metadata/",
         "url_btihsearch": 'https://archive.org/advancedsearch.php?fl=identifier,btih&output=json&rows=1&q=btih:',
@@ -21,9 +21,9 @@ config = {
     },
     "gateway": {
         "url_metadata": "https://https://dweb.me/arc/archive.org/metadata/",
-        "url_download": "https://dweb.me/arc/archive.org/download/",
+        "url_download": "https://dweb.me/arc/archive.org/download/",  # TODO-PERMS usage checked
         "url_servicesimg": "https://dweb.me/arc/archive.org/thumbnail/",
-        "url_torrent": "https://dweb.me/arc/archive.org/torrent/",
+        "url_torrent": "https://dweb.me/arc/archive.org/torrent/", #TODO-PERMS CHECK USAGE
     },
     "httpserver": {  # Configuration used by generic HTTP server
         "favicon_url": "https://dweb.me/favicon.ico",
@@ -73,7 +73,7 @@ config = {
         "www",
         "xampp",
     ],
-    "torrent_reject_list": [ # Baked into torrentmaker at in petabox/sw/bin/ia_make_torrent.py
+    "torrent_reject_list": [ # Baked into torrentmaker at in petabox/sw/bin/ia_make_torrent.py  # See Archive/inTorrent()
         "_archive.torrent", # Torrent file isnt in itself !
         "_files.xml",
         "_reviews.xml",
@@ -86,6 +86,10 @@ config = {
         "_orig_cr2.tar",
         "_orig_jp2.tar",
         "_raw_jpg.tar"    # could exclude scandata.zip too maybe...
+    ],
+    "torrent_reject_collections": [ # See Archive/inTorrent()
+        "loggedin",
+        "georestricted"
     ],
     "have_no_sha1_list": [
         "_files.xml"

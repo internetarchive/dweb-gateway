@@ -77,7 +77,8 @@ def httpget(url, wantmime=False, range=None):
     # Returns the content - i.e. bytes
     # Raises TransportFileNotFound or HTTPError TODO latter error should be caughts
     #TODO-STREAMS future work to return a stream
-
+    #TODO-PERMS should ideally check perms here, or pass flag to make it check or similar
+    #TODO-PERMS should also pass the X-ORIGINATING-IP (?) header, but need to figure out how to get that.
     r = None  # So that if exception in get, r is still defined and can be tested for None
     try:
         logging.debug("GET {} {}".format(url, range if range else ""))

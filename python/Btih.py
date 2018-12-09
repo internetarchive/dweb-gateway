@@ -90,14 +90,14 @@ class BtihResolver(NameResolverDir):
         data = magnetlink or "" # Current paths mean we should have it, but if not we'll return "" as we have no way of doing that lookup
         return {"Content-type": "text/plain", "data": data} if headers else data
 
-    def torrenturl(self, verbose=False):
+    def torrenturl(self, verbose=False): # TODO-PERMS only used in torrent() below which doesnt use result so can delete this routine
         itemid = self.itemid(verbose=verbose)
         if not itemid:
             raise NoContentException()
         return "https://archive.org/download/{}/{}_archive.torrent".format(itemid, itemid)
 
     def torrent(self, verbose=False, headers=False, **kwargs):
-        torrenturl = self.torrenturl(verbose=verbose)   # NoContentException if not found
+        torrenturl = self.torrenturl(verbose=verbose)   # NoContentException if not found # TODO-PERMS unused can delete this line?
         data = bencode.bencode(ArchiveItem.modifiedtorrent(self.itemid(), wantmodified=True, verbose=verbose))
         mimetype = "application/x-bittorrent"
         return {"Content-type": mimetype, "data": data} if headers else data

@@ -29,7 +29,7 @@ announcedht = False
 
 obj = ArchiveItem.new("archiveid", *args, wanttorrent=False)
 print('"URL","Add/Urlstore","Hash","Size","Announced"')
-if isinstance(obj, ArchiveFile):
+if isinstance(obj, ArchiveFile): # TODO-PERMS-OK cache_ipfs should be checking perms
     obj.cache_ipfs(url = obj.archive_url, forceadd=forceadd, forceurlstore=forceurlstore, verbose=False,  printlog=True, announcedht=announcedht, size=int(obj._metadata["size"]))
 else:
     obj.cache_ipfs(forceurlstore=forceurlstore, forceadd=forceadd, verbose=False, announcedht=announcedht, printlog=True)  # Will Loop through all files in Item

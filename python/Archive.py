@@ -202,7 +202,7 @@ class ArchiveItem(NameResolverDir):
         torrentfilename = itemid + "_archive.torrent"
         torrentfileurl = "{}{}/{}".format(config["archive"]["url_download"], itemid, torrentfilename)
         try:
-            torrentcontents = httpget(torrentfileurl, wantmime=False)
+            torrentcontents = httpget(torrentfileurl, wantmime=False) # TODO-PERMS need to check here, or in httpget if allowed
         except (requests.exceptions.HTTPError, TransportURLNotFound, ForbiddenException) as e:
             logging.warning("Inaccessible torrent at {}, {}".format(torrentfileurl, e))
             return  # Its ok if cant get a torrent
@@ -228,11 +228,11 @@ class ArchiveItem(NameResolverDir):
             # Note announce-list is never empty after this, so can ignore announce field
             #  Replace http with https (as cant call http from https) BUT still has cors issues
             # torrentdata["url-list"] = [ u.replace("http://","https://") for u in torrentdata["url-list"] ]
-            torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash
+            torrentdata["url-list"] = [config["gateway"]["url_download"]]  # Has trailing slash  # TODO-PERMS CHECK USAGE
             externaltorrenturl = "{}{}".format(config["gateway"]["url_torrent"],
                                                itemid)  # Intentionally no file name, we are modifying it
         else:
-            externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], itemid, torrentfilename)
+            externaltorrenturl = "{}{}/{}".format(config["archive"]["url_download"], itemid, torrentfilename)  # TODO-PERMS CHECK USAGE
         magnetlink = ''.join([
             'magnet:?xt=urn:btih:', b32hashascii,
             ''.join(['&tr=' + urllib.parse.quote_plus(t[0]) for t in torrentdata['announce-list']]),
@@ -388,7 +388,7 @@ class ArchiveItem(NameResolverDir):
         :param forceurlstore, forceadd, printlog, verbose:    See NameResolverFile.cache_ipfs for documentation
         :return:                                    Doesnt return anything, but sets ipfs link on each file
         """
-        for af in self._list:
+        for af in self._list: # TODO-PERMS must check here or prob in af.cache_ipfs before passing to IPF
             af.cache_ipfs(url=af.archive_url, verbose=verbose, forceurlstore=forceurlstore, forceadd=forceadd, printlog=printlog, announcedht=announcedht, size=int(af._metadata.get("size","0")))
 
 # noinspection PyProtectedMember
@@ -432,13 +432,14 @@ class ArchiveFile(NameResolverFile):
         # Call path is Archivefile.metadata > ArchiveFile.cache_content > NameResolverFile.cache_content
         # In particular that call path means it is NOT called by default during ArchiveItem.metadata as can be slow over multiple files.
         if not self.filename.endswith("_files.xml"):  # Dont waste energy saving stuff about _files.xml as it doesnt have a sha1 for timing reasons (contains sha1's of files).
+            # TODO-PERMS must check here or in super.cache_content before passing to IPFS
             cached = super(ArchiveFile, self).cache_content(self.archive_url, wantipfs=wantipfs, verbose=verbose)  # Setup for IPFS and contenthash returns {ipldhash}
             if cached.get("ipldhash") is not None:
                 self._metadata["ipfs"] = "ipfs:/ipfs/{}".format(cached["ipldhash"])  # Add to IPFS hash returned
 
 
     def check(self, verbose):
-        (data, mimetype) = httpget(self.archive_url, wantmime=True)
+        (data, mimetype) = httpget(self.archive_url, wantmime=True) # TODO-PERMS must check before doing the httpget
         assert self.mimetype == mimetype, "mimetype mismatch on {}/{}".format(self.itemid, self.filename)
         self.multihash.check(data)
 
@@ -455,8 +456,8 @@ class ArchiveFile(NameResolverFile):
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
     @property
-    def archive_url(self):
-        return "{}{}/{}".format(config["archive"]["url_download"], self.itemid, self._metadata["name"])  # Note similar code in torrentdata
+    def archive_url(self): # TODO-PERMS usage checked - lots of places this is used but all flagged for perms checking.
+        return "{}{}/{}".format(config["archive"]["url_download"], self.itemid, self._metadata["name"])  # Note similar code in torrentdata  # TODO-PERMS usage checked
 
     # NOT COMPLETE YET
     # @property
@@ -466,11 +467,11 @@ class ArchiveFile(NameResolverFile):
     # noinspection PyAttributeOutsideInit
     def retrieve(self, _headers=None, verbose=False, **kwargs):
         _headers = _headers or {}
-        (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range"))
+        (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range")) # TODO-PERMS must check before doing the httpget
         return data
 
     def content(self, _headers=None, verbose=False, **kwargs):   # Equivalent to archive.org/downloads/xxx/yyy but gets around cors problems
-        (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range"))
+        (data, self.mimetype) = httpget(self.archive_url, wantmime=True, range=_headers.get("range")) # TODO-PERMS must check before doing the httpget
         return {"Content-type": self.mimetype, "data": data}
         # TODO this should really pass back a stream
 

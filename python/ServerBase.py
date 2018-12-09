@@ -97,6 +97,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         """
         # In documentation, assuming call with /foo/aaa/bbb?x=ccc,y=ddd
         try:
+            # TODO-PERMS make sure we are getting X-ORIGINATING-IP or similar here then make sure passed all way thru to httpget callls
             logging.info("dispatcher: {0}".format(self.path)) # Always log URLs in
             o = urlparse(self.path)             # Parsed URL {path:"/foo/aaa/bbb", query: "bbb?x=ccc,y=ddd"}
 

@@ -288,7 +288,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     def content(self, namespace, *args, **kwargs):
         if namespace == "archiveid":
             logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, '/'.join(args), kwargs))
-            return self.arc("archive.org", "download", *args, **kwargs)
+            return self.arc("archive.org", "download", *args, **kwargs)  # TODO-PERMS check what self.arc does with this
         else:
             logging.debug("Accessing unsupported legacy URL - needs implementing content/{}/{} {}".format(namespace, '/'.join(args), kwargs))
             verbose = kwargs.get("verbose")
