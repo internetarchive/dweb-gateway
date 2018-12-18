@@ -89,7 +89,9 @@ class AdvancedSearch(NameResolverDir):
             logging.error("Failed to decode JSON from search, query %s failed".format(obj.query));
             raise e
         for doc in obj.res["response"]["docs"]:
-            doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(doc["identifier"], verbose)
+            i = doc.get("identifier")
+            if i: # Expect identifier, but if specify fl= without identifier we dont want it to crash
+                doc["thumbnaillinks"] = ArchiveItem.item2thumbnail(i, verbose)
             c = doc.get("collection")
             if c:
                 collection0id = c[0] if isinstance(c, (list, tuple, set)) else c
