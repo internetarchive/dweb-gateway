@@ -123,7 +123,7 @@ class HashResolver(NameResolverFile):
         #logging.info("XXX@searcharchivefor res={}".format(res))
         if res.get("error"):
             # {"error": "internal use only"}
-            raise ForbiddenException(what="SHA1 search from machine unless its whitelisted by Aaron")
+            raise ForbiddenException(what="SHA1 search from machine unless its whitelisted by Aaron ip=:"+res.get("error"))
         if not res["hits"]["total"]:
             # {"key":"sha1","val":"88d4b0d91acd3c25139804afbf4aef4e675bef63","hits":{"total":0,"matches":[]}}
             raise NoContentException()
