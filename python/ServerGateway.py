@@ -56,7 +56,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
     Future Work:
     #TODO-STREAM Expand the ServerBase classes to support streams as a return from these routines
     """
-    defaulthttpoptions = {"ipandport": ('localhost', 4244)}
+    defaulthttpoptions = {"ipandport": ('0.0.0.0', 4244)}   # Was localhost, but need it to answer on all ports
     onlyexposed = True          # Only allow calls to @exposed methods
     expectedExceptions = (NoContentException, ArchiveItemNotFound, HTTPdispatcherException, TransportFileNotFound, ForbiddenException)     # List any exceptions that you "expect" (and don't want stacktraces for)
 
@@ -318,5 +318,5 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
 if __name__ == "__main__":
     logging.basicConfig(**config["logging"])
-    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('localhost', 4244)}, verbose=True)  # Run local gateway
+    DwebGatewayHTTPRequestHandler.DwebGatewayHTTPServeForever({'ipandport': ('0.0.0.0', 4244)}, verbose=True)  # Run local gateway
 
