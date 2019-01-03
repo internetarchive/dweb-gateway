@@ -176,9 +176,10 @@ class ArchiveItem(NameResolverDir):
         obj._metadata = loads(res)
         if not obj._metadata:  # metadata retrieval failed, itemid probably false
             raise ArchiveItemNotFound(itemid=itemid)
-        obj.setmagnetlink(wantmodified=True, wanttorrent=kwargs.get("wanttorrent", False), verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
-        if not obj._metadata["metadata"].get("thumbnaillinks"):  # Set thumbnaillinks if not done already - can be slow as loads to IPFS
-            obj._metadata["metadata"]["thumbnaillinks"] = obj.item2thumbnail(obj.itemid, verbose)
+        if obj._metadata.get("metadata", None):  # Some items e.g. with isdark:true will not have metadata.
+            obj.setmagnetlink(wantmodified=True, wanttorrent=kwargs.get("wanttorrent", False), verbose=verbose)  # Set a modified magnet link suitable for WebTorrent
+            if not obj._metadata["metadata"].get("thumbnaillinks"):  # Set thumbnaillinks if not done already - can be slow as loads to IPFS
+                obj._metadata["metadata"]["thumbnaillinks"] = obj.item2thumbnail(obj.itemid, verbose)
         name = "/".join(args) if args else None  # Get the name of the file if present
         if name:  # Its a single file just cache that one
             if name.startswith(".____padding_file"):    # Webtorrent convention
@@ -188,9 +189,9 @@ class ArchiveItem(NameResolverDir):
                 f = [f for f in obj._metadata["files"] if f["name"] == name]
                 if not f: raise Exception("Valid Archive item {} but no file called: {}".format(itemid, name))    # TODO change to islice
                 return ArchiveFile.new(namespace, itemid, name, item=obj, metadata=f[0], verbose=verbose)
-        else:  # Its an item - cache all the files
+        else:  # Its an item - cache all the files isdark:dark and possibly other items have no .files field
             obj._list = [ArchiveFile.new(namespace, itemid, f["name"], item=obj, metadata=f, transport=transport,
-                                         verbose=verbose) for f in obj._metadata["files"]]
+                                         verbose=verbose) for f in obj._metadata.get("files",[])]
             if verbose: logging.debug("Archive Metadata found {0} files".format(len(obj._list)))
             return obj
 
@@ -268,15 +269,16 @@ class ArchiveItem(NameResolverDir):
         Pass metadata (i.e. what retrieved in AdvancedSearch) directly back to client
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
-        if self._metadata["metadata"].get("collection"):
-            self._metadata["collection_titles"] = {k: AdvancedSearch.collectiontitle(k, verbose) for k in
-                                                (self._metadata["metadata"]["collection"]
-                                                if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
-                                                else [self._metadata["metadata"]["collection"]])}
-        if self._metadata.get("is_collection"): # We are looking up what collections this collection is in as that is used to override the default sort order.
-            collections = self._metadata["metadata"].get("collection") or []    # Empty collection if non specified
-            if not isinstance(collections, (tuple, list, set)): collections = [collections]
-            self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections)
+        if self._metadata.get("metadata", None): # isdark:true have no metadata
+            if self._metadata["metadata"].get("collection"):
+                self._metadata["collection_titles"] = {k: AdvancedSearch.collectiontitle(k, verbose) for k in
+                                                    (self._metadata["metadata"]["collection"]
+                                                    if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
+                                                    else [self._metadata["metadata"]["collection"]])}
+            if self._metadata.get("is_collection"): # We are looking up what collections this collection is in as that is used to override the default sort order.
+                collections = self._metadata["metadata"].get("collection") or []    # Empty collection if non specified
+                if not isinstance(collections, (tuple, list, set)): collections = [collections]
+                self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections)
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
@@ -285,11 +287,12 @@ class ArchiveItem(NameResolverDir):
         """
         Set magnet link (note could easily be modified to return torrentdata or torrentfile if wanted)
         - assume that metadata already fetched but that _metadata.files not converted to _list yet (as that process  will use this data.
+        - for "is_dark:true" _metadata will be present, but _metadata.metadata wont be
         :return:
         """
         if not self._metadata:
             raise CodingException(message="Must have fetched metadata before read torrentdata")
-        if not self._metadata["metadata"].get("noarchivetorrent", None) == "true": # Some items intentionally dont have torrents
+        if self._metadata.get("metadata", None) and not self._metadata["metadata"].get("noarchivetorrent", None) == "true": # Some items intentionally dont have torrents
             magnetlink = self._metadata["metadata"].get("magnetlink")  # First check the metadata
             if not magnetlink or wanttorrent:  # Skip if its already set.
                 magnetlink = MagnetLinkService.archiveidget(self.itemid, verbose)  # Look for cached version
