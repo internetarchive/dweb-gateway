@@ -143,6 +143,18 @@ class ArchiveItem(NameResolverDir):
 
     Supports: metadata
     """
+    alwaysArray = ["collection"]       # Any metadata fields which should always be a (possibly empty) array
+
+    def _enforceMetadataContracts(self):
+        # Enforce consistency in data, especially type of fields, to avoid having to check everywhere for Fjords
+        metadata = self._metadata.get("metadata", None)
+        if metadata:
+            for field in self.alwaysArray:
+                if not metadata.get(field):
+                    metadata[field] = []
+                elif not isinstance(metadata[field],(list,tuple,set)):
+                    metadata[field] = [metadata[field]]
+
 
     # noinspection PyMethodOverriding
     @classmethod
@@ -174,6 +186,7 @@ class ArchiveItem(NameResolverDir):
         if verbose: logging.debug("Archive Metadata url={0}".format(obj.query))
         res = httpget(obj.query)        # SLOW - retrieves metadata
         obj._metadata = loads(res)
+        obj._enforceMetadataContracts()     # Ensure fields we care about are what we expect e.g. always a possibly empty array
         if not obj._metadata:  # metadata retrieval failed, itemid probably false
             raise ArchiveItemNotFound(itemid=itemid)
         if obj._metadata.get("metadata", None):  # Some items e.g. with isdark:true will not have metadata.
@@ -270,15 +283,10 @@ class ArchiveItem(NameResolverDir):
         This is based on assumption that if/when CORS issues are fixed then client will go direct to this API on archive.org
         """
         if self._metadata.get("metadata", None): # isdark:true have no metadata
-            if self._metadata["metadata"].get("collection"):
-                self._metadata["collection_titles"] = {k: AdvancedSearch.collectiontitle(k, verbose) for k in
-                                                    (self._metadata["metadata"]["collection"]
-                                                    if isinstance(self._metadata["metadata"]["collection"], (list, tuple, set))
-                                                    else [self._metadata["metadata"]["collection"]])}
+            # collection will always exist and be array - see _enforceMetadataContracts()
+            self._metadata["collection_titles"] = {k: AdvancedSearch.collectiontitle(k, verbose) for k in self._metadata["metadata"]["collection"]}
             if self._metadata.get("is_collection"): # We are looking up what collections this collection is in as that is used to override the default sort order.
-                collections = self._metadata["metadata"].get("collection") or []    # Empty collection if non specified
-                if not isinstance(collections, (tuple, list, set)): collections = [collections]
-                self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], collections)
+                self._metadata["collection_sort_order"] = self._collectionsortorder(self._metadata["metadata"]["identifier"], self._metadata["metadata"]["collection"])
         mimetype = 'application/json'
         return {"Content-type": mimetype, "data": self._metadata} if headers else self._metadata
 
@@ -484,7 +492,7 @@ class ArchiveFile(NameResolverFile):
         # TODO may be some specific files e.g. _meta.xml that should also return false
         if (self.parent._metadata["metadata"].get("noarchivetorrent", None) == "true") or \
             any([ self._metadata["name"].endswith(ending) for ending in config["torrent_reject_list"] ]) or \
-            any([coll in config["torrent_reject_collections"] for coll in self.parent._metadata["metadata"].get("collection")]):
+            any([coll in config["torrent_reject_collections"] for coll in self.parent._metadata["metadata"]["collection"]]):
             return False
         # The rule is a bit more complex, if any of the collctions an item is in are not open (don't start with open_) then can go to 250GB else 75GB)
         if self.parent._metadata["item_size"] > 80530636800:
