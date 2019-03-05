@@ -85,7 +85,8 @@ config = {
         "_raw_jp2.zip",     # scribe nodes
         "_orig_cr2.tar",
         "_orig_jp2.tar",
-        "_raw_jpg.tar"    # could exclude scandata.zip too maybe...
+        "_raw_jpg.tar",    # could exclude scandata.zip too maybe...
+        "_meta.xml"         # Always written after the torrent so cant be in it
     ],
     "torrent_reject_collections": [ # See Archive/inTorrent()
         "loggedin",

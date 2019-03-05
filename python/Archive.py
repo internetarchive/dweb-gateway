@@ -502,7 +502,7 @@ class ArchiveFile(NameResolverFile):
                 # Note known bug in Traceys code as of 13Nov2018 where doesnt update torrent when writing __ia_thumb.jpg TODO ask Tracey to fix
                 # Large torrents can be behind on updates
                 # If files count is large there is a bug with some part of the tools process Aaron let me know about, setting to 20k as a guess
-                if (self.parent._metadata["item_size"] < 80530636800) and (self.parent.files_count < 20000) and (self._metadata["name"] != "__ia_thumb.jpg"):
+                if (self.parent._metadata["item_size"] < 80530636800) and (self.parent._metadata["files_count"] < 20000) and (self._metadata["name"] != "__ia_thumb.jpg"):
                     logging.warning("Aaron believes all that torrents updated for files not in reject_list exception={}/{}".format(self.itemid, self._metadata["name"]));
             return False
         return True
