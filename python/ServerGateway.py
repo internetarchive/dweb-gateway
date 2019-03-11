@@ -279,7 +279,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         if namespace == "advancedsearch":
             logging.debug("Accessing legacy URL - needs rewriting to use /arc/archive.org/{}/{} {}".format(namespace, '/'.join(args), kwargs))
             return self.arc("archive.org", "advancedsearch", *args, **kwargs)
-        if namespace not in ["sha1hex", "contenthash", "doi"]:
+        if namespace not in ["sha1hex", "contenthash", "doi", "rawlist"]:
             logging.debug("Accessing unsupported legacy URL - needs implementing metadata/{}/{} {}".format(namespace, '/'.join(args), kwargs))
             raise ToBeImplementedException(name="metadata/{}/{} {}".format(namespace, '/'.join(args), kwargs))
         # legacy supporting metadata/xxx
