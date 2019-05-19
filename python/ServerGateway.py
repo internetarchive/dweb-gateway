@@ -214,7 +214,7 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
                     args.append(kwargs["key"])  # Push key into place normally held by itemid in URL of archiveid/xyz
                     del kwargs["key"]
                 return ArchiveItem.new("archiveid", *args, **kwargs).leaf(headers=True, **kwargs)    # ERR: ArchiveItemNotFound if invalid id
-            if arg2 == "service" and args[0] == "img":
+            if arg2 == "services" and args[0] == "img":
                 args.pop(0)
                 arg2 = "thumbnail"
             if arg2 in ["torrent", "metadata", "thumbnail"]:
@@ -302,14 +302,14 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
 
     @exposed
     def thumbnail(self, namespace, *args, **kwargs):
-        # Get a thumbnail image - required because https://archive.org/service/img/<itemid> has CORS issues
+        # Get a thumbnail image - required because https://archive.org/services/img/<itemid> has CORS issues
         if namespace == "archiveid":
             return self.arc("archive.org", "thumbnail", *args, **kwargs)
         raise ToBeImplementedException(name="{}/{}/{}?{}".format("thumbnail", namespace, "/".join(args), kwargs))
 
     @exposed
     def torrent(self, namespace, *args, **kwargs):
-        # Get a thumbnail image - required because https://archive.org/service/img/<itemid> has CORS issues
+        # Get a thumbnail image - required because https://archive.org/services/img/<itemid> has CORS issues
         if namespace == "archiveid":
             return self.arc("archive.org", "torrent", *args, **kwargs)
         raise ToBeImplementedException(name="{}/{}/{}?{}".format("torrent", namespace, "/".join(args), kwargs))
