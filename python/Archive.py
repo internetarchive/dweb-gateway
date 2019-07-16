@@ -497,6 +497,7 @@ class ArchiveFile(NameResolverFile):
         # The rule is a bit more complex, if any of the collctions an item is in are not open (don't start with open_) then can go to 250GB else 75GB)
         if self.parent._metadata["item_size"] > 80530636800:
             return False
+        # TODO Note this next line fails if mtime = "12345.0" as it does for some items see https://github.com/internetarchive/dweb-mirror/issues/212
         if (not self._metadata.get("mtime")) or (self.parent.torrenttime() < int(self._metadata["mtime"])):
             if self.parent.torrenttime(): # Only log the data inconsistency if the torrent exists
                 # Note known bug in Traceys code as of 13Nov2018 where doesnt update torrent when writing __ia_thumb.jpg TODO ask Tracey to fix
