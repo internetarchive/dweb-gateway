@@ -201,6 +201,8 @@ class DwebGatewayHTTPRequestHandler(MyHTTPRequestHandler):
         if arg1 == "archive.org":
             arg2 = args[0]
             args = list(args[1:])
+            if arg2 == "info":
+                return self.info(**kwargs)
             if (arg2 == "download") or (arg2 == "serve"):
                 return ArchiveItem.new("archiveid", *args, **kwargs).content(verbose=verbose, _headers=self.headers)   # { Content-Type: xxx; data: "bytes" }
             if arg2 == "advancedsearch":
