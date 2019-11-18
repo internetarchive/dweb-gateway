@@ -127,7 +127,7 @@ class TransportIPFS(Transport):
             headers = { "Connection": "keep-alive"}
             if urlfrom and config["ipfs"].get("url_urlstore"):              # On a machine with urlstore and passed a url
                     ipfsurl = config["ipfs"]["url_urlstore"]
-                    res = requests.get(ipfsurl, headers=headers, params={'arg': urlfrom, 'trickle': 'true'}).json()
+                    res = requests.get(ipfsurl, headers=headers, params={'arg': urlfrom, 'trickle': 'true', 'nocopy': 'true', 'cid-version':"1"}).json()
                     ipldhash = res['Key']
                     # Now pin to gateway or JS clients wont see it  TODO remove this when client relay working (waiting on IPFS)
                     # This next line is to get around bug in IPFS propogation
