@@ -116,13 +116,19 @@ class AdvancedSearch(NameResolverDir):
             return itemid[4:] + " favorites"
         if itemid in archiveconfig["staticnames"]:
             return archiveconfig["staticnames"][itemid]
-        cached = TitleService.archiveidget(itemid, verbose)
+        try:
+            cached = TitleService.archiveidget(itemid, verbose)
+        except Exception as e: # Will be a redis connection error most likely
+            cached = None
         if cached:
             return cached
         query = "https://archive.org/advancedsearch.php?" + '&'.join([k + "=" + v for (k, v) in {'q': 'identifier:'+itemid, 'fl': 'title', 'output': 'json'}.items()])
         try:
             title = loads(httpget(query))["response"]["docs"][0]["title"]
-            TitleService.archiveidset(itemid, title, verbose)
+            try:
+                TitleService.archiveidset(itemid, title, verbose)
+            except Exception as e: # Ignore errors from redis
+                logging.error("Looks like redis down - TitleService.archiveidset failed")
         except Exception as e:
             logging.error("Couldnt find collection title for {}, err={}".format(itemid, e))
             title = ""
@@ -375,7 +381,10 @@ class ArchiveItem(NameResolverDir):
         """
         archive_servicesimgurl = "{}{}".format(config["archive"]["url_servicesimg"], itemid)  # Note similar code in torrentdata
         archive_servicesimgurl_cors = "{}{}".format(config["gateway"]["url_servicesimg"], itemid)  # Note similar code in torrentdata
-        thumbnailipfsurl = ThumbnailIPFSfromItemIdService.get(itemid)
+        try:
+            thumbnailipfsurl = ThumbnailIPFSfromItemIdService.get(itemid)
+        except Exception as e:
+            thumbnailipfsurl = None;
         if not thumbnailipfsurl:  # Dont have IPFS URL
             if verbose: logging.debug("Retrieving thumbnail for {}".format(itemid))
             # Store to IPFS and if still reqd then ping the ipfs.io gateway
