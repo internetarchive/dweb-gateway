@@ -131,6 +131,7 @@ server {
     }
 
 	location / {
+        add_header Access-Control-Allow-Origin *;
 	    try_files $uri /archive$uri @gateway;
     }
 
