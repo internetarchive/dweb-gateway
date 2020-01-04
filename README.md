@@ -2,6 +2,9 @@
 # dweb-gateway
 A decentralized web gateway for open academic papers on the Internet Archive
 
+## NOTE THIS REPO IS NO LONGER MAINTAINED, ITS ALL MOVED TO ia-dweb and www-dweb on internal system 
+## which just calls the dweb-archivecontroller routing.js
+
 ## Important editing notes
 * Names might not be consistent below as it gets edited and code built.
 * Please edit to match names in the code as you notice conflicts.
